@@ -30,6 +30,7 @@ if (5 < 10) {
 "foo bar"
 [1, 2];
 {"foo": "bar"}
+let fl = 1.23
 `
 
 	tests := []struct {
@@ -122,6 +123,10 @@ if (5 < 10) {
 		{token.COLON, ":"},
 		{token.STRING, "bar"},
 		{token.RBRACE, "}"},
+		{token.LET, "let"},
+		{token.IDENT, "fl"},
+		{token.ASSIGN, "="},
+		{token.FLOAT, "1.23"},
 		{token.EOF, ""},
 	}
 

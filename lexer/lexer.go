@@ -46,7 +46,28 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.SLASH, l.ch)
 	case '*':
 		tok = newToken(token.ASTERISK, l.ch)
+	case '%':
+		if l.peekChar() == '>' {
+			l.readChar()
+			tok = token.Token{Type: token.E_END, Literal: "%>"}
+			break
+		}
+		tok = newToken(token.ILLEGAL, l.ch)
 	case '<':
+		if l.peekChar() == '%' {
+			l.readChar()
+			switch l.peekChar() {
+			case '#':
+				l.readChar()
+				tok = token.Token{Type: token.C_START, Literal: "<%#"}
+			case '=':
+				l.readChar()
+				tok = token.Token{Type: token.E_START, Literal: "<%="}
+			default:
+				tok = token.Token{Type: token.S_START, Literal: "<%"}
+			}
+			break
+		}
 		tok = newToken(token.LT, l.ch)
 	case '>':
 		tok = newToken(token.GT, l.ch)

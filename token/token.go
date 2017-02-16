@@ -19,6 +19,7 @@ const (
 	BANG     = "!"
 	ASTERISK = "*"
 	SLASH    = "/"
+	PERCENT  = "%"
 
 	LT = "<"
 	GT = ">"
@@ -27,6 +28,12 @@ const (
 	NOT_EQ = "!="
 
 	// Delimiters
+
+	S_START = "<%"
+	C_START = "<%#"
+	E_START = "<%="
+	E_END   = "%>"
+
 	COMMA     = ","
 	SEMICOLON = ";"
 	COLON     = ":"

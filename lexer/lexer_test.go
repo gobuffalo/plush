@@ -31,6 +31,9 @@ if (5 < 10) {
 [1, 2];
 {"foo": "bar"}
 let fl = 1.23
+<%= 1 %>
+<%# 2 %>
+<% 3 %>
 `
 
 	tests := []struct {
@@ -127,6 +130,15 @@ let fl = 1.23
 		{token.IDENT, "fl"},
 		{token.ASSIGN, "="},
 		{token.FLOAT, "1.23"},
+		{token.E_START, "<%="},
+		{token.INT, "1"},
+		{token.E_END, "%>"},
+		{token.C_START, "<%#"},
+		{token.INT, "2"},
+		{token.E_END, "%>"},
+		{token.S_START, "<%"},
+		{token.INT, "3"},
+		{token.E_END, "%>"},
 		{token.EOF, ""},
 	}
 

@@ -69,6 +69,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
+	p.registerPrefix(token.HTML, p.parseHTMLLiteral)
+	p.registerPrefix(token.C_START, p.parseCommentLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -149,6 +151,11 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseLetStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
+	case token.S_START, token.E_END, token.E_START:
+		p.nextToken()
+		return p.parseStatement()
+	case token.EOF:
+		return nil
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -278,6 +285,17 @@ func (p *Parser) parseFloatLiteral() ast.Expression {
 
 func (p *Parser) parseStringLiteral() ast.Expression {
 	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseCommentLiteral() ast.Expression {
+	for p.curToken.Type != token.E_END {
+		p.nextToken()
+	}
+	return &ast.StringLiteral{Token: p.curToken, Value: ""}
+}
+
+func (p *Parser) parseHTMLLiteral() ast.Expression {
+	return &ast.HTMLLiteral{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) parsePrefixExpression() ast.Expression {

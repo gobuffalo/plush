@@ -1,13 +1,16 @@
 package lexer
 
-import "monkey/token"
-import "regexp"
+import (
+	"monkey/token"
+	"regexp"
+)
 
 type Lexer struct {
 	input        string
 	position     int  // current position in input (points to current char)
 	readPosition int  // current reading position in input (after current char)
 	ch           byte // current char under examination
+	inside       bool
 }
 
 func New(input string) *Lexer {
@@ -17,6 +20,29 @@ func New(input string) *Lexer {
 }
 
 func (l *Lexer) NextToken() token.Token {
+	if l.inside {
+		return l.nextInsideToken()
+	}
+	var tok token.Token
+
+	l.skipWhitespace()
+	if l.ch == 0 {
+		tok.Literal = ""
+		tok.Type = token.EOF
+		return tok
+	}
+
+	if l.ch == '<' && l.peekChar() == '%' {
+		l.inside = true
+		return l.nextInsideToken()
+	}
+
+	tok.Type = token.HTML
+	tok.Literal = l.readHTML()
+	return tok
+}
+
+func (l *Lexer) nextInsideToken() token.Token {
 	var tok token.Token
 
 	l.skipWhitespace()
@@ -48,6 +74,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.ASTERISK, l.ch)
 	case '%':
 		if l.peekChar() == '>' {
+			l.inside = false
 			l.readChar()
 			tok = token.Token{Type: token.E_END, Literal: "%>"}
 			break
@@ -55,6 +82,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.ILLEGAL, l.ch)
 	case '<':
 		if l.peekChar() == '%' {
+			l.inside = true
 			l.readChar()
 			switch l.peekChar() {
 			case '#':
@@ -168,6 +196,18 @@ func (l *Lexer) readString() string {
 	return l.input[position:l.position]
 }
 
+func (l *Lexer) readHTML() string {
+	position := l.position
+
+	for l.ch != 0 {
+		if l.ch == '<' && l.peekChar() == '%' {
+			l.inside = true
+			break
+		}
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }

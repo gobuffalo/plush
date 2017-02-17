@@ -1,13 +1,57 @@
 package lexer
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"monkey/token"
 )
 
+func TestNextToken_Simple(t *testing.T) {
+	r := require.New(t)
+	input := `<%= 1 %>`
+	tests := []struct {
+		tokenType    token.TokenType
+		tokenLiteral string
+	}{
+		{token.E_START, "<%="},
+		{token.INT, "1"},
+		{token.E_END, "%>"},
+	}
+
+	l := New(input)
+	for _, tt := range tests {
+		tok := l.NextToken()
+		r.Equal(tt.tokenType, tok.Type)
+		r.Equal(tt.tokenLiteral, tok.Literal)
+	}
+}
+
+func TestNextToken_SlightlyMoreComplex(t *testing.T) {
+	r := require.New(t)
+	input := `<p class="foo"><%= 1 %></p>`
+	tests := []struct {
+		tokenType    token.TokenType
+		tokenLiteral string
+	}{
+		{token.HTML, `<p class="foo">`},
+		{token.E_START, "<%="},
+		{token.INT, "1"},
+		{token.E_END, "%>"},
+		{token.HTML, `</p>`},
+	}
+
+	l := New(input)
+	for _, tt := range tests {
+		tok := l.NextToken()
+		r.Equal(tt.tokenType, tok.Type)
+		r.Equal(tt.tokenLiteral, tok.Literal)
+	}
+}
 func TestNextToken(t *testing.T) {
-	input := `let five = 5;
+	input := `<% let five = 5;
 let ten = 10;
 
 let add = fn(x, y) {
@@ -30,7 +74,7 @@ if (5 < 10) {
 "foo bar"
 [1, 2];
 {"foo": "bar"}
-let fl = 1.23
+let fl = 1.23 %>
 <%= 1 %>
 <%# 2 %>
 <% 3 %>
@@ -40,6 +84,7 @@ let fl = 1.23
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
+		{token.S_START, "<%"},
 		{token.LET, "let"},
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
@@ -130,6 +175,7 @@ let fl = 1.23
 		{token.IDENT, "fl"},
 		{token.ASSIGN, "="},
 		{token.FLOAT, "1.23"},
+		{token.E_END, "%>"},
 		{token.E_START, "<%="},
 		{token.INT, "1"},
 		{token.E_END, "%>"},
@@ -145,16 +191,17 @@ let fl = 1.23
 	l := New(input)
 
 	for i, tt := range tests {
+		fmt.Printf("### tt -> %#v\n", tt)
 		tok := l.NextToken()
-
-		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, tt.expectedType, tok.Type)
-		}
 
 		if tok.Literal != tt.expectedLiteral {
 			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
 				i, tt.expectedLiteral, tok.Literal)
 		}
+		if tok.Type != tt.expectedType {
+			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
+				i, tt.expectedType, tok.Type)
+		}
+
 	}
 }

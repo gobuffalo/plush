@@ -11,6 +11,7 @@ const (
 	INT    = "INT"    // 1343456
 	FLOAT  = "FLOAT"  // 12.34
 	STRING = "STRING" // "foobar"
+	HTML   = "HTML"   // <p>adf</p>
 
 	// Operators
 	ASSIGN   = "="

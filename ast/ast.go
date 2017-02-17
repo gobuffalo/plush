@@ -200,6 +200,30 @@ func (oe *InfixExpression) String() string {
 	return out.String()
 }
 
+type ForExpression struct {
+	Token       token.Token
+	KeyName     string
+	ValueName   string
+	Consequence *BlockStatement
+	Iterable    Expression
+}
+
+func (ie *ForExpression) expressionNode()      {}
+func (ie *ForExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *ForExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("for (")
+	out.WriteString(ie.KeyName)
+	out.WriteString(", ")
+	out.WriteString(ie.ValueName)
+	out.WriteString(") in ")
+	out.WriteString(ie.Iterable.String())
+	out.WriteString(" { ")
+	out.WriteString(ie.Consequence.String())
+	out.WriteString(" }")
+	return out.String()
+}
+
 type IfExpression struct {
 	Token       token.Token // The 'if' token
 	Condition   Expression
@@ -212,14 +236,16 @@ func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *IfExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString("if")
+	out.WriteString("if (")
 	out.WriteString(ie.Condition.String())
-	out.WriteString(" ")
+	out.WriteString(") { ")
 	out.WriteString(ie.Consequence.String())
+	out.WriteString(" }")
 
 	if ie.Alternative != nil {
-		out.WriteString("else ")
+		out.WriteString(" } else { ")
 		out.WriteString(ie.Alternative.String())
+		out.WriteString(" }")
 	}
 
 	return out.String()

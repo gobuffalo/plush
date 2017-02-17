@@ -50,21 +50,24 @@ func (ev *evaler) eval() (string, error) {
 			return "", err
 		}
 
-		switch t := res.(type) {
-		case string, interfaceable:
-			bb.WriteString(template.HTMLEscaper(t))
-		case template.HTML:
-			bb.WriteString(string(t))
-		case int64, int, float64:
-			bb.WriteString(fmt.Sprint(t))
-		case error:
-			return "", t
-			// default:
-			// 	fmt.Printf("### !t -> %+v\n", t)
-			// 	fmt.Printf("### !t -> %T\n", t)
-		}
+		ev.write(bb, res)
 	}
 	return bb.String(), nil
+}
+
+func (ev *evaler) write(bb *bytes.Buffer, i interface{}) {
+	switch t := i.(type) {
+	case string, interfaceable:
+		bb.WriteString(template.HTMLEscaper(t))
+	case template.HTML:
+		bb.WriteString(string(t))
+	case int64, int, float64:
+		bb.WriteString(fmt.Sprint(t))
+	case []interface{}:
+		for _, ii := range t {
+			ev.write(bb, ii)
+		}
+	}
 }
 
 func (ev *evaler) evalExpression(node ast.Expression) (interface{}, error) {
@@ -89,8 +92,44 @@ func (ev *evaler) evalExpression(node ast.Expression) (interface{}, error) {
 		return ev.evalCallExpression(s)
 	case *ast.Boolean:
 		return s.Value, nil
+	case *ast.ArrayLiteral:
+		return ev.evalArrayLiteral(s)
+	case *ast.ForExpression:
+		return ev.evalForExpression(s)
+	case *ast.IfExpression:
+		return ev.evalIfExpression(s)
 	}
 	return nil, errors.Errorf("could not evaluate node %T", node)
+}
+
+func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
+	c, err := ev.evalExpression(node.Condition)
+	if err != nil {
+		return nil, err
+	}
+
+	var r interface{}
+	if ev.isTruthy(c) {
+		r, err = ev.evalBlockStatement(node.Consequence)
+	} else {
+		r, err = ev.evalBlockStatement(node.Alternative)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (ev *evaler) isTruthy(i interface{}) bool {
+	if i == nil {
+		return false
+	}
+	if b, ok := i.(bool); ok {
+		return b
+	}
+	return true
 }
 
 func (ev *evaler) evalIndexExpression(node *ast.IndexExpression) (interface{}, error) {
@@ -233,4 +272,96 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 		return res[0].Interface(), nil
 	}
 	return nil, nil
+}
+
+func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error) {
+	iter, err := ev.evalExpression(node.Iterable)
+	if err != nil {
+		return nil, err
+	}
+	riter := reflect.ValueOf(iter)
+	ret := []interface{}{}
+	switch riter.Kind() {
+	case reflect.Map:
+		octx := ev.ctx
+		keys := riter.MapKeys()
+		for i := 0; i < len(keys); i++ {
+			k := keys[i]
+			v := riter.MapIndex(k)
+			ev.ctx = octx.New()
+			ev.ctx.Set(node.KeyName, k.Interface())
+			ev.ctx.Set(node.ValueName, v.Interface())
+			res, err := ev.evalBlockStatement(node.Consequence)
+			ev.ctx = octx
+			if err != nil {
+				return nil, err
+			}
+			ret = append(ret, res)
+		}
+	case reflect.Slice, reflect.Array:
+		octx := ev.ctx
+		for i := 0; i < riter.Len(); i++ {
+			ev.ctx = octx.New()
+			v := riter.Index(i)
+			ev.ctx.Set(node.KeyName, i)
+			ev.ctx.Set(node.ValueName, v.Interface())
+			res, err := ev.evalBlockStatement(node.Consequence)
+			fmt.Printf("### res -> %+v\n", res)
+			ev.ctx = octx
+			if err != nil {
+				return nil, err
+			}
+			if res != nil {
+				ret = append(ret, res)
+			}
+		}
+	default:
+		return ret, errors.Errorf("could not iterate over %T", iter)
+	}
+	return ret, nil
+}
+
+func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
+	res := []interface{}{}
+	for _, s := range node.Statements {
+		i, err := ev.evalStatement(s)
+		if err != nil {
+			return nil, err
+		}
+		if i != nil {
+			res = append(res, i)
+		}
+	}
+	return res, nil
+}
+
+func (ev *evaler) evalStatement(node ast.Statement) (interface{}, error) {
+	switch t := node.(type) {
+	case *ast.ExpressionStatement:
+		_, err := ev.evalExpression(t.Expression)
+		return nil, err
+	case *ast.ReturnStatement:
+		return ev.evalReturnStatement(t)
+	}
+	return nil, errors.Errorf("could not eval statement %T", node)
+}
+
+func (ev *evaler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, error) {
+	res, err := ev.evalExpression(node.ReturnValue)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (ev *evaler) evalArrayLiteral(node *ast.ArrayLiteral) (interface{}, error) {
+	res := []interface{}{}
+	for _, e := range node.Elements {
+		i, err := ev.evalExpression(e)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, i)
+	}
+	return res, nil
 }

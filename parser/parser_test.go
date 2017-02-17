@@ -5,6 +5,8 @@ import (
 	"monkey/ast"
 	"monkey/lexer"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestLetStatements(t *testing.T) {
@@ -162,7 +164,7 @@ func TestFloatLiteralExpression(t *testing.T) {
 		t.Fatalf("exp not *ast.FloatLiteral. got=%T", stmt.Expression)
 	}
 	if literal.Value != 1.23 {
-		t.Errorf("literal.Value not %d. got=%d", 1.23, literal.Value)
+		t.Errorf("literal.Value not %f. got=%f", 1.23, literal.Value)
 	}
 	if literal.TokenLiteral() != "1.23" {
 		t.Errorf("literal.TokenLiteral not %s. got=%s", "1.23",
@@ -1114,4 +1116,35 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.Errorf("parser error: %q", msg)
 	}
 	t.FailNow()
+}
+
+func TestForExpression(t *testing.T) {
+	r := require.New(t)
+	input := `<% for (k,v) in myArray {
+		v
+	} %>`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+
+	exp := stmt.Expression.(*ast.ForExpression)
+
+	r.Equal("k", exp.KeyName)
+	r.Equal("v", exp.ValueName)
+	r.Equal("myArray", exp.Iterable.String())
+
+	r.Len(exp.Consequence.Statements, 1)
+
+	consequence := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+
+	if !testIdentifier(t, consequence.Expression, "v") {
+		return
+	}
+
 }

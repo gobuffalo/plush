@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -78,6 +77,9 @@ let fl = 1.23 %>
 <%= 1 %>
 <%# 2 %>
 <% 3 %>
+<% for (i, v) in myArray {
+}
+%>
 `
 
 	tests := []struct {
@@ -185,13 +187,24 @@ let fl = 1.23 %>
 		{token.S_START, "<%"},
 		{token.INT, "3"},
 		{token.E_END, "%>"},
+		{token.S_START, "<%"},
+		{token.FOR, "for"},
+		{token.LPAREN, "("},
+		{token.IDENT, "i"},
+		{token.COMMA, ","},
+		{token.IDENT, "v"},
+		{token.RPAREN, ")"},
+		{token.IN, "in"},
+		{token.IDENT, "myArray"},
+		{token.LBRACE, "{"},
+		{token.RBRACE, "}"},
+		{token.E_END, "%>"},
 		{token.EOF, ""},
 	}
 
 	l := New(input)
 
 	for i, tt := range tests {
-		fmt.Printf("### tt -> %#v\n", tt)
 		tok := l.NextToken()
 
 		if tok.Literal != tt.expectedLiteral {

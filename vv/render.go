@@ -98,6 +98,8 @@ func (ev *evaler) evalExpression(node ast.Expression) (interface{}, error) {
 		return ev.evalForExpression(s)
 	case *ast.IfExpression:
 		return ev.evalIfExpression(s)
+	case nil:
+		return nil, nil
 	}
 	return nil, errors.Errorf("could not evaluate node %T", node)
 }
@@ -109,6 +111,7 @@ func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) 
 	}
 
 	var r interface{}
+	fmt.Printf("### ev.isTruthy(c) -> %+v\n", ev.isTruthy(c))
 	if ev.isTruthy(c) {
 		r, err = ev.evalBlockStatement(node.Consequence)
 	} else {
@@ -244,10 +247,25 @@ func (ev *evaler) stringsOperator(l string, r interface{}, op string) (interface
 }
 
 func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
-	f, err := ev.evalExpression(node.Function)
-	if err != nil {
-		return nil, err
+	var rv reflect.Value
+	if node.Callee != nil {
+		c, err := ev.evalExpression(node.Callee)
+		if err != nil {
+			return nil, err
+		}
+		rc := reflect.ValueOf(c)
+		rv = rc.MethodByName(node.Function.String())
+	} else {
+		f, err := ev.evalExpression(node.Function)
+		if err != nil {
+			return nil, err
+		}
+		rv = reflect.ValueOf(f)
 	}
+	if !rv.IsValid() {
+		return nil, errors.Errorf("%+v (%T) is an invalid function value", rv, rv)
+	}
+
 	args := []reflect.Value{}
 	for _, a := range node.Arguments {
 		v, err := ev.evalExpression(a)
@@ -261,7 +279,6 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 		args = append(args, rv)
 	}
 
-	rv := reflect.ValueOf(f)
 	res := rv.Call(args)
 	if len(res) > 0 {
 		if len(res) > 1 {
@@ -306,7 +323,6 @@ func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error
 			ev.ctx.Set(node.KeyName, i)
 			ev.ctx.Set(node.ValueName, v.Interface())
 			res, err := ev.evalBlockStatement(node.Consequence)
-			fmt.Printf("### res -> %+v\n", res)
 			ev.ctx = octx
 			if err != nil {
 				return nil, err
@@ -322,6 +338,7 @@ func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error
 }
 
 func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
+	fmt.Println("evalBlockStatement")
 	res := []interface{}{}
 	for _, s := range node.Statements {
 		i, err := ev.evalStatement(s)
@@ -336,9 +353,14 @@ func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, err
 }
 
 func (ev *evaler) evalStatement(node ast.Statement) (interface{}, error) {
+	fmt.Println("evalStatement")
+	fmt.Printf("### node -> %T\n", node)
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:
-		_, err := ev.evalExpression(t.Expression)
+		s, err := ev.evalExpression(t.Expression)
+		if _, ok := t.Expression.(*ast.HTMLLiteral); ok {
+			return s, err
+		}
 		return nil, err
 	case *ast.ReturnStatement:
 		return ev.evalReturnStatement(t)

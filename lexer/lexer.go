@@ -171,7 +171,7 @@ func (l *Lexer) peekChar() byte {
 
 func (l *Lexer) readIdentifier() string {
 	position := l.position
-	for isLetter(l.ch) {
+	for isLetter(l.ch) || l.ch == '.' {
 		l.readChar()
 	}
 	return l.input[position:l.position]

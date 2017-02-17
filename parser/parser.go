@@ -150,7 +150,6 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
 	fmt.Println("parseStatement")
-	fmt.Printf("### p.curToken -> %+v\n", p.curToken)
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
@@ -160,14 +159,11 @@ func (p *Parser) parseStatement() ast.Statement {
 		p.nextToken()
 		return p.parseStatement()
 	case token.E_START:
-		fmt.Println("E_START")
 		p.curToken = token.Token{
 			Type:    token.RETURN,
 			Literal: p.curToken.Literal,
 		}
 		r := p.parseReturnStatement()
-		fmt.Printf("### r -> %T\n", r)
-		fmt.Printf("### r -> %+v\n", r)
 		return r
 	case token.EOF:
 		return nil

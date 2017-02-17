@@ -37,16 +37,12 @@ type interfaceable interface {
 
 func (ev *evaler) eval() (string, error) {
 	bb := &bytes.Buffer{}
-	fmt.Printf("### ev.program.Statements -> %+v\n", ev.program.Statements)
 	for _, stmt := range ev.program.Statements {
-		fmt.Printf("### stmt -> %T\n", stmt)
 		var res interface{}
 		var err error
 		switch node := stmt.(type) {
 		case *ast.ReturnStatement:
 			res, err = ev.evalReturnStatement(node)
-			fmt.Printf("### res -> %+v\n", res)
-			fmt.Printf("### err -> %+v\n", err)
 		case *ast.ExpressionStatement:
 			var s interface{}
 			s, err = ev.evalExpression(node.Expression)
@@ -67,10 +63,8 @@ func (ev *evaler) eval() (string, error) {
 }
 
 func (ev *evaler) write(bb *bytes.Buffer, i interface{}) {
-	fmt.Printf("### i -> %+v\n", i)
-	fmt.Printf("### i -> %T\n", i)
 	switch t := i.(type) {
-	case string, interfaceable:
+	case string, interfaceable, ast.Printable:
 		bb.WriteString(template.HTMLEscaper(t))
 	case template.HTML:
 		bb.WriteString(string(t))
@@ -119,8 +113,6 @@ func (ev *evaler) evalExpression(node ast.Expression) (interface{}, error) {
 
 func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
 	c, err := ev.evalExpression(node.Condition)
-	fmt.Printf("### c -> %+v\n", c)
-	fmt.Printf("### err -> %+v\n", err)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +348,6 @@ func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error
 func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
 	fmt.Println("evalBlockStatement")
 	res := []interface{}{}
-	fmt.Printf("### node.Statements -> %+v\n", node.Statements)
 	for _, s := range node.Statements {
 		i, err := ev.evalStatement(s)
 		if err != nil {
@@ -374,10 +365,6 @@ func (ev *evaler) evalStatement(node ast.Statement) (interface{}, error) {
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:
 		s, err := ev.evalExpression(t.Expression)
-		fmt.Printf("### t -> %+v\n", t)
-		fmt.Printf("### t -> %T\n", t)
-		fmt.Printf("### s -> %+v\n", s)
-		fmt.Printf("### s -> %T\n", s)
 		switch s.(type) {
 		case ast.Printable, template.HTML:
 			return s, err
@@ -390,7 +377,7 @@ func (ev *evaler) evalStatement(node ast.Statement) (interface{}, error) {
 }
 
 func (ev *evaler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, error) {
-	fmt.Printf("### node.ReturnValue -> %+v\n", node.ReturnValue)
+	fmt.Println("evalReturnStatement")
 	res, err := ev.evalExpression(node.ReturnValue)
 	if err != nil {
 		return nil, err

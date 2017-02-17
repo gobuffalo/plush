@@ -724,22 +724,11 @@ func TestCallExpressionParsing_WithCallee(t *testing.T) {
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
 
-	if len(program.Statements) != 1 {
-		t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-			1, len(program.Statements))
-	}
+	r.Len(program.Statements, 1)
 
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-			program.Statements[0])
-	}
+	stmt := program.Statements[0].(*ast.ReturnStatement)
 
-	exp, ok := stmt.Expression.(*ast.CallExpression)
-	if !ok {
-		t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
-			stmt.Expression)
-	}
+	exp := stmt.ReturnValue.(*ast.CallExpression)
 
 	if !testIdentifier(t, exp.Function, "Greet") {
 		return
@@ -751,6 +740,7 @@ func TestCallExpressionParsing_WithCallee(t *testing.T) {
 
 	r.Equal(exp.Arguments[0].String(), "mark")
 }
+
 func TestStringLiteralExpression(t *testing.T) {
 	input := `<% "hello world"; %>`
 

@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+type Printable interface {
+	Printable() bool
+}
+
 // The base Node interface
 type Node interface {
 	TokenLiteral() string
@@ -74,6 +78,10 @@ func (ls *LetStatement) String() string {
 type ReturnStatement struct {
 	Token       token.Token // the 'return' token
 	ReturnValue Expression
+}
+
+func (rs *ReturnStatement) Printable() bool {
+	return true
 }
 
 func (rs *ReturnStatement) statementNode()       {}
@@ -315,6 +323,7 @@ type HTMLLiteral struct {
 	Value string
 }
 
+func (sl *HTMLLiteral) Printable() bool      { return true }
 func (sl *HTMLLiteral) expressionNode()      {}
 func (sl *HTMLLiteral) TokenLiteral() string { return sl.Token.Literal }
 func (sl *HTMLLiteral) String() string       { return sl.Token.Literal }

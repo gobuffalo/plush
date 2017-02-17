@@ -236,7 +236,7 @@ func Test_Render17(t *testing.T) {
 		"g": greeter{},
 	}))
 	r.NoError(err)
-	r.Equal(s, `<p>hi mark!</p>`)
+	r.Equal(`<p>hi mark!</p>`, s)
 }
 
 func Test_Render18(t *testing.T) {
@@ -244,7 +244,7 @@ func Test_Render18(t *testing.T) {
 	input := `<% for (i,v) in ["a", "b", "c"] {return v} %>`
 	s, err := Render(input, velvet.NewContext())
 	r.NoError(err)
-	r.Equal("abc", s)
+	r.Equal("", s)
 }
 
 func Test_Render18a(t *testing.T) {
@@ -257,12 +257,34 @@ func Test_Render18a(t *testing.T) {
 
 func Test_Render18b(t *testing.T) {
 	r := require.New(t)
+	input := `<%= for (k,v) in myMap {return k + ":" + v} %>`
+	s, err := Render(input, velvet.NewContextWith(map[string]interface{}{
+		"myMap": map[string]string{
+			"a": "A",
+			"b": "B",
+		},
+	}))
+	r.NoError(err)
+	r.Contains(s, "a:A")
+	r.Contains(s, "b:B")
+}
+
+func Test_Render18c(t *testing.T) {
+	r := require.New(t)
 	input := `<% for (k,v) in myMap {return k + ":" + v} %>`
 	s, err := Render(input, velvet.NewContextWith(map[string]interface{}{
 		"myMap": map[string]string{"a": "A"},
 	}))
 	r.NoError(err)
-	r.Equal("a:A", s)
+	r.Equal("", s)
+}
+
+func Test_Render18d(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (i,v) in ["a", "b", "c"] {return v} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("abc", s)
 }
 
 func Test_Render19(t *testing.T) {
@@ -270,12 +292,28 @@ func Test_Render19(t *testing.T) {
 	input := `<% if (true) { return "hi"} %>`
 	s, err := Render(input, velvet.NewContext())
 	r.NoError(err)
+	r.Equal("", s)
+}
+
+func Test_Render19a(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (true) { return "hi"} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
 	r.Equal("hi", s)
+}
+
+func Test_Render19b(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (true) { %> hi <%} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("", s)
 }
 
 func Test_Render20(t *testing.T) {
 	r := require.New(t)
-	input := `<% if (false) { return "hi"} else { return "bye"} %>`
+	input := `<%= if (false) { return "hi"} else { return "bye"} %>`
 	s, err := Render(input, velvet.NewContext())
 	r.NoError(err)
 	r.Equal("bye", s)
@@ -286,9 +324,16 @@ func Test_Render21(t *testing.T) {
 	input := `<% if (true) { %> hi <% } %>`
 	s, err := Render(input, velvet.NewContext())
 	r.NoError(err)
-	r.Equal("hi ", s)
+	r.Equal("", s)
 }
 
+func Test_Render21a(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (true) { %> hi <% } %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("hi ", s)
+}
 func Test_Render22(t *testing.T) {
 	r := require.New(t)
 	input := `<%= "shown" %><% "notshown" %>`

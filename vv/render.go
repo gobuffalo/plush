@@ -193,6 +193,7 @@ func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) 
 }
 
 func (ev *evaler) isTruthy(i interface{}) bool {
+	fmt.Printf("### i -> %+v\n", i)
 	if i == nil {
 		return false
 	}
@@ -240,12 +241,11 @@ func (ev *evaler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 }
 
 func (ev *evaler) evalLetStatement(node *ast.LetStatement) (interface{}, error) {
-	fmt.Println("evalLetStatement")
+	// fmt.Println("evalLetStatement")
 	v, err := ev.evalExpression(node.Value)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("### node.Name.Value -> %+v\n", node.Name.Value)
 	ev.ctx.Set(node.Name.Value, v)
 	return nil, nil
 }
@@ -363,7 +363,7 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 			return nil, err
 		}
 		ar := reflect.ValueOf(v)
-		if !rv.IsValid() {
+		if !ar.IsValid() {
 			return nil, errors.Errorf("%+v (%T) is an invalid value", v, v)
 		}
 		args = append(args, ar)
@@ -442,7 +442,7 @@ func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error
 }
 
 func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
-	fmt.Println("evalBlockStatement")
+	// fmt.Println("evalBlockStatement")
 	res := []interface{}{}
 	for _, s := range node.Statements {
 		i, err := ev.evalStatement(s)
@@ -457,7 +457,7 @@ func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, err
 }
 
 func (ev *evaler) evalStatement(node ast.Statement) (interface{}, error) {
-	fmt.Println("evalStatement")
+	// fmt.Println("evalStatement")
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:
 		s, err := ev.evalExpression(t.Expression)
@@ -473,7 +473,7 @@ func (ev *evaler) evalStatement(node ast.Statement) (interface{}, error) {
 }
 
 func (ev *evaler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, error) {
-	fmt.Println("evalReturnStatement")
+	// fmt.Println("evalReturnStatement")
 	res, err := ev.evalExpression(node.ReturnValue)
 	if err != nil {
 		return nil, err

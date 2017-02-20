@@ -10,6 +10,7 @@ import (
 )
 
 func TestLetStatements(t *testing.T) {
+	r := require.New(t)
 	tests := []struct {
 		input              string
 		expectedIdentifier string
@@ -26,11 +27,7 @@ func TestLetStatements(t *testing.T) {
 		program := p.ParseProgram()
 		checkParserErrors(t, p)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain 1 statements. got=%d",
-				len(program.Statements))
-		}
-
+		r.Len(program.Statements, 1)
 		stmt := program.Statements[0]
 		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
 			return
@@ -396,13 +393,12 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		checkParserErrors(t, p)
 
 		actual := program.String()
-		fmt.Printf("### actual -> %+v\n", actual)
-		fmt.Printf("### tt.expected -> %+v\n", tt.expected)
 		r.Equal(tt.expected, actual)
 	}
 }
 
 func TestBooleanExpression(t *testing.T) {
+	r := require.New(t)
 	tests := []struct {
 		input           string
 		expectedBoolean bool
@@ -417,10 +413,7 @@ func TestBooleanExpression(t *testing.T) {
 		program := p.ParseProgram()
 		checkParserErrors(t, p)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf("program has not enough statements. got=%d",
-				len(program.Statements))
-		}
+		r.Len(program.Statements, 1)
 
 		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 		if !ok {
@@ -497,26 +490,28 @@ func TestIfExpression_HTML(t *testing.T) {
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
 
-	fmt.Printf("### program.Statements -> %+v\n", program.Statements)
-	r.Len(program.Statements, 1)
+	r.Len(program.Statements, 3)
 
-	stmt := program.Statements[0].(*ast.ExpressionStatement)
-	exp := stmt.Expression.(*ast.IfExpression)
+	es := program.Statements[0].(*ast.ExpressionStatement)
+	h := es.Expression.(*ast.HTMLLiteral)
+	r.Equal("<p>", h.Value)
 
-	if !testInfixExpression(t, exp.Condition, "x", "<", "y") {
+	es = program.Statements[1].(*ast.ExpressionStatement)
+	ifs := es.Expression.(*ast.IfExpression)
+
+	if !testInfixExpression(t, ifs.Condition, "x", "<", "y") {
 		return
 	}
 
-	r.Equal(exp.Consequence.Statements, 1)
+	r.Len(ifs.Consequence.Statements, 1)
 
-	consequence := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	ret := ifs.Consequence.Statements[0].(*ast.ReturnStatement)
 
-	if !testIdentifier(t, consequence.Expression, "x") {
-		return
-	}
+	r.Equal("x", ret.ReturnValue.String())
 
-	r.Nil(exp.Alternative)
+	r.Nil(ifs.Alternative)
 }
+
 func TestIfElseExpression(t *testing.T) {
 	input := `<% if (x < y) { x } else { y } %>`
 
@@ -778,15 +773,20 @@ func TestCallExpressionParsing_WithBlock(t *testing.T) {
 
 	r.Len(program.Statements, 3)
 
-	stmt := program.Statements[0].(*ast.ReturnStatement)
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	html := stmt.Expression.(*ast.HTMLLiteral)
+	r.Equal("<p>", html.Value)
 
-	exp := stmt.ReturnValue.(*ast.CallExpression)
+	rstmt := program.Statements[1].(*ast.ReturnStatement)
+	exp := rstmt.ReturnValue.(*ast.CallExpression)
 
 	ident := exp.Function.(*ast.Identifier)
-	r.Equal("Greet", ident.Value)
+	r.Equal("foo", ident.Value)
 
-	r.Len(exp.Arguments, 1)
-	r.Equal(exp.Arguments[0].String(), "mark")
+	r.Len(exp.Arguments, 0)
+	r.NotNil(exp.Block)
+	r.Equal("hi", exp.Block.String())
+	r.Nil(exp.Callee)
 }
 func TestStringLiteralExpression(t *testing.T) {
 	input := `<% "hello world"; %>`
@@ -1231,7 +1231,6 @@ func TestForExpression_Split(t *testing.T) {
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
 
-	fmt.Printf("### program.Statements -> %+v\n", program.Statements)
 	r.Len(program.Statements, 1)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -1241,14 +1240,5 @@ func TestForExpression_Split(t *testing.T) {
 	r.Equal("k", exp.KeyName)
 	r.Equal("v", exp.ValueName)
 	r.Equal("anArray", exp.Iterable.String())
-
-	fmt.Printf("### exp.Consequence.Statements -> %+v\n", exp.Consequence.Statements)
-	r.Len(exp.Consequence.Statements, 4)
-	//
-	// consequence := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
-	//
-	// if !testIdentifier(t, consequence.Expression, "v") {
-	// 	return
-	// }
-
+	r.Len(exp.Consequence.Statements, 3)
 }

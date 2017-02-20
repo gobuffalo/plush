@@ -96,8 +96,18 @@ func (l *Lexer) nextInsideToken() token.Token {
 			}
 			break
 		}
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok = token.Token{Type: token.LTEQ, Literal: "<="}
+			break
+		}
 		tok = newToken(token.LT, l.ch)
 	case '>':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok = token.Token{Type: token.GTEQ, Literal: ">="}
+			break
+		}
 		tok = newToken(token.GT, l.ch)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)

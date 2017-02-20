@@ -25,7 +25,9 @@ var precedences = map[token.TokenType]int{
 	token.EQ:       EQUALS,
 	token.NOT_EQ:   EQUALS,
 	token.LT:       LESSGREATER,
+	token.LTEQ:     LESSGREATER,
 	token.GT:       LESSGREATER,
+	token.GTEQ:     LESSGREATER,
 	token.PLUS:     SUM,
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
@@ -73,7 +75,12 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(token.HTML, p.parseHTMLLiteral)
 	p.registerPrefix(token.C_START, p.parseCommentLiteral)
-	p.registerPrefix(token.RBRACE, func() ast.Expression { return nil })
+	p.registerPrefix(token.S_START, func() ast.Expression {
+		fmt.Println("S_START")
+		p.nextToken()
+		return p.parseExpression(LOWEST)
+	})
+	p.registerPrefix(token.E_END, func() ast.Expression { return nil })
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -84,6 +91,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
+	p.registerInfix(token.LTEQ, p.parseInfixExpression)
+	p.registerInfix(token.GTEQ, p.parseInfixExpression)
 
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
@@ -150,21 +159,17 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
 	fmt.Println("parseStatement")
+	fmt.Printf("### p.curToken -> %+v\n", p.curToken)
 	switch p.curToken.Type {
 	case token.LET:
+		fmt.Println("LET")
 		return p.parseLetStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
-	case token.S_START, token.E_END:
-		p.nextToken()
-		return p.parseStatement()
 	case token.E_START:
-		p.curToken = token.Token{
-			Type:    token.RETURN,
-			Literal: p.curToken.Literal,
-		}
-		r := p.parseReturnStatement()
-		return r
+		return p.parseReturnStatement()
+	case token.RBRACE:
+		return nil
 	case token.EOF:
 		return nil
 	default:
@@ -191,6 +196,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	fmt.Println("parseLetStatement")
 	stmt := &ast.LetStatement{Token: p.curToken}
 
+	fmt.Printf("### p.peekToken -> %+v\n", p.peekToken)
 	if !p.expectPeek(token.IDENT) {
 		return nil
 	}
@@ -228,6 +234,12 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	fmt.Println("parseExpression")
 	prefix := p.prefixParseFns[p.curToken.Type]
+	fmt.Printf("### p.curToken.Type -> %+v\n", p.curToken.Type)
+	if p.curTokenIs(token.LET) {
+		fmt.Println("I GOT A LET")
+		p.parseLetStatement()
+		return nil
+	}
 	if prefix == nil {
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
@@ -455,6 +467,12 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	p.nextToken()
 
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		if p.curTokenIs(token.S_START) || p.curTokenIs(token.E_END) {
+			fmt.Println("skip the start or end token")
+			p.nextToken()
+			continue
+		}
+		fmt.Printf("### p.curToken -> %+v\n", p.curToken)
 		stmt := p.parseStatement()
 		if stmt != nil {
 			block.Statements = append(block.Statements, stmt)
@@ -530,6 +548,13 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 		}
 	}
 	exp.Arguments = p.parseExpressionList(token.RPAREN)
+
+	if p.peekTokenIs(token.LBRACE) {
+		p.nextToken()
+
+		exp.Block = p.parseBlockStatement()
+		fmt.Printf("### exp.Consequence -> %+v\n", exp.Block)
+	}
 	return exp
 }
 

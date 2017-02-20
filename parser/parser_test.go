@@ -270,6 +270,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 }
 
 func TestOperatorPrecedenceParsing(t *testing.T) {
+	r := require.New(t)
 	tests := []struct {
 		input    string
 		expected string
@@ -395,9 +396,9 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		checkParserErrors(t, p)
 
 		actual := program.String()
-		if actual != tt.expected {
-			t.Errorf("expected=%q, got=%q", tt.expected, actual)
-		}
+		fmt.Printf("### actual -> %+v\n", actual)
+		fmt.Printf("### tt.expected -> %+v\n", tt.expected)
+		r.Equal(tt.expected, actual)
 	}
 }
 
@@ -487,6 +488,35 @@ func TestIfExpression(t *testing.T) {
 	}
 }
 
+func TestIfExpression_HTML(t *testing.T) {
+	r := require.New(t)
+	input := `<p><% if (x < y) { %> <%= x %> <% } %></p>`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	fmt.Printf("### program.Statements -> %+v\n", program.Statements)
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	exp := stmt.Expression.(*ast.IfExpression)
+
+	if !testInfixExpression(t, exp.Condition, "x", "<", "y") {
+		return
+	}
+
+	r.Equal(exp.Consequence.Statements, 1)
+
+	consequence := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+
+	if !testIdentifier(t, consequence.Expression, "x") {
+		return
+	}
+
+	r.Nil(exp.Alternative)
+}
 func TestIfElseExpression(t *testing.T) {
 	input := `<% if (x < y) { x } else { y } %>`
 
@@ -730,17 +760,34 @@ func TestCallExpressionParsing_WithCallee(t *testing.T) {
 
 	exp := stmt.ReturnValue.(*ast.CallExpression)
 
-	if !testIdentifier(t, exp.Function, "Greet") {
-		return
-	}
+	ident := exp.Function.(*ast.Identifier)
+	r.Equal("Greet", ident.Value)
 
-	if len(exp.Arguments) != 1 {
-		t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
-	}
-
+	r.Len(exp.Arguments, 1)
 	r.Equal(exp.Arguments[0].String(), "mark")
 }
 
+func TestCallExpressionParsing_WithBlock(t *testing.T) {
+	r := require.New(t)
+	input := `<p><%= foo() { %>hi<% } %></p>`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	r.Len(program.Statements, 3)
+
+	stmt := program.Statements[0].(*ast.ReturnStatement)
+
+	exp := stmt.ReturnValue.(*ast.CallExpression)
+
+	ident := exp.Function.(*ast.Identifier)
+	r.Equal("Greet", ident.Value)
+
+	r.Len(exp.Arguments, 1)
+	r.Equal(exp.Arguments[0].String(), "mark")
+}
 func TestStringLiteralExpression(t *testing.T) {
 	input := `<% "hello world"; %>`
 

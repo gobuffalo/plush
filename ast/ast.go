@@ -89,7 +89,7 @@ func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
 func (rs *ReturnStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(rs.TokenLiteral() + " ")
+	out.WriteString("return ")
 
 	if rs.ReturnValue != nil {
 		out.WriteString(rs.ReturnValue.String())
@@ -200,7 +200,9 @@ func (oe *InfixExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(oe.Left.String())
+	if oe.Left != nil {
+		out.WriteString(oe.Left.String())
+	}
 	out.WriteString(" " + oe.Operator + " ")
 	out.WriteString(oe.Right.String())
 	out.WriteString(")")
@@ -289,6 +291,8 @@ type CallExpression struct {
 	Callee    Expression
 	Function  Expression // Identifier or FunctionLiteral
 	Arguments []Expression
+	Block     *BlockStatement
+	ElseBlock *BlockStatement
 }
 
 func (ce *CallExpression) expressionNode()      {}

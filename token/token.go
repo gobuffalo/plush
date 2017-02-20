@@ -22,8 +22,10 @@ const (
 	SLASH    = "/"
 	PERCENT  = "%"
 
-	LT = "<"
-	GT = ">"
+	LT   = "<"
+	LTEQ = "<="
+	GT   = ">"
+	GTEQ = ">="
 
 	EQ     = "=="
 	NOT_EQ = "!="

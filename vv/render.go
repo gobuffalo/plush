@@ -13,6 +13,53 @@ import (
 	"github.com/pkg/errors"
 )
 
+type HelperContext struct {
+	*velvet.Context
+	ev    *evaler
+	block *ast.BlockStatement
+}
+
+var helperContextKind = "HelperContext"
+
+// Block executes the block of template associated with
+// the helper, think the block inside of an "if" or "each"
+// statement.
+func (h HelperContext) Block() (string, error) {
+	return h.BlockWith(h.Context)
+}
+
+func (h HelperContext) BlockWith(ctx *velvet.Context) (string, error) {
+	octx := h.ev.ctx
+	defer func() { h.ev.ctx = octx }()
+	h.ev.ctx = ctx
+
+	if h.block == nil {
+		return "", errors.New("no block defined")
+	}
+	i, err := h.ev.evalBlockStatement(h.block)
+	if err != nil {
+		return "", err
+	}
+	bb := &bytes.Buffer{}
+	h.ev.write(bb, i)
+	return bb.String(), nil
+}
+
+// // ElseBlock executes the "inverse" block of template associated with
+// // the helper, think the "else" block of an "if" or "each"
+// // statement.
+// func (h HelperContext) ElseBlock() (string, error) {
+// 	return h.ElseBlockWith(h.Context)
+// }
+//
+// // ElseBlockWith executes the "inverse" block of template associated with
+// // the helper, think the "else" block of an "if" or "each"
+// // statement. It takes a new context with which to evaluate
+// // the block.
+// func (h HelperContext) ElseBlockWith(ctx *velvet.Context) (string, error) {
+// 	return "", nil
+// }
+
 func Render(s string, ctx *velvet.Context) (string, error) {
 	l := lexer.New(s)
 	p := parser.New(l)
@@ -105,10 +152,24 @@ func (ev *evaler) evalExpression(node ast.Expression) (interface{}, error) {
 		return ev.evalForExpression(s)
 	case *ast.IfExpression:
 		return ev.evalIfExpression(s)
+	case *ast.PrefixExpression:
+		return ev.evalPrefixExpression(s)
 	case nil:
 		return nil, nil
 	}
 	return nil, errors.Errorf("could not evaluate node %T", node)
+}
+
+func (ev *evaler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}, error) {
+	res, err := ev.evalExpression(node.Right)
+	if err != nil {
+		return nil, err
+	}
+	switch node.Operator {
+	case "!":
+		return !ev.isTruthy(res), nil
+	}
+	return nil, errors.Errorf("unknown operator %s", node.Operator)
 }
 
 func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
@@ -179,11 +240,12 @@ func (ev *evaler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 }
 
 func (ev *evaler) evalLetStatement(node *ast.LetStatement) (interface{}, error) {
-
+	fmt.Println("evalLetStatement")
 	v, err := ev.evalExpression(node.Value)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("### node.Name.Value -> %+v\n", node.Name.Value)
 	ev.ctx.Set(node.Name.Value, v)
 	return nil, nil
 }
@@ -229,6 +291,16 @@ func (ev *evaler) intsOperator(l int64, r int64, op string) (interface{}, error)
 		return l / r, nil
 	case "*":
 		return l * r, nil
+	case "<":
+		return l < r, nil
+	case ">":
+		return l > r, nil
+	case "!=":
+		return l != r, nil
+	case ">=":
+		return l >= r, nil
+	case "<=":
+		return l <= r, nil
 	}
 	return nil, errors.Errorf("unknown operator for integer %s", op)
 }
@@ -243,6 +315,16 @@ func (ev *evaler) floatsOperator(l float64, r float64, op string) (interface{}, 
 		return l / r, nil
 	case "*":
 		return l * r, nil
+	case "<":
+		return l < r, nil
+	case ">":
+		return l > r, nil
+	case "!=":
+		return l != r, nil
+	case ">=":
+		return l >= r, nil
+	case "<=":
+		return l <= r, nil
 	}
 	return nil, errors.Errorf("unknown operator for float %s", op)
 }
@@ -280,11 +362,25 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 		if err != nil {
 			return nil, err
 		}
-		rv := reflect.ValueOf(v)
+		ar := reflect.ValueOf(v)
 		if !rv.IsValid() {
 			return nil, errors.Errorf("%+v (%T) is an invalid value", v, v)
 		}
-		args = append(args, rv)
+		args = append(args, ar)
+	}
+
+	rt := rv.Type()
+	if rt.NumIn() > 0 {
+		last := rt.In(rt.NumIn() - 1)
+
+		if last.Name() == helperContextKind {
+			hargs := HelperContext{
+				Context: ev.ctx,
+				ev:      ev,
+				block:   node.Block,
+			}
+			args = append(args, reflect.ValueOf(hargs))
+		}
 	}
 
 	res := rv.Call(args)

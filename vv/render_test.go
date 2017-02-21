@@ -302,6 +302,22 @@ func Test_Render18d(t *testing.T) {
 	r.Equal("abc", s)
 }
 
+func Test_Render18e(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (v) in ["a", "b", "c"] {%><%=v%><%} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("abc", s)
+}
+
+func Test_Render18f(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (i,v) in ["a", "b", "c"] {%><%=i%><%=v%><%} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("0a1b2c", s)
+}
+
 func Test_Render19(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (true) { return "hi"} %>`

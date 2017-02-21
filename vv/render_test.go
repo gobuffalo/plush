@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"reflect"
 	"testing"
 
 	"github.com/gobuffalo/velvet"
@@ -116,7 +117,7 @@ func Test_Render8e(t *testing.T) {
 
 	input := `<%= true + 1 %>`
 	_, err := Render(input, velvet.NewContext())
-	r.Error(err)
+	r.NoError(err)
 }
 
 func Test_Render9(t *testing.T) {
@@ -319,7 +320,39 @@ func Test_Render19a(t *testing.T) {
 
 func Test_Render19b(t *testing.T) {
 	r := require.New(t)
-	input := `<% if (true) { %> hi <%} %>`
+	input := `<%= if (true) { %>hi<%} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
+func Test_Render19c(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (false && true) { %> hi <%} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("", s)
+}
+
+func Test_Render19d(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (false || true) { %>hi<%} %>`
+	s, err := Render(input, velvet.NewContext())
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
+func Test_Render19e(t *testing.T) {
+	r := require.New(t)
+	ctx := velvet.NewContext()
+	ctx.Set("len", func(i interface{}) int64 {
+		rv := reflect.ValueOf(i)
+		if !rv.IsValid() {
+			return int64(0)
+		}
+		return int64(rv.Len())
+	})
+	input := `<%= if (names && len(names) >= 1) { %>hi<%} %>`
 	s, err := Render(input, velvet.NewContext())
 	r.NoError(err)
 	r.Equal("", s)

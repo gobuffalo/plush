@@ -29,6 +29,8 @@ const (
 
 	EQ     = "=="
 	NOT_EQ = "!="
+	AND    = "&&"
+	OR     = "||"
 
 	// Delimiters
 

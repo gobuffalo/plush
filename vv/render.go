@@ -173,6 +173,7 @@ func (ev *evaler) evalPrefixExpression(node *ast.PrefixExpression) (interface{},
 }
 
 func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
+	fmt.Println("evalIfExpression")
 	c, err := ev.evalExpression(node.Condition)
 	if err != nil {
 		return nil, err
@@ -182,7 +183,9 @@ func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) 
 	if ev.isTruthy(c) {
 		r, err = ev.evalBlockStatement(node.Consequence)
 	} else {
-		r, err = ev.evalBlockStatement(node.Alternative)
+		if node.Alternative != nil {
+			r, err = ev.evalBlockStatement(node.Alternative)
+		}
 	}
 
 	if err != nil {
@@ -193,7 +196,6 @@ func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) 
 }
 
 func (ev *evaler) isTruthy(i interface{}) bool {
-	fmt.Printf("### i -> %+v\n", i)
 	if i == nil {
 		return false
 	}
@@ -255,13 +257,24 @@ func (ev *evaler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 }
 
 func (ev *evaler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
+	// fmt.Println("evalInfixExpression")
 	lres, err := ev.evalExpression(node.Left)
 	if err != nil {
 		return nil, err
 	}
+	if node.Operator == "&&" {
+		if !ev.isTruthy(lres) {
+			return false, nil
+		}
+	}
 	rres, err := ev.evalExpression(node.Right)
 	if err != nil {
 		return nil, err
+	}
+
+	switch node.Operator {
+	case "&&", "||":
+		return ev.boolsOperator(lres, rres, node.Operator)
 	}
 
 	switch t := lres.(type) {
@@ -275,10 +288,21 @@ func (ev *evaler) evalInfixExpression(node *ast.InfixExpression) (interface{}, e
 		if r, ok := rres.(float64); ok {
 			return ev.floatsOperator(t, r, node.Operator)
 		}
+	case bool:
+		return ev.boolsOperator(lres, rres, node.Operator)
 	case nil:
 		return nil, nil
 	}
-	return nil, errors.Errorf("unable to operate on %T and %T", lres, rres)
+	return nil, errors.Errorf("unable to operate (%s) on %T and %T ", node.Operator, lres, rres)
+}
+
+func (ev *evaler) boolsOperator(l interface{}, r interface{}, op string) (interface{}, error) {
+	lt := ev.isTruthy(l)
+	rt := ev.isTruthy(r)
+	if op == "||" {
+		return lt || rt, nil
+	}
+	return lt && rt, nil
 }
 
 func (ev *evaler) intsOperator(l int64, r int64, op string) (interface{}, error) {

@@ -79,6 +79,8 @@ let fl = 1.23 %>
 <% 3 %>
 <% for (i, v) in myArray {
 }
+a && b
+c || d
 %>
 `
 
@@ -198,6 +200,12 @@ let fl = 1.23 %>
 		{token.IDENT, "myArray"},
 		{token.LBRACE, "{"},
 		{token.RBRACE, "}"},
+		{token.IDENT, "a"},
+		{token.AND, "&&"},
+		{token.IDENT, "b"},
+		{token.IDENT, "c"},
+		{token.OR, "||"},
+		{token.IDENT, "d"},
 		{token.E_END, "%>"},
 		{token.EOF, ""},
 	}

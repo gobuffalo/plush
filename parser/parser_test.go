@@ -215,6 +215,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 }
 
 func TestParsingInfixExpressions(t *testing.T) {
+	r := require.New(t)
 	infixTests := []struct {
 		input      string
 		leftValue  interface{}
@@ -248,17 +249,8 @@ func TestParsingInfixExpressions(t *testing.T) {
 		program := p.ParseProgram()
 		checkParserErrors(t, p)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
-
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
-
+		r.Len(program.Statements, 1)
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
 		if !testInfixExpression(t, stmt.Expression, tt.leftValue,
 			tt.operator, tt.rightValue) {
 			return
@@ -1185,6 +1177,7 @@ func checkParserErrors(t *testing.T, p *Parser) {
 	}
 
 	t.Errorf("parser has %d errors", len(errors))
+
 	for _, msg := range errors {
 		t.Errorf("parser error: %q", msg)
 	}
@@ -1241,4 +1234,31 @@ func TestForExpression_Split(t *testing.T) {
 	r.Equal("v", exp.ValueName)
 	r.Equal("anArray", exp.Iterable.String())
 	r.Len(exp.Consequence.Statements, 3)
+}
+
+func TestParsingAndOrInfixExpressions(t *testing.T) {
+	r := require.New(t)
+	infixTests := []struct {
+		input      string
+		leftValue  interface{}
+		operator   string
+		rightValue interface{}
+	}{
+		{"foobar && barfoo;", "foobar", "&&", "barfoo"},
+		{"foobar || barfoo;", "foobar", "||", "barfoo"},
+		{"true && true", "true", "&&", "true"},
+		{"true || false", "true", "||", "false"},
+	}
+
+	for _, tt := range infixTests {
+		l := lexer.New("<% " + tt.input + "%>")
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		r.Len(program.Statements, 1)
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		ins := stmt.Expression.(*ast.InfixExpression)
+		r.Equal(ins.Right.String(), tt.rightValue)
+	}
 }

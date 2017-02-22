@@ -49,6 +49,8 @@ func (ev *evaler) write(bb *bytes.Buffer, i interface{}) {
 		bb.WriteString(template.HTMLEscaper(t))
 	case template.HTML:
 		bb.WriteString(string(t))
+	case HTMLer:
+		bb.WriteString(string(t.HTML()))
 	case int64, int, float64:
 		bb.WriteString(fmt.Sprint(t))
 	case []interface{}:
@@ -163,15 +165,11 @@ func (ev *evaler) evalIndexExpression(node *ast.IndexExpression) (interface{}, e
 func (ev *evaler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 	m := map[string]interface{}{}
 	for ke, ve := range node.Pairs {
-		k, err := ev.evalExpression(ke)
-		if err != nil {
-			return nil, err
-		}
 		v, err := ev.evalExpression(ve)
 		if err != nil {
 			return nil, err
 		}
-		m[k.(string)] = v
+		m[ke.String()] = v
 	}
 	return m, nil
 }
@@ -356,7 +354,7 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 	rt := rv.Type()
 	if rt.NumIn() > 0 {
 		last := rt.In(rt.NumIn() - 1)
-
+		fmt.Printf("### last.Name() -> %+v\n", last.Name())
 		if last.Name() == helperContextKind {
 			hargs := HelperContext{
 				Context: ev.ctx,
@@ -365,6 +363,10 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 			}
 			args = append(args, reflect.ValueOf(hargs))
 		}
+	}
+
+	if len(args) > rt.NumIn() {
+		return nil, errors.Errorf("%s too many arguments (%d for %d) - %+v", node.String(), len(args), rt.NumIn(), args)
 	}
 
 	res := rv.Call(args)

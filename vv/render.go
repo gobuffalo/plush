@@ -1,6 +1,7 @@
 package vv
 
 import (
+	"html/template"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -40,4 +41,9 @@ func Render(input string, ctx *Context) (string, error) {
 
 type interfaceable interface {
 	Interface() interface{}
+}
+
+// HTMLer generates HTML source
+type HTMLer interface {
+	HTML() template.HTML
 }

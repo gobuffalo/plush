@@ -2,9 +2,8 @@ package vv
 
 // Context holds all of the data for the template that is being rendered.
 type Context struct {
-	data    map[string]interface{}
-	options map[string]interface{}
-	outer   *Context
+	data  map[string]interface{}
+	outer *Context
 }
 
 // New context containing the current context. Values set on the new context
@@ -37,17 +36,11 @@ func (c *Context) Has(key string) bool {
 	return c.Get(key) != nil
 }
 
-// Options are the values passed into a helper.
-func (c *Context) Options() map[string]interface{} {
-	return c.options
-}
-
 // NewContext returns a fully formed context ready to go
 func NewContext() *Context {
 	return &Context{
-		data:    map[string]interface{}{},
-		options: map[string]interface{}{},
-		outer:   nil,
+		data:  map[string]interface{}{},
+		outer: nil,
 	}
 }
 

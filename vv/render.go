@@ -219,7 +219,7 @@ func (ev *evaler) evalIndexExpression(node *ast.IndexExpression) (interface{}, e
 	case reflect.Map:
 		return rv.MapIndex(reflect.ValueOf(index)).Interface(), nil
 	case reflect.Array, reflect.Slice:
-		if i, ok := index.(int64); ok {
+		if i, ok := index.(int); ok {
 			return rv.Index(int(i)).Interface(), nil
 		}
 	}
@@ -281,7 +281,11 @@ func (ev *evaler) evalInfixExpression(node *ast.InfixExpression) (interface{}, e
 	case string:
 		return ev.stringsOperator(t, rres, node.Operator)
 	case int64:
-		if r, ok := rres.(int64); ok {
+		if r, ok := rres.(int); ok {
+			return ev.intsOperator(int(t), r, node.Operator)
+		}
+	case int:
+		if r, ok := rres.(int); ok {
 			return ev.intsOperator(t, r, node.Operator)
 		}
 	case float64:
@@ -305,7 +309,7 @@ func (ev *evaler) boolsOperator(l interface{}, r interface{}, op string) (interf
 	return lt && rt, nil
 }
 
-func (ev *evaler) intsOperator(l int64, r int64, op string) (interface{}, error) {
+func (ev *evaler) intsOperator(l int, r int, op string) (interface{}, error) {
 	switch op {
 	case "+":
 		return l + r, nil

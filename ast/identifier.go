@@ -3,8 +3,9 @@ package ast
 import "monkey/token"
 
 type Identifier struct {
-	Token token.Token
-	Value string
+	Token  token.Token
+	Callee *Identifier
+	Value  string
 }
 
 func (i *Identifier) expressionNode() {

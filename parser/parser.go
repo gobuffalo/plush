@@ -43,15 +43,31 @@ type (
 	infixParseFn  func(ast.Expression) ast.Expression
 )
 
+type errSlice []string
+
+func (e errSlice) Error() string {
+	return strings.Join(e, "\n")
+}
+
 type Parser struct {
 	l      *lexer.Lexer
-	errors []string
+	errors errSlice
 
 	curToken  token.Token
 	peekToken token.Token
 
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
+}
+
+func Parse(s string) (*ast.Program, error) {
+	l := lexer.New(s)
+	p := New(l)
+	prog := p.ParseProgram()
+	if len(p.errors) > 0 {
+		return prog, p.errors
+	}
+	return prog, nil
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -274,7 +290,17 @@ func (p *Parser) curPrecedence() int {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	fmt.Println("parseIdentifier")
-	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	id := &ast.Identifier{Token: p.curToken}
+	ss := strings.Split(p.curToken.Literal, ".")
+	id.Value = ss[0]
+
+	for i := 1; i < len(ss); i++ {
+		s := ss[i]
+		id = &ast.Identifier{Token: p.curToken, Value: s, Callee: id}
+	}
+	fmt.Printf("### id -> %+v\n", id)
+	fmt.Printf("### id.Callee -> %+v\n", id.Callee)
+	return id
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {

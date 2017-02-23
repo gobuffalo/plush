@@ -1,6 +1,6 @@
 package ast
 
-import "monkey/token"
+import "github.com/gobuffalo/plush/token"
 
 type Identifier struct {
 	Token  token.Token

@@ -2,7 +2,7 @@ package ast
 
 import (
 	"bytes"
-	"monkey/token"
+	"github.com/gobuffalo/plush/token"
 )
 
 type IndexExpression struct {

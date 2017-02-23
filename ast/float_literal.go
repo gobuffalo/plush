@@ -1,6 +1,6 @@
 package ast
 
-import "monkey/token"
+import "github.com/gobuffalo/plush/token"
 
 type FloatLiteral struct {
 	Token token.Token

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"monkey/vv"
+	"github.com/gobuffalo/plush"
 	"path/filepath"
 	"strings"
 
@@ -28,7 +28,7 @@ func (s templateRenderer) Render(w io.Writer, data render.Data) error {
 	var yield template.HTML
 	var err error
 	for _, name := range s.names {
-		yield, err = s.execute(name, vv.NewContextWith(data))
+		yield, err = s.execute(name, plush.NewContextWith(data))
 		if err != nil {
 			err = errors.Errorf("error rendering %s:\n%+v", name, err)
 			return err
@@ -42,13 +42,13 @@ func (s templateRenderer) Render(w io.Writer, data render.Data) error {
 	return nil
 }
 
-func (s templateRenderer) execute(name string, data *vv.Context) (template.HTML, error) {
+func (s templateRenderer) execute(name string, data *plush.Context) (template.HTML, error) {
 	source, err := s.source(name)
 	if err != nil {
 		return "", err
 	}
 
-	err = source.Helpers.Add("partial", func(name string, help vv.HelperContext) (template.HTML, error) {
+	err = source.Helpers.Add("partial", func(name string, help plush.HelperContext) (template.HTML, error) {
 		p, err := s.partial(name, help.Context)
 		if err != nil {
 			return template.HTML(fmt.Sprintf("<pre>%s: %s</pre>", name, err.Error())), err
@@ -66,8 +66,8 @@ func (s templateRenderer) execute(name string, data *vv.Context) (template.HTML,
 	return template.HTML(yield), nil
 }
 
-func (s templateRenderer) source(name string) (*vv.Template, error) {
-	var t *vv.Template
+func (s templateRenderer) source(name string) (*plush.Template, error) {
+	var t *plush.Template
 	var ok bool
 	var err error
 	if s.CacheTemplates {
@@ -86,7 +86,7 @@ func (s templateRenderer) source(name string) (*vv.Template, error) {
 		b = bytes.Replace(b, []byte("&gt;"), []byte(">"), -1)
 	}
 	source := string(b)
-	t, err = vv.Parse(source)
+	t, err = plush.Parse(source)
 	if err != nil {
 		return t, errors.Errorf("Error parsing %s: %+v", name, errors.WithStack(err))
 	}
@@ -101,7 +101,7 @@ func (s templateRenderer) source(name string) (*vv.Template, error) {
 	return t.Clone(), err
 }
 
-func (s templateRenderer) partial(name string, data *vv.Context) (template.HTML, error) {
+func (s templateRenderer) partial(name string, data *plush.Context) (template.HTML, error) {
 	d, f := filepath.Split(name)
 	name = filepath.Join(d, "_"+f)
 	return s.execute(name, data)

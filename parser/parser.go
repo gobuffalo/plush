@@ -2,11 +2,12 @@ package parser
 
 import (
 	"fmt"
-	"monkey/ast"
-	"monkey/lexer"
-	"monkey/token"
 	"strconv"
 	"strings"
+
+	"github.com/gobuffalo/plush/ast"
+	"github.com/gobuffalo/plush/lexer"
+	"github.com/gobuffalo/plush/token"
 )
 
 const (
@@ -298,8 +299,6 @@ func (p *Parser) parseIdentifier() ast.Expression {
 		s := ss[i]
 		id = &ast.Identifier{Token: p.curToken, Value: s, Callee: id}
 	}
-	fmt.Printf("### id -> %+v\n", id)
-	fmt.Printf("### id.Callee -> %+v\n", id.Callee)
 	return id
 }
 

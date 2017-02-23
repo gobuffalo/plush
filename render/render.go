@@ -1,8 +1,9 @@
 package render
 
 import (
-	"monkey/vv"
 	"sync"
+
+	"github.com/gobuffalo/plush"
 
 	"github.com/gobuffalo/buffalo/render/resolvers"
 )
@@ -13,7 +14,7 @@ import (
 // the defaults.
 type Engine struct {
 	Options
-	templateCache map[string]*vv.Template
+	templateCache map[string]*plush.Template
 	moot          *sync.Mutex
 }
 
@@ -34,7 +35,7 @@ func New(opts Options) *Engine {
 
 	e := &Engine{
 		Options:       opts,
-		templateCache: map[string]*vv.Template{},
+		templateCache: map[string]*plush.Template{},
 		moot:          &sync.Mutex{},
 	}
 	return e

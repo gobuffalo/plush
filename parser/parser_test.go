@@ -2,8 +2,8 @@ package parser
 
 import (
 	"fmt"
-	"monkey/ast"
-	"monkey/lexer"
+	"github.com/gobuffalo/plush/ast"
+	"github.com/gobuffalo/plush/lexer"
 	"testing"
 
 	"github.com/stretchr/testify/require"

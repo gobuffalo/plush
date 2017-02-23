@@ -1,8 +1,9 @@
 package lexer
 
 import (
-	"monkey/token"
 	"regexp"
+
+	"github.com/gobuffalo/plush/token"
 )
 
 type Lexer struct {

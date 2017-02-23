@@ -48,25 +48,24 @@ let greet = fn(n) {
 <h1><%= greet(h["name"]) %></h1>
 ```
 
+## If/Else Statements
+
+## For Loops
+
+## Functions
+
+## Custom Functions (Helpers)
+
+## Maps
+
+## Arrays
 
 
 
 
 
 
-```erb
-<html>
-<%= if (names && len(names) > 0) { %>
-	<ul>
-		<%= for (n) in names { %>
-			<li><%= capitalize(n) %></li>
-		<% } %>
-	</ul>
-<% } else { %>
-	<h1>Sorry, no names. :(</h1>
-<% } %>
-</html>
-```
+
 
 
 ### Special Thanks

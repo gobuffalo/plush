@@ -421,7 +421,7 @@ func Test_Render_ScriptFunction(t *testing.T) {
 }
 
 // ExampleTemplate using `if`, `for`, `else`, functions, etc...
-func ExampleTemplate() {
+func ExampleRender() {
 	html := `<html>
 <%= if (names && len(names) > 0) { %>
 	<ul>
@@ -453,7 +453,7 @@ func ExampleTemplate() {
 	// </html>
 }
 
-func ExampleTemplate_scripletTags() {
+func ExampleRender_scripletTags() {
 	html := `<%
 let h = {name: "mark"}
 let greet = fn(n) {
@@ -471,7 +471,7 @@ let greet = fn(n) {
 	// output:<h1>hi mark</h1>
 }
 
-func ExampleTemplate_customHelperFunctions() {
+func ExampleRender_customHelperFunctions() {
 	html := `<p><%= one() %></p>
 <p><%= greet("mark")%></p>
 <%= can("update") { %>
@@ -505,4 +505,27 @@ func ExampleTemplate_customHelperFunctions() {
 	// output: <p>1</p>
 	// <p>Hi mark</p>
 	// <p>i can update</p>
+}
+
+func ExampleRender_nilValue() {
+	html := `<html>
+<%= if (names && len(names) > 0) { %>
+	<ul>
+		<%= for (n) in names { %>
+			<li><%= capitalize(n) %></li>
+		<% } %>
+	</ul>
+<% } else { %>
+	<h1>Sorry, no names. :(</h1>
+<% } %>
+</html>`
+
+	s, err := Render(html, NewContext())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(s)
+	// output: <html>
+	// <h1>Sorry, no names. :(</h1>
+	// </html>
 }

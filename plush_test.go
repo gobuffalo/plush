@@ -408,6 +408,18 @@ func Test_Render_Struct_Attribute(t *testing.T) {
 	r.Equal("Mark", s)
 }
 
+func Test_Render_ScriptFunction(t *testing.T) {
+	r := require.New(t)
+
+	input := `<% fn(x) { x + 2; }; %>`
+
+	s, err := Render(input, NewContext())
+	if err != nil {
+		r.NoError(err)
+	}
+	r.Equal("<h1>hi mark</h1>", s)
+}
+
 // ExampleTemplate using `if`, `for`, `else`, functions, etc...
 func ExampleTemplate() {
 	html := `<html>
@@ -439,6 +451,23 @@ func ExampleTemplate() {
 	// 		<li>Ringo</li>
 	// 		</ul>
 	// </html>
+}
+
+func ExampleTemplate_scripletTags() {
+	html := `<%
+let h = {name: "mark"}
+let greet = fn(n) {
+  return "hi " + n
+}
+%>
+<h1><%= greet(h["name"]) %></h1>`
+
+	s, err := Render(html, NewContext())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(s)
+	// output: <h1>hi mark</h1>
 }
 
 func ExampleTemplate_customHelperFunctions() {

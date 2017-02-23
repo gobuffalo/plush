@@ -411,13 +411,13 @@ func Test_Render_Struct_Attribute(t *testing.T) {
 func Test_Render_ScriptFunction(t *testing.T) {
 	r := require.New(t)
 
-	input := `<% fn(x) { x + 2; }; %>`
+	input := `<% let add = fn(x) { return x + 2; }; %><%= add(2) %>`
 
 	s, err := Render(input, NewContext())
 	if err != nil {
 		r.NoError(err)
 	}
-	r.Equal("<h1>hi mark</h1>", s)
+	r.Equal("4", s)
 }
 
 // ExampleTemplate using `if`, `for`, `else`, functions, etc...
@@ -466,8 +466,9 @@ let greet = fn(n) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// fmt.Printf("%q", s)
 	fmt.Print(s)
-	// output: <h1>hi mark</h1>
+	// output:<h1>hi mark</h1>
 }
 
 func ExampleTemplate_customHelperFunctions() {

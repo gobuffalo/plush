@@ -91,10 +91,34 @@ func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
 		return c.evalIfExpression(s)
 	case *ast.PrefixExpression:
 		return c.evalPrefixExpression(s)
+	case *ast.FunctionLiteral:
+		return c.evalFunctionLiteral(s)
 	case nil:
 		return nil, nil
 	}
 	return nil, errors.Errorf("could not evaluate node %T", node)
+}
+
+func (c *compiler) evalUserFunction(node *userFunction, args []ast.Expression) (interface{}, error) {
+	octx := c.ctx
+	defer func() { c.ctx = octx }()
+	c.ctx = c.ctx.New()
+	for i, p := range node.Parameters {
+		a := args[i]
+		v, err := c.evalExpression(a)
+		if err != nil {
+			return nil, err
+		}
+		c.ctx.Set(p.Value, v)
+
+	}
+	return c.evalBlockStatement(node.Block)
+}
+
+func (c *compiler) evalFunctionLiteral(node *ast.FunctionLiteral) (interface{}, error) {
+	params := node.Parameters
+	block := node.Block
+	return &userFunction{Parameters: params, Block: block}, nil
 }
 
 func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}, error) {
@@ -317,6 +341,7 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 }
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
+
 	var rv reflect.Value
 	if node.Callee != nil {
 		c, err := c.evalExpression(node.Callee)
@@ -329,6 +354,9 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		f, err := c.evalExpression(node.Function)
 		if err != nil {
 			return nil, err
+		}
+		if ff, ok := f.(*userFunction); ok {
+			return c.evalUserFunction(ff, node.Arguments)
 		}
 		rv = reflect.ValueOf(f)
 	}

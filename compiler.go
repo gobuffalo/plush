@@ -11,40 +11,40 @@ import (
 	"github.com/pkg/errors"
 )
 
-type evaler struct {
+type compiler struct {
 	ctx      *Context
 	program  *ast.Program
 	template *Template
 }
 
-func (ev *evaler) eval() (string, error) {
+func (c *compiler) compile() (string, error) {
 	bb := &bytes.Buffer{}
-	for _, stmt := range ev.program.Statements {
+	for _, stmt := range c.program.Statements {
 		var res interface{}
 		var err error
 		switch node := stmt.(type) {
 		case *ast.ReturnStatement:
-			res, err = ev.evalReturnStatement(node)
+			res, err = c.evalReturnStatement(node)
 		case *ast.ExpressionStatement:
 			var s interface{}
-			s, err = ev.evalExpression(node.Expression)
+			s, err = c.evalExpression(node.Expression)
 			switch s.(type) {
 			case ast.Printable, template.HTML:
 				res = s
 			}
 		case *ast.LetStatement:
-			res, err = ev.evalLetStatement(node)
+			res, err = c.evalLetStatement(node)
 		}
 		if err != nil {
 			return "", err
 		}
 
-		ev.write(bb, res)
+		c.write(bb, res)
 	}
 	return bb.String(), nil
 }
 
-func (ev *evaler) write(bb *bytes.Buffer, i interface{}) {
+func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 	switch t := i.(type) {
 	case string, interfaceable, ast.Printable:
 		bb.WriteString(template.HTMLEscaper(t))
@@ -56,12 +56,12 @@ func (ev *evaler) write(bb *bytes.Buffer, i interface{}) {
 		bb.WriteString(fmt.Sprint(t))
 	case []interface{}:
 		for _, ii := range t {
-			ev.write(bb, ii)
+			c.write(bb, ii)
 		}
 	}
 }
 
-func (ev *evaler) evalExpression(node ast.Expression) (interface{}, error) {
+func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
 	switch s := node.(type) {
 	case *ast.HTMLLiteral:
 		return template.HTML(s.Value), nil
@@ -72,56 +72,56 @@ func (ev *evaler) evalExpression(node ast.Expression) (interface{}, error) {
 	case *ast.FloatLiteral:
 		return s.Value, nil
 	case *ast.InfixExpression:
-		return ev.evalInfixExpression(s)
+		return c.evalInfixExpression(s)
 	case *ast.HashLiteral:
-		return ev.evalHashLiteral(s)
+		return c.evalHashLiteral(s)
 	case *ast.IndexExpression:
-		return ev.evalIndexExpression(s)
+		return c.evalIndexExpression(s)
 	case *ast.CallExpression:
-		return ev.evalCallExpression(s)
+		return c.evalCallExpression(s)
 	case *ast.Identifier:
-		return ev.evalIdentifier(s)
+		return c.evalIdentifier(s)
 	case *ast.Boolean:
 		return s.Value, nil
 	case *ast.ArrayLiteral:
-		return ev.evalArrayLiteral(s)
+		return c.evalArrayLiteral(s)
 	case *ast.ForExpression:
-		return ev.evalForExpression(s)
+		return c.evalForExpression(s)
 	case *ast.IfExpression:
-		return ev.evalIfExpression(s)
+		return c.evalIfExpression(s)
 	case *ast.PrefixExpression:
-		return ev.evalPrefixExpression(s)
+		return c.evalPrefixExpression(s)
 	case nil:
 		return nil, nil
 	}
 	return nil, errors.Errorf("could not evaluate node %T", node)
 }
 
-func (ev *evaler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}, error) {
-	res, err := ev.evalExpression(node.Right)
+func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}, error) {
+	res, err := c.evalExpression(node.Right)
 	if err != nil {
 		return nil, err
 	}
 	switch node.Operator {
 	case "!":
-		return !ev.isTruthy(res), nil
+		return !c.isTruthy(res), nil
 	}
 	return nil, errors.Errorf("unknown operator %s", node.Operator)
 }
 
-func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
+func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
 	// fmt.Println("evalIfExpression")
-	c, err := ev.evalExpression(node.Condition)
+	con, err := c.evalExpression(node.Condition)
 	if err != nil {
 		return nil, err
 	}
 
 	var r interface{}
-	if ev.isTruthy(c) {
-		r, err = ev.evalBlockStatement(node.Block)
+	if c.isTruthy(con) {
+		r, err = c.evalBlockStatement(node.Block)
 	} else {
 		if node.ElseBlock != nil {
-			r, err = ev.evalBlockStatement(node.ElseBlock)
+			r, err = c.evalBlockStatement(node.ElseBlock)
 		}
 	}
 
@@ -132,7 +132,7 @@ func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) 
 	return r, nil
 }
 
-func (ev *evaler) isTruthy(i interface{}) bool {
+func (c *compiler) isTruthy(i interface{}) bool {
 	if i == nil {
 		return false
 	}
@@ -142,12 +142,12 @@ func (ev *evaler) isTruthy(i interface{}) bool {
 	return true
 }
 
-func (ev *evaler) evalIndexExpression(node *ast.IndexExpression) (interface{}, error) {
-	index, err := ev.evalExpression(node.Index)
+func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, error) {
+	index, err := c.evalExpression(node.Index)
 	if err != nil {
 		return nil, err
 	}
-	left, err := ev.evalExpression(node.Left)
+	left, err := c.evalExpression(node.Left)
 	if err != nil {
 		return nil, err
 	}
@@ -163,10 +163,10 @@ func (ev *evaler) evalIndexExpression(node *ast.IndexExpression) (interface{}, e
 	return nil, errors.Errorf("could not index %T with %T", left, index)
 }
 
-func (ev *evaler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
+func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 	m := map[string]interface{}{}
 	for ke, ve := range node.Pairs {
-		v, err := ev.evalExpression(ve)
+		v, err := c.evalExpression(ve)
 		if err != nil {
 			return nil, err
 		}
@@ -175,19 +175,19 @@ func (ev *evaler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 	return m, nil
 }
 
-func (ev *evaler) evalLetStatement(node *ast.LetStatement) (interface{}, error) {
+func (c *compiler) evalLetStatement(node *ast.LetStatement) (interface{}, error) {
 	// fmt.Println("evalLetStatement")
-	v, err := ev.evalExpression(node.Value)
+	v, err := c.evalExpression(node.Value)
 	if err != nil {
 		return nil, err
 	}
-	ev.ctx.Set(node.Name.Value, v)
+	c.ctx.Set(node.Name.Value, v)
 	return nil, nil
 }
 
-func (ev *evaler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
+func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 	if node.Callee != nil {
-		c, err := ev.evalExpression(node.Callee)
+		c, err := c.evalExpression(node.Callee)
 		if err != nil {
 			return nil, err
 		}
@@ -205,63 +205,63 @@ func (ev *evaler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		}
 		return f.Interface(), nil
 	}
-	return ev.ctx.Get(node.Value), nil
+	return c.ctx.Get(node.Value), nil
 }
 
-func (ev *evaler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
+func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
 	// fmt.Println("evalInfixExpression")
-	lres, err := ev.evalExpression(node.Left)
+	lres, err := c.evalExpression(node.Left)
 	if err != nil {
 		return nil, err
 	}
 	if node.Operator == "&&" {
-		if !ev.isTruthy(lres) {
+		if !c.isTruthy(lres) {
 			return false, nil
 		}
 	}
-	rres, err := ev.evalExpression(node.Right)
+	rres, err := c.evalExpression(node.Right)
 	if err != nil {
 		return nil, err
 	}
 
 	switch node.Operator {
 	case "&&", "||":
-		return ev.boolsOperator(lres, rres, node.Operator)
+		return c.boolsOperator(lres, rres, node.Operator)
 	}
 
 	switch t := lres.(type) {
 	case string:
-		return ev.stringsOperator(t, rres, node.Operator)
+		return c.stringsOperator(t, rres, node.Operator)
 	case int64:
 		if r, ok := rres.(int); ok {
-			return ev.intsOperator(int(t), r, node.Operator)
+			return c.intsOperator(int(t), r, node.Operator)
 		}
 	case int:
 		if r, ok := rres.(int); ok {
-			return ev.intsOperator(t, r, node.Operator)
+			return c.intsOperator(t, r, node.Operator)
 		}
 	case float64:
 		if r, ok := rres.(float64); ok {
-			return ev.floatsOperator(t, r, node.Operator)
+			return c.floatsOperator(t, r, node.Operator)
 		}
 	case bool:
-		return ev.boolsOperator(lres, rres, node.Operator)
+		return c.boolsOperator(lres, rres, node.Operator)
 	case nil:
 		return nil, nil
 	}
 	return nil, errors.Errorf("unable to operate (%s) on %T and %T ", node.Operator, lres, rres)
 }
 
-func (ev *evaler) boolsOperator(l interface{}, r interface{}, op string) (interface{}, error) {
-	lt := ev.isTruthy(l)
-	rt := ev.isTruthy(r)
+func (c *compiler) boolsOperator(l interface{}, r interface{}, op string) (interface{}, error) {
+	lt := c.isTruthy(l)
+	rt := c.isTruthy(r)
 	if op == "||" {
 		return lt || rt, nil
 	}
 	return lt && rt, nil
 }
 
-func (ev *evaler) intsOperator(l int, r int, op string) (interface{}, error) {
+func (c *compiler) intsOperator(l int, r int, op string) (interface{}, error) {
 	switch op {
 	case "+":
 		return l + r, nil
@@ -285,7 +285,7 @@ func (ev *evaler) intsOperator(l int, r int, op string) (interface{}, error) {
 	return nil, errors.Errorf("unknown operator for integer %s", op)
 }
 
-func (ev *evaler) floatsOperator(l float64, r float64, op string) (interface{}, error) {
+func (c *compiler) floatsOperator(l float64, r float64, op string) (interface{}, error) {
 	switch op {
 	case "+":
 		return l + r, nil
@@ -309,24 +309,24 @@ func (ev *evaler) floatsOperator(l float64, r float64, op string) (interface{}, 
 	return nil, errors.Errorf("unknown operator for float %s", op)
 }
 
-func (ev *evaler) stringsOperator(l string, r interface{}, op string) (interface{}, error) {
+func (c *compiler) stringsOperator(l string, r interface{}, op string) (interface{}, error) {
 	if op == "+" {
 		return l + fmt.Sprint(r), nil
 	}
 	return nil, errors.Errorf("unknown operator for string %s", op)
 }
 
-func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
+func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
 	var rv reflect.Value
 	if node.Callee != nil {
-		c, err := ev.evalExpression(node.Callee)
+		c, err := c.evalExpression(node.Callee)
 		if err != nil {
 			return nil, err
 		}
 		rc := reflect.ValueOf(c)
 		rv = rc.MethodByName(node.Function.String())
 	} else {
-		f, err := ev.evalExpression(node.Function)
+		f, err := c.evalExpression(node.Function)
 		if err != nil {
 			return nil, err
 		}
@@ -341,7 +341,7 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 
 	args := []reflect.Value{}
 	for _, a := range node.Arguments {
-		v, err := ev.evalExpression(a)
+		v, err := c.evalExpression(a)
 		if err != nil {
 			return nil, err
 		}
@@ -357,9 +357,9 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 		last := rt.In(rt.NumIn() - 1)
 		if last.Name() == helperContextKind {
 			hargs := HelperContext{
-				Context: ev.ctx,
-				ev:      ev,
-				block:   node.Block,
+				Context:  c.ctx,
+				compiler: c,
+				block:    node.Block,
 			}
 			args = append(args, reflect.ValueOf(hargs))
 		}
@@ -381,8 +381,8 @@ func (ev *evaler) evalCallExpression(node *ast.CallExpression) (interface{}, err
 	return nil, nil
 }
 
-func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error) {
-	iter, err := ev.evalExpression(node.Iterable)
+func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, error) {
+	iter, err := c.evalExpression(node.Iterable)
 	if err != nil {
 		return nil, err
 	}
@@ -390,30 +390,30 @@ func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error
 	ret := []interface{}{}
 	switch riter.Kind() {
 	case reflect.Map:
-		octx := ev.ctx
+		octx := c.ctx
 		keys := riter.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			k := keys[i]
 			v := riter.MapIndex(k)
-			ev.ctx = octx.New()
-			ev.ctx.Set(node.KeyName, k.Interface())
-			ev.ctx.Set(node.ValueName, v.Interface())
-			res, err := ev.evalBlockStatement(node.Block)
-			ev.ctx = octx
+			c.ctx = octx.New()
+			c.ctx.Set(node.KeyName, k.Interface())
+			c.ctx.Set(node.ValueName, v.Interface())
+			res, err := c.evalBlockStatement(node.Block)
+			c.ctx = octx
 			if err != nil {
 				return nil, err
 			}
 			ret = append(ret, res)
 		}
 	case reflect.Slice, reflect.Array:
-		octx := ev.ctx
+		octx := c.ctx
 		for i := 0; i < riter.Len(); i++ {
-			ev.ctx = octx.New()
+			c.ctx = octx.New()
 			v := riter.Index(i)
-			ev.ctx.Set(node.KeyName, i)
-			ev.ctx.Set(node.ValueName, v.Interface())
-			res, err := ev.evalBlockStatement(node.Block)
-			ev.ctx = octx
+			c.ctx.Set(node.KeyName, i)
+			c.ctx.Set(node.ValueName, v.Interface())
+			res, err := c.evalBlockStatement(node.Block)
+			c.ctx = octx
 			if err != nil {
 				return nil, err
 			}
@@ -427,11 +427,11 @@ func (ev *evaler) evalForExpression(node *ast.ForExpression) (interface{}, error
 	return ret, nil
 }
 
-func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
+func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
 	// fmt.Println("evalBlockStatement")
 	res := []interface{}{}
 	for _, s := range node.Statements {
-		i, err := ev.evalStatement(s)
+		i, err := c.evalStatement(s)
 		if err != nil {
 			return nil, err
 		}
@@ -442,35 +442,35 @@ func (ev *evaler) evalBlockStatement(node *ast.BlockStatement) (interface{}, err
 	return res, nil
 }
 
-func (ev *evaler) evalStatement(node ast.Statement) (interface{}, error) {
+func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 	// fmt.Println("evalStatement")
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:
-		s, err := ev.evalExpression(t.Expression)
+		s, err := c.evalExpression(t.Expression)
 		switch s.(type) {
 		case ast.Printable, template.HTML:
 			return s, err
 		}
 		return nil, err
 	case *ast.ReturnStatement:
-		return ev.evalReturnStatement(t)
+		return c.evalReturnStatement(t)
 	}
 	return nil, errors.Errorf("could not eval statement %T", node)
 }
 
-func (ev *evaler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, error) {
+func (c *compiler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, error) {
 	// fmt.Println("evalReturnStatement")
-	res, err := ev.evalExpression(node.ReturnValue)
+	res, err := c.evalExpression(node.ReturnValue)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (ev *evaler) evalArrayLiteral(node *ast.ArrayLiteral) (interface{}, error) {
+func (c *compiler) evalArrayLiteral(node *ast.ArrayLiteral) (interface{}, error) {
 	res := []interface{}{}
 	for _, e := range node.Elements {
-		i, err := ev.evalExpression(e)
+		i, err := c.evalExpression(e)
 		if err != nil {
 			return nil, err
 		}

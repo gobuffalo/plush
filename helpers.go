@@ -40,11 +40,11 @@ func init() {
 // within the helper.
 type HelperContext struct {
 	*Context
-	ev    *evaler
-	block *ast.BlockStatement
+	compiler *compiler
+	block    *ast.BlockStatement
 }
 
-var helperContextKind = "HelperContext"
+const helperContextKind = "HelperContext"
 
 // Block executes the block of template associated with
 // the helper, think the block inside of an "if" or "each"
@@ -57,25 +57,25 @@ func (h HelperContext) Block() (string, error) {
 // the helper, think the block inside of an "if" or "each"
 // statement, but with it's own context.
 func (h HelperContext) BlockWith(ctx *Context) (string, error) {
-	octx := h.ev.ctx
-	defer func() { h.ev.ctx = octx }()
-	h.ev.ctx = ctx
+	octx := h.compiler.ctx
+	defer func() { h.compiler.ctx = octx }()
+	h.compiler.ctx = ctx
 
 	if h.block == nil {
 		return "", errors.New("no block defined")
 	}
-	i, err := h.ev.evalBlockStatement(h.block)
+	i, err := h.compiler.evalBlockStatement(h.block)
 	if err != nil {
 		return "", err
 	}
 	bb := &bytes.Buffer{}
-	h.ev.write(bb, i)
+	h.compiler.write(bb, i)
 	return bb.String(), nil
 }
 
 // Helpers associated with the current context.
 func (h HelperContext) Helpers() *HelperMap {
-	return &h.ev.template.Helpers
+	return &h.compiler.template.Helpers
 }
 
 // toJSONHelper converts an interface into a string.

@@ -60,12 +60,12 @@ func (t *Template) Exec(ctx *Context) (string, error) {
 	for k, v := range t.Helpers.Helpers() {
 		ctx.Set(k, v)
 	}
-	ev := evaler{
+	ev := compiler{
 		ctx:     ctx,
 		program: t.program,
 	}
 
-	s, err := ev.eval()
+	s, err := ev.compile()
 	return s, err
 }
 

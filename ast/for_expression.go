@@ -2,15 +2,16 @@ package ast
 
 import (
 	"bytes"
+
 	"github.com/gobuffalo/plush/token"
 )
 
 type ForExpression struct {
-	Token       token.Token
-	KeyName     string
-	ValueName   string
-	Consequence *BlockStatement
-	Iterable    Expression
+	Token     token.Token
+	KeyName   string
+	ValueName string
+	Block     *BlockStatement
+	Iterable  Expression
 }
 
 func (fe *ForExpression) expressionNode()      {}
@@ -24,7 +25,7 @@ func (fe *ForExpression) String() string {
 	out.WriteString(") in ")
 	out.WriteString(fe.Iterable.String())
 	out.WriteString(" { ")
-	out.WriteString(fe.Consequence.String())
+	out.WriteString(fe.Block.String())
 	out.WriteString(" }")
 	return out.String()
 }

@@ -437,7 +437,7 @@ func (p *Parser) parseForExpression() ast.Expression {
 	if !p.expectPeek(token.LBRACE) {
 		return nil
 	}
-	expression.Consequence = p.parseBlockStatement()
+	expression.Block = p.parseBlockStatement()
 
 	if p.curTokenIs(token.RBRACE) {
 		p.nextToken()

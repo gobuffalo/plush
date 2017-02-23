@@ -1203,9 +1203,9 @@ func TestForExpression(t *testing.T) {
 	r.Equal("v", exp.ValueName)
 	r.Equal("myArray", exp.Iterable.String())
 
-	r.Len(exp.Consequence.Statements, 1)
+	r.Len(exp.Block.Statements, 1)
 
-	consequence := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	consequence := exp.Block.Statements[0].(*ast.ExpressionStatement)
 
 	if !testIdentifier(t, consequence.Expression, "v") {
 		return
@@ -1233,7 +1233,7 @@ func TestForExpression_Split(t *testing.T) {
 	r.Equal("k", exp.KeyName)
 	r.Equal("v", exp.ValueName)
 	r.Equal("anArray", exp.Iterable.String())
-	r.Len(exp.Consequence.Statements, 3)
+	r.Len(exp.Block.Statements, 3)
 }
 
 func TestParsingAndOrInfixExpressions(t *testing.T) {

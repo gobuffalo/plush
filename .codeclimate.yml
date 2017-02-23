@@ -17,6 +17,8 @@ ratings:
 exclude_paths:
   - "ast/**/*"
   - "lexer/**/*"
+  - "token/**/*"
+  - "parser/precedences.go"
   - "grifts/**/*"
   - "**/*_test.go"
   - "*_test.go"

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"github.com/gobuffalo/plush"
 	"path/filepath"
 	"strings"
+
+	"github.com/gobuffalo/plush"
 
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/pkg/errors"

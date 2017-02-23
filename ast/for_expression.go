@@ -14,8 +14,13 @@ type ForExpression struct {
 	Iterable  Expression
 }
 
-func (fe *ForExpression) expressionNode()      {}
-func (fe *ForExpression) TokenLiteral() string { return fe.Token.Literal }
+func (fe *ForExpression) expressionNode() {
+}
+
+func (fe *ForExpression) TokenLiteral() string {
+	return fe.Token.Literal
+}
+
 func (fe *ForExpression) String() string {
 	var out bytes.Buffer
 	out.WriteString("for (")

@@ -6,10 +6,10 @@ import (
 )
 
 type IfExpression struct {
-	Token       token.Token
-	Condition   Expression
-	Consequence *BlockStatement
-	Alternative *BlockStatement
+	Token     token.Token
+	Condition Expression
+	Block     *BlockStatement
+	ElseBlock *BlockStatement
 }
 
 func (ie *IfExpression) expressionNode() {
@@ -25,12 +25,12 @@ func (ie *IfExpression) String() string {
 	out.WriteString("if (")
 	out.WriteString(ie.Condition.String())
 	out.WriteString(") { ")
-	out.WriteString(ie.Consequence.String())
+	out.WriteString(ie.Block.String())
 	out.WriteString(" }")
 
-	if ie.Alternative != nil {
+	if ie.ElseBlock != nil {
 		out.WriteString(" } else { ")
-		out.WriteString(ie.Alternative.String())
+		out.WriteString(ie.ElseBlock.String())
 		out.WriteString(" }")
 	}
 

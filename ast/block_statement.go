@@ -2,11 +2,12 @@ package ast
 
 import (
 	"bytes"
+
 	"github.com/gobuffalo/plush/token"
 )
 
 type BlockStatement struct {
-	Token      token.Token // the { token
+	Token      token.Token
 	Statements []Statement
 }
 

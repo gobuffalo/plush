@@ -2,8 +2,9 @@ package ast
 
 import (
 	"bytes"
-	"github.com/gobuffalo/plush/token"
 	"strings"
+
+	"github.com/gobuffalo/plush/token"
 )
 
 type ArrayLiteral struct {

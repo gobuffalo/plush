@@ -11,15 +11,15 @@ import (
 )
 
 const (
-	_ int = iota
-	LOWEST
-	EQUALS      // ==
-	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or !X
-	CALL        // myFunction(X)
-	INDEX       // array[index]
+	_           int = iota
+	LOWEST          // lowest possible precendent
+	EQUALS          // ==
+	LESSGREATER     // > or <
+	SUM             // +
+	PRODUCT         // *
+	PREFIX          // -X or !X
+	CALL            // myFunction(X)
+	INDEX           // array[index]
 )
 
 var precedences = map[token.TokenType]int{
@@ -63,7 +63,7 @@ type Parser struct {
 
 func Parse(s string) (*ast.Program, error) {
 	l := lexer.New(s)
-	p := New(l)
+	p := newParser(l)
 	prog := p.ParseProgram()
 	if len(p.errors) > 0 {
 		return prog, p.errors
@@ -71,7 +71,7 @@ func Parse(s string) (*ast.Program, error) {
 	return prog, nil
 }
 
-func New(l *lexer.Lexer) *Parser {
+func newParser(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
 		errors: []string{},
@@ -465,7 +465,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		return nil
 	}
 
-	expression.Consequence = p.parseBlockStatement()
+	expression.Block = p.parseBlockStatement()
 
 	if p.peekTokenIs(token.ELSE) {
 		p.nextToken()
@@ -474,7 +474,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 			return nil
 		}
 
-		expression.Alternative = p.parseBlockStatement()
+		expression.ElseBlock = p.parseBlockStatement()
 	}
 
 	return expression
@@ -516,7 +516,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 		return nil
 	}
 
-	lit.Body = p.parseBlockStatement()
+	lit.Block = p.parseBlockStatement()
 
 	return lit
 }

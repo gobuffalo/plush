@@ -9,7 +9,7 @@ import (
 type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
-	Body       *BlockStatement
+	Block      *BlockStatement
 }
 
 func (fl *FunctionLiteral) expressionNode() {
@@ -31,7 +31,7 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
-	out.WriteString(fl.Body.String())
+	out.WriteString(fl.Block.String())
 
 	return out.String()
 }

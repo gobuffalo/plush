@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"github.com/gobuffalo/plush/ast"
 	"reflect"
 	"strings"
+
+	"github.com/gobuffalo/plush/ast"
 
 	"github.com/markbates/inflect"
 	"github.com/pkg/errors"
@@ -33,6 +34,10 @@ func init() {
 	Helpers.AddMany(inflect.Helpers)
 }
 
+// HelperContext is an optional last argument to helpers
+// that provides the current context of the call, and access
+// to an optional "block" of code that can be executed from
+// within the helper.
 type HelperContext struct {
 	*Context
 	ev    *evaler
@@ -48,6 +53,9 @@ func (h HelperContext) Block() (string, error) {
 	return h.BlockWith(h.Context)
 }
 
+// BlockWith executes the block of template associated with
+// the helper, think the block inside of an "if" or "each"
+// statement, but with it's own context.
 func (h HelperContext) BlockWith(ctx *Context) (string, error) {
 	octx := h.ev.ctx
 	defer func() { h.ev.ctx = octx }()
@@ -65,20 +73,7 @@ func (h HelperContext) BlockWith(ctx *Context) (string, error) {
 	return bb.String(), nil
 }
 
-// // ElseBlock executes the "inverse" block of template associated with
-// // the helper, think the "else" block of an "if" or "each"
-// // statement.
-// func (h HelperContext) ElseBlock() (string, error) {
-// 	return h.ElseBlockWith(h.Context)
-// }
-//
-// // ElseBlockWith executes the "inverse" block of template associated with
-// // the helper, think the "else" block of an "if" or "each"
-// // statement. It takes a new context with which to evaluate
-// // the block.
-// func (h HelperContext) ElseBlockWith(ctx *Context) (string, error) {
-// 	return "", nil
-// }
+// Helpers associated with the current context.
 func (h HelperContext) Helpers() *HelperMap {
 	return &h.ev.template.Helpers
 }

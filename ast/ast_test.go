@@ -1,11 +1,14 @@
 package ast
 
 import (
-	"github.com/gobuffalo/plush/token"
 	"testing"
+
+	"github.com/gobuffalo/plush/token"
+	"github.com/stretchr/testify/require"
 )
 
-func TestString(t *testing.T) {
+func Test_Program_String(t *testing.T) {
+	r := require.New(t)
 	program := &Program{
 		Statements: []Statement{
 			&LetStatement{
@@ -22,7 +25,5 @@ func TestString(t *testing.T) {
 		},
 	}
 
-	if program.String() != "let myVar = anotherVar;" {
-		t.Errorf("program.String() wrong. got=%q", program.String())
-	}
+	r.Equal("let myVar = anotherVar;", program.String())
 }

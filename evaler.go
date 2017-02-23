@@ -118,10 +118,10 @@ func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) 
 
 	var r interface{}
 	if ev.isTruthy(c) {
-		r, err = ev.evalBlockStatement(node.Consequence)
+		r, err = ev.evalBlockStatement(node.Block)
 	} else {
-		if node.Alternative != nil {
-			r, err = ev.evalBlockStatement(node.Alternative)
+		if node.ElseBlock != nil {
+			r, err = ev.evalBlockStatement(node.ElseBlock)
 		}
 	}
 

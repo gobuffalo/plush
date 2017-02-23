@@ -8,7 +8,7 @@ import (
 	"github.com/gobuffalo/plush/token"
 )
 
-func TestNextToken_Simple(t *testing.T) {
+func Test_NextToken_Simple(t *testing.T) {
 	r := require.New(t)
 	input := `<%= 1 %>`
 	tests := []struct {
@@ -28,7 +28,7 @@ func TestNextToken_Simple(t *testing.T) {
 	}
 }
 
-func TestNextToken_SlightlyMoreComplex(t *testing.T) {
+func Test_NextToken_WithHTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p class="foo"><%= 1 %></p>`
 	tests := []struct {
@@ -49,7 +49,8 @@ func TestNextToken_SlightlyMoreComplex(t *testing.T) {
 		r.Equal(tt.tokenLiteral, tok.Literal)
 	}
 }
-func TestNextToken(t *testing.T) {
+func Test_NextToken_Complete(t *testing.T) {
+	r := require.New(t)
 	input := `<% let five = 5;
 let ten = 10;
 
@@ -212,17 +213,10 @@ c || d
 
 	l := New(input)
 
-	for i, tt := range tests {
+	for _, tt := range tests {
 		tok := l.NextToken()
 
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
-				i, tt.expectedLiteral, tok.Literal)
-		}
-		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, tt.expectedType, tok.Type)
-		}
-
+		r.Equal(tt.expectedLiteral, tok.Literal)
+		r.Equal(tt.expectedType, tok.Type)
 	}
 }

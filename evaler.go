@@ -110,7 +110,7 @@ func (ev *evaler) evalPrefixExpression(node *ast.PrefixExpression) (interface{},
 }
 
 func (ev *evaler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
-	fmt.Println("evalIfExpression")
+	// fmt.Println("evalIfExpression")
 	c, err := ev.evalExpression(node.Condition)
 	if err != nil {
 		return nil, err

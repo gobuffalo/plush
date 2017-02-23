@@ -26,7 +26,7 @@ func contentForHelper(name string, help HelperContext) (string, error) {
 	<%= contentOf("buttons") %>
 */
 func contentOfHelper(name string, help HelperContext) template.HTML {
-	if s := help.Get(name); s != nil {
+	if s := help.Value(name); s != nil {
 		return s.(template.HTML)
 	}
 	return ""

@@ -229,7 +229,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		}
 		return f.Interface(), nil
 	}
-	return c.ctx.Get(node.Value), nil
+	return c.ctx.Value(node.Value), nil
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {

@@ -46,7 +46,7 @@ func (c *compiler) compile() (string, error) {
 
 func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 	switch t := i.(type) {
-	case string, interfaceable, ast.Printable:
+	case string, interfaceable, ast.Printable, bool:
 		bb.WriteString(template.HTMLEscaper(t))
 	case template.HTML:
 		bb.WriteString(string(t))
@@ -305,6 +305,8 @@ func (c *compiler) intsOperator(l int, r int, op string) (interface{}, error) {
 		return l >= r, nil
 	case "<=":
 		return l <= r, nil
+	case "==":
+		return l == r, nil
 	}
 	return nil, errors.Errorf("unknown operator for integer %s", op)
 }
@@ -329,13 +331,35 @@ func (c *compiler) floatsOperator(l float64, r float64, op string) (interface{},
 		return l >= r, nil
 	case "<=":
 		return l <= r, nil
+	case "==":
+		return l == r, nil
 	}
 	return nil, errors.Errorf("unknown operator for float %s", op)
 }
 
 func (c *compiler) stringsOperator(l string, r interface{}, op string) (interface{}, error) {
-	if op == "+" {
-		return l + fmt.Sprint(r), nil
+	rr := fmt.Sprint(r)
+	switch op {
+	case "+":
+		return l + rr, nil
+	// case "-":
+	// 	return l - rr, nil
+	// case "/":
+	// 	return l / rr, nil
+	// case "*":
+	// 	return l * rr, nil
+	case "<":
+		return l < rr, nil
+	case ">":
+		return l > rr, nil
+	case "!=":
+		return l != rr, nil
+	case ">=":
+		return l >= rr, nil
+	case "<=":
+		return l <= rr, nil
+	case "==":
+		return l == rr, nil
 	}
 	return nil, errors.Errorf("unknown operator for string %s", op)
 }

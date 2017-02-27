@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,24 +36,6 @@ func Test_Render_EscapedString(t *testing.T) {
 	r.Equal("<p>&lt;script&gt;alert(&#39;pwned&#39;)&lt;/script&gt;</p>", s)
 }
 
-func Test_Render_Int_Math(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><%= 1 + 3 %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>4</p>", s)
-}
-
-func Test_Render_Float_Math(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><%= 1.1 + 3.1 %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>4.2</p>", s)
-}
-
 func Test_Render_Injected_Variable(t *testing.T) {
 	r := require.New(t)
 
@@ -73,42 +54,6 @@ func Test_Render_Let_Hash(t *testing.T) {
 	s, err := Render(input, NewContext())
 	r.NoError(err)
 	r.Equal("<p>A</p>", s)
-}
-
-func Test_Render_String_Concat(t *testing.T) {
-	r := require.New(t)
-
-	input := `<%= "a"  + "b" %>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("ab", s)
-}
-
-func Test_Render_String_Concat_Multiple(t *testing.T) {
-	r := require.New(t)
-
-	input := `<%= "a" + "b" + "c" %>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("abc", s)
-}
-
-func Test_Render_String_Int_Concat(t *testing.T) {
-	r := require.New(t)
-
-	input := `<%= "a"  + 1 %>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("a1", s)
-}
-
-func Test_Render_Bool_Concat(t *testing.T) {
-	r := require.New(t)
-
-	input := `<%= true + 1 %>`
-	s, err := Render(input, NewContext())
-	r.Equal("", s)
-	r.NoError(err)
 }
 
 func Test_Render_Hash_Array_Index(t *testing.T) {
@@ -442,113 +387,4 @@ func Test_Render_ScriptFunction(t *testing.T) {
 		r.NoError(err)
 	}
 	r.Equal("4", s)
-}
-
-// ExampleTemplate using `if`, `for`, `else`, functions, etc...
-func ExampleRender() {
-	html := `<html>
-<%= if (names && len(names) > 0) { %>
-	<ul>
-		<%= for (n) in names { %>
-			<li><%= capitalize(n) %></li>
-		<% } %>
-	</ul>
-<% } else { %>
-	<h1>Sorry, no names. :(</h1>
-<% } %>
-</html>`
-
-	ctx := NewContext()
-	ctx.Set("names", []string{"john", "paul", "george", "ringo"})
-
-	s, err := Render(html, ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Print(s)
-	// output: <html>
-	// <ul>
-	// 		<li>John</li>
-	// 		<li>Paul</li>
-	// 		<li>George</li>
-	// 		<li>Ringo</li>
-	// 		</ul>
-	// </html>
-}
-
-func ExampleRender_scripletTags() {
-	html := `<%
-let h = {name: "mark"}
-let greet = fn(n) {
-  return "hi " + n
-}
-%>
-<h1><%= greet(h["name"]) %></h1>`
-
-	s, err := Render(html, NewContext())
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Print(s)
-	// output:<h1>hi mark</h1>
-}
-
-func ExampleRender_customHelperFunctions() {
-	html := `<p><%= one() %></p>
-<p><%= greet("mark")%></p>
-<%= can("update") { %>
-<p>i can update</p>
-<% } %>
-<%= can("destroy") { %>
-<p>i can destroy</p>
-<% } %>
-`
-
-	ctx := NewContext()
-	ctx.Set("one", func() int {
-		return 1
-	})
-	ctx.Set("greet", func(s string) string {
-		return fmt.Sprintf("Hi %s", s)
-	})
-	ctx.Set("can", func(s string, help HelperContext) (template.HTML, error) {
-		if s == "update" {
-			h, err := help.Block()
-			return template.HTML(h), err
-		}
-		return "", nil
-	})
-
-	s, err := Render(html, ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Print(s)
-	// output: <p>1</p>
-	// <p>Hi mark</p>
-	// <p>i can update</p>
-}
-
-func ExampleRender_nilValue() {
-	html := `<html>
-<%= if (names && len(names) > 0) { %>
-	<ul>
-		<%= for (n) in names { %>
-			<li><%= capitalize(n) %></li>
-		<% } %>
-	</ul>
-<% } else { %>
-	<h1>Sorry, no names. :(</h1>
-<% } %>
-</html>`
-
-	s, err := Render(html, NewContext())
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Print(s)
-	// output: <html>
-	// <h1>Sorry, no names. :(</h1>
-	// </html>
 }

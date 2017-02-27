@@ -82,6 +82,7 @@ let fl = 1.23 %>
 }
 a && b
 c || d
+for (x) in range(1,3){return x}
 %>
 `
 
@@ -207,6 +208,21 @@ c || d
 		{token.IDENT, "c"},
 		{token.OR, "||"},
 		{token.IDENT, "d"},
+		{token.FOR, "for"},
+		{token.LPAREN, "("},
+		{token.IDENT, "x"},
+		{token.RPAREN, ")"},
+		{token.IN, "in"},
+		{token.IDENT, "range"},
+		{token.LPAREN, "("},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "3"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.IDENT, "x"},
+		{token.RBRACE, "}"},
 		{token.E_END, "%>"},
 		{token.EOF, ""},
 	}

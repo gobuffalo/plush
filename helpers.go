@@ -31,6 +31,9 @@ func init() {
 	Helpers.Add("len", lenHelper)
 	Helpers.Add("debug", debugHelper)
 	Helpers.Add("inspect", inspectHelper)
+	Helpers.Add("range", rangeHelper)
+	Helpers.Add("between", betweenHelper)
+	Helpers.Add("until", untilHelper)
 	Helpers.AddMany(inflect.Helpers)
 }
 

@@ -450,6 +450,26 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 			}
 		}
 	default:
+		if it, ok := iter.(Iterator); ok {
+			octx := c.ctx
+			i := 0
+			ii := it.Next()
+			for ii != nil {
+				c.ctx.Set(node.KeyName, i)
+				c.ctx.Set(node.ValueName, ii)
+				res, err := c.evalBlockStatement(node.Block)
+				c.ctx = octx
+				if err != nil {
+					return nil, err
+				}
+				if res != nil {
+					ret = append(ret, res)
+				}
+				ii = it.Next()
+				i++
+			}
+			return ret, nil
+		}
 		return ret, errors.Errorf("could not iterate over %T", iter)
 	}
 	return ret, nil

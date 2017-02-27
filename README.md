@@ -67,5 +67,10 @@ let greet = fn(n) {
 
 
 
-
 ### Special Thanks
+
+This package absolutely 100% could not have been written without the help of Thorsten Ball's incredible book, [Writing an Interpeter in Go](https://interpreterbook.com).
+
+Not only did the book make understanding the process of writing lexers, parsers, and asts, but it also provided the basis for the syntax of Plush itself.
+
+If you have yet to read Thorsten's book, I can't recommend it enough. Please go and buy it!

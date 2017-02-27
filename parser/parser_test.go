@@ -846,6 +846,27 @@ func Test_ForExpression_Split(t *testing.T) {
 	r.Len(exp.Block.Statements, 3)
 }
 
+func Test_ForExpression_Func(t *testing.T) {
+	r := require.New(t)
+	input := `<% for (k,v) in range(1,3) { %>
+	<p><%= v %></p>
+	<% } %>`
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+
+	exp := stmt.Expression.(*ast.ForExpression)
+
+	r.Equal("k", exp.KeyName)
+	r.Equal("v", exp.ValueName)
+	r.Equal("range(1, 3)", exp.Iterable.String())
+	r.Len(exp.Block.Statements, 3)
+}
+
 func Test_AndOrInfixExpressions(t *testing.T) {
 	r := require.New(t)
 	infixTests := []struct {

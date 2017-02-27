@@ -255,7 +255,7 @@ func Test_Render_For_Array(t *testing.T) {
 
 func Test_Render_For_Hash(t *testing.T) {
 	r := require.New(t)
-	input := `<%= for (k,v) in myMap {return k + ":" + v} %>`
+	input := `<%= for (k,v) in myMap { %><%= k + ":" + v%><% } %>`
 	s, err := Render(input, NewContextWith(map[string]interface{}{
 		"myMap": map[string]string{
 			"a": "A",
@@ -281,6 +281,30 @@ func Test_Render_For_Array_Key_Only(t *testing.T) {
 	s, err := Render(input, NewContext())
 	r.NoError(err)
 	r.Equal("abc", s)
+}
+
+func Test_Render_For_Func_Range(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (v) in range(3,5) { %><%=v%><% } %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("345", s)
+}
+
+func Test_Render_For_Func_Between(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (v) in between(3,6) { %><%=v%><% } %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("45", s)
+}
+
+func Test_Render_For_Func_Until(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (v) in until(3) { %><%=v%><% } %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("012", s)
 }
 
 func Test_Render_For_Array_Key_Value(t *testing.T) {
@@ -466,7 +490,6 @@ let greet = fn(n) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// fmt.Printf("%q", s)
 	fmt.Print(s)
 	// output:<h1>hi mark</h1>
 }

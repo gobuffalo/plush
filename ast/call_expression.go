@@ -2,8 +2,9 @@ package ast
 
 import (
 	"bytes"
-	"github.com/gobuffalo/plush/token"
 	"strings"
+
+	"github.com/gobuffalo/plush/token"
 )
 
 type CallExpression struct {
@@ -34,6 +35,16 @@ func (ce *CallExpression) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
+	if ce.Block != nil {
+		out.WriteString(" { ")
+		out.WriteString(ce.Block.String())
+		out.WriteString(" } ")
+	}
+	if ce.ElseBlock != nil {
+		out.WriteString(" else { ")
+		out.WriteString(ce.ElseBlock.String())
+		out.WriteString(" } ")
+	}
 
 	return out.String()
 }

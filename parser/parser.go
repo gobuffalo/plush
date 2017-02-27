@@ -392,6 +392,14 @@ func (p *parser) parseForExpression() ast.Expression {
 	}
 	p.nextToken()
 	expression.Iterable = p.parseExpression(LOWEST)
+	if ce, ok := expression.Iterable.(*ast.CallExpression); ok {
+		if ce.Block != nil {
+			expression.Block = ce.Block
+			ce.Block = nil
+			return expression
+		}
+	}
+
 	if !p.expectPeek(token.LBRACE) {
 		return nil
 	}

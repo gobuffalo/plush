@@ -30,7 +30,9 @@ func (fe *ForExpression) String() string {
 	out.WriteString(") in ")
 	out.WriteString(fe.Iterable.String())
 	out.WriteString(" { ")
-	out.WriteString(fe.Block.String())
+	if fe.Block != nil {
+		out.WriteString(fe.Block.String())
+	}
 	out.WriteString(" }")
 	return out.String()
 }

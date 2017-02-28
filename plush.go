@@ -10,6 +10,19 @@ import (
 var cache = map[string]*Template{}
 var moot = &sync.Mutex{}
 
+// BuffaloRenderer implements the render.TemplateEngine interface allowing velvet to be used as a template engine
+// for Buffalo
+func BuffaloRenderer(input string, data map[string]interface{}, helpers map[string]interface{}) (string, error) {
+	t, err := Parse(input)
+	if err != nil {
+		return "", err
+	}
+	if helpers != nil {
+		t.Helpers.AddMany(helpers)
+	}
+	return t.Exec(NewContextWith(data))
+}
+
 // Parse an input string and return a Template.
 func Parse(input string) (*Template, error) {
 	moot.Lock()

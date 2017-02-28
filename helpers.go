@@ -76,11 +76,6 @@ func (h HelperContext) BlockWith(ctx *Context) (string, error) {
 	return bb.String(), nil
 }
 
-// Helpers associated with the current context.
-func (h HelperContext) Helpers() *HelperMap {
-	return &h.compiler.template.Helpers
-}
-
 // toJSONHelper converts an interface into a string.
 func toJSONHelper(v interface{}) (template.HTML, error) {
 	b, err := json.Marshal(v)

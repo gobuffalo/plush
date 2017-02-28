@@ -43,6 +43,20 @@ func (c *Context) Has(key string) bool {
 	return c.Value(key) != nil
 }
 
+func (c *Context) export() map[string]interface{} {
+	m := map[string]interface{}{}
+	if c.outer != nil {
+		for k, v := range c.outer.export() {
+			m[k] = v
+		}
+	}
+	for k, v := range c.data {
+		m[k] = v
+	}
+
+	return m
+}
+
 // NewContext returns a fully formed context ready to go
 func NewContext() *Context {
 	return &Context{

@@ -22,12 +22,6 @@ func NewHelperMap() (HelperMap, error) {
 
 // Add a new helper to the map. New Helpers will be validated to ensure they
 // meet the requirements for a helper:
-/*
-	func(...) (string) {}
-	func(...) (string, error) {}
-	func(...) (template.HTML) {}
-	func(...) (template.HTML, error) {}
-*/
 func (h *HelperMap) Add(key string, helper interface{}) error {
 	if h.helpers == nil {
 		h.helpers = map[string]interface{}{}

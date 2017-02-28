@@ -415,10 +415,16 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			}
 			args = append(args, reflect.ValueOf(hargs))
 		}
+		if len(args) != rt.NumIn() && last.Kind() == reflect.Map {
+			args = append(args, reflect.ValueOf(c.ctx.export()))
+		}
 	}
 
 	if len(args) > rt.NumIn() {
 		return nil, errors.Errorf("%s too many arguments (%d for %d) - %+v", node.String(), len(args), rt.NumIn(), args)
+	}
+	if len(args) < rt.NumIn() {
+		return nil, errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rt.NumIn(), args)
 	}
 
 	res := rv.Call(args)
@@ -439,6 +445,9 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 		return nil, err
 	}
 	riter := reflect.ValueOf(iter)
+	if riter.Kind() == reflect.Ptr {
+		riter = riter.Elem()
+	}
 	ret := []interface{}{}
 	switch riter.Kind() {
 	case reflect.Map:

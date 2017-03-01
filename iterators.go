@@ -1,7 +1,5 @@
 package plush
 
-// Iterator can be defined and passed to a `for` call.
-// If `Next()` returns `nil` the iteration stops.
 type Iterator interface {
 	Next() interface{}
 }

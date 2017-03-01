@@ -114,3 +114,14 @@ func ExampleRender_nilValue() {
 	// <h1>Sorry, no names. :(</h1>
 	// </html>
 }
+
+func ExampleRender_forIterator() {
+	html := `<%= for (v) in between(3,6) { %><%=v%><% } %>`
+
+	s, err := Render(html, NewContext())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(s)
+	// output: 45
+}

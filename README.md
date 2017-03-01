@@ -20,6 +20,8 @@ Plush allows for the ebedding of dynamic code inside of your templates. Take the
 <p>plush is great</p>
 ```
 
+### Controlling Output
+
 By using the `<%= %>` tags we tell Plush to dynamically render the inner content, in this case the string `plush is great`, into the template between the `<p></p>` tags.
 
 If we were to change the example to use `<% %>` tags instead the inner content will be evaluated and executed, but not injected into the template:
@@ -35,12 +37,14 @@ If we were to change the example to use `<% %>` tags instead the inner content w
 By using the `<% %>` tags we can create variables (and functions!) inside of templates to use later:
 
 ```erb
+<!-- does not print output -->
 <%
 let h = {name: "mark"}
 let greet = fn(n) {
   return "hi " + n
 }
 %>
+<!-- prints output -->
 <h1><%= greet(h["name"]) %></h1>
 ```
 
@@ -59,10 +63,10 @@ html := `<html>
 <% } %>
 </html>`
 
-ctx := NewContext()
+ctx := plush.NewContext()
 ctx.Set("names", []string{"john", "paul", "george", "ringo"})
 
-s, err := Render(html, ctx)
+s, err := plush.Render(html, ctx)
 if err != nil {
   log.Fatal(err)
 }
@@ -124,22 +128,96 @@ Complex `if` statements can be built in Plush using "common" operators:
 <% } %>
 ```
 
-## For Loops
-
-## Functions
-
-## Custom Functions (Helpers)
-
 ## Maps
 
 ## Arrays
 
+## For Loops
 
+There are three different types that can be looped over: maps, arrays/slices, and iterators. The format for them all looks the same:
 
+```erb
+<%= for (key, value) in expression { %>
+  <%= key %> <%= value %>
+<% } %>
+```
 
+The values inside the `()` part of the statement are the names you wish to give to the key (or index) and the value of the expression. The `expression` can be an array, map, or iterator type.
 
+### Arrays
 
+#### Using Index and Value
 
+```erb
+<%= for (i, x) in someArray { %>
+  <%= i %> <%= x %>
+<% } %>
+```
+
+#### Using Just the Value
+
+```erb
+<%= for (val) in someArray { %>
+  <%= val %>
+<% } %>
+```
+
+### Maps
+
+#### Using Index and Value
+
+```erb
+<%= for (k, v) in someMap { %>
+  <%= k %> <%= v %>
+<% } %>
+```
+
+#### Using Just the Value
+
+```erb
+<%= for (v) in someMap { %>
+  <%= v %>
+<% } %>
+```
+
+### Iterators
+
+```go
+type ranger struct {
+	pos int
+	end int
+}
+
+func (r *ranger) Next() interface{} {
+	if r.pos < r.end {
+		r.pos++
+		return r.pos
+	}
+	return nil
+}
+
+func betweenHelper(a, b int) Iterator {
+	return &ranger{pos: a, end: b - 1}
+}
+```
+
+```go
+html := `<%= for (v) in between(3,6) { return v } %>`
+
+ctx := plush.NewContext()
+ctx.Set("between", betweenHelper)
+
+s, err := plush.Render(html, ctx)
+if err != nil {
+  log.Fatal(err)
+}
+fmt.Print(s)
+// output: 45
+```
+
+## Functions
+
+## Custom Functions (Helpers)
 
 ### Special Thanks
 

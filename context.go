@@ -25,7 +25,7 @@ func (c *Context) Set(key string, value interface{}) {
 	c.data[key] = value
 }
 
-// Value from the context, or it's parent's context if one exists.
+// Get a value from the context, or it's parent's context if one exists.
 func (c *Context) Value(key interface{}) interface{} {
 	if s, ok := key.(string); ok {
 		if v, ok := c.data[s]; ok {

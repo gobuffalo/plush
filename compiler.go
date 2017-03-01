@@ -54,6 +54,12 @@ func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 		bb.WriteString(string(t.HTML()))
 	case int64, int, float64:
 		bb.WriteString(fmt.Sprint(t))
+	case fmt.Stringer:
+		bb.WriteString(t.String())
+	case []string:
+		for _, ii := range t {
+			c.write(bb, ii)
+		}
 	case []interface{}:
 		for _, ii := range t {
 			c.write(bb, ii)

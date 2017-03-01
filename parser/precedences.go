@@ -4,7 +4,7 @@ import "github.com/gobuffalo/plush/token"
 
 const (
 	_           int = iota
-	LOWEST          // lowest possible precendent
+	LOWEST          //
 	EQUALS          // ==
 	LESSGREATER     // > or <
 	SUM             // +
@@ -14,7 +14,7 @@ const (
 	INDEX           // array[index]
 )
 
-var precedences = map[token.TokenType]int{
+var precedences = map[token.Type]int{
 	token.EQ:       EQUALS,
 	token.NOT_EQ:   EQUALS,
 	token.LT:       LESSGREATER,

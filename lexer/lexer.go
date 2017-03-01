@@ -6,6 +6,7 @@ import (
 	"github.com/gobuffalo/plush/token"
 )
 
+// Lexer moves through the source input and tokenizes its content
 type Lexer struct {
 	input        string
 	position     int  // current position in input (points to current char)
@@ -14,12 +15,14 @@ type Lexer struct {
 	inside       bool
 }
 
+// New Lexer from the input string
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.readChar()
 	return l
 }
 
+// NextToken from the source input
 func (l *Lexer) NextToken() token.Token {
 	if l.inside {
 		return l.nextInsideToken()
@@ -242,6 +245,6 @@ func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9' || ch == '.'
 }
 
-func newToken(tokenType token.TokenType, ch byte) token.Token {
+func newToken(tokenType token.Type, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }

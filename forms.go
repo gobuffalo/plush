@@ -23,7 +23,7 @@ func FormForHelper(model interface{}, opts tags.Options, help HelperContext) (te
 	})
 }
 
-// FormHelper for building basic forms using bootstrap
+// BootstrapFormHelper for building basic forms using bootstrap
 func BootstrapFormHelper(opts tags.Options, help HelperContext) (template.HTML, error) {
 	return helper(opts, help, func(opts tags.Options) helperable {
 		return bootstrap.New(opts)

@@ -12,7 +12,7 @@ func Test_NextToken_Simple(t *testing.T) {
 	r := require.New(t)
 	input := `<%= 1 %>`
 	tests := []struct {
-		tokenType    token.TokenType
+		tokenType    token.Type
 		tokenLiteral string
 	}{
 		{token.E_START, "<%="},
@@ -32,7 +32,7 @@ func Test_NextToken_WithHTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p class="foo"><%= 1 %></p>`
 	tests := []struct {
-		tokenType    token.TokenType
+		tokenType    token.Type
 		tokenLiteral string
 	}{
 		{token.HTML, `<p class="foo">`},
@@ -87,7 +87,7 @@ for (x) in range(1,3){return x}
 `
 
 	tests := []struct {
-		expectedType    token.TokenType
+		expectedType    token.Type
 		expectedLiteral string
 	}{
 		{token.S_START, "<%"},

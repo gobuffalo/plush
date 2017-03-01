@@ -18,3 +18,5 @@ exclude_paths:
   - "ast/*.go"
   - "**/*_test.go"
   - "*_test.go"
+  - "parser/precedences.go"
+  - "token/const.go"

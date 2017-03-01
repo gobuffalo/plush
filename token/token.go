@@ -21,7 +21,7 @@ var keywords = map[string]Type{
 	"in":     IN,
 }
 
-// Lookup an ident and return a keyword type, or a plain ident
+// LookupIdent an ident and return a keyword type, or a plain ident
 func LookupIdent(ident string) Type {
 	if tok, ok := keywords[ident]; ok {
 		return tok

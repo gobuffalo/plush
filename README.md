@@ -130,7 +130,41 @@ Complex `if` statements can be built in Plush using "common" operators:
 
 ## Maps
 
+Maps in Plush will get translated to the Go type `map[string]interface{}` when used. Creating, and using maps in Plush is not too different than in JSON:
+
+```erb
+<% let h = {key: "value", "a number": 1, bool: true} %>
+```
+
+Would become the following in Go:
+
+```go
+map[string]interface{}{
+  "key": "value",
+  "a number": 1,
+  "bool": true,
+}
+```
+
+Accessing maps is just like access a JSON object:
+
+```erb
+<%= h["key"] %>
+```
+
+Using maps as options to functions in Plush is incredibly powerful. See the sections on Functions and Helpers to see more examples.
+
 ## Arrays
+
+Arrays in Plush will get translated to the Go type `[]interface{}` when used.
+
+```erb
+<% let a = [1, 2, "three", "four", h] %>
+```
+
+```go
+[]interface{}{ 1, 2, "three", "four", h }
+```
 
 ## For Loops
 
@@ -215,9 +249,87 @@ fmt.Print(s)
 // output: 45
 ```
 
-## Functions
+## Helpers
 
-## Custom Functions (Helpers)
+### Builtin Helpers
+
+* `json` - converts the interface to a JSON object
+* `jsEscape` - escapes the interface to be JavaScript safe
+* `htmlEscape` - escapes the interface to be HTML safe
+* `upcase` - converts the string to upper case
+* `downcase` - converts the string to lower case
+* `contentFor` - stores a block of HTML to be used later
+* `contentOf` - retrieves a block of HTML previously stored with `contentFor`
+* `markdown` - converts the string from Markdown into HTML
+* `len` - returns the length of the interface
+* `debug` - returns the `%+v` of the interface wrapped in `<pre>` tags.
+* `inspect` - returns the `%+v` of the interface
+* `range` - interate between, and including two numbers
+* `between` - iterate between, but not including, two numbers
+* `until` - iterate until a number is reached
+* `env` - returns the ENV variable for the specified key
+
+### From github.com/markbates/inflect
+
+* `asciffy` -
+* `camelize` -
+* `camelize_down_first` -
+* `capitalize` -
+* `dasherize` -
+* `humanize` -
+* `ordinalize` -
+* `parameterize` -
+* `pluralize` -
+* `pluralize_with_size` -
+* `singularize` -
+* `tableize` -
+* `typeify` -
+* `underscore` -
+
+### Custom Helpers
+
+```go
+html := `<p><%= one() %></p>
+<p><%= greet("mark")%></p>
+<%= can("update") { %>
+<p>i can update</p>
+<% } %>
+<%= can("destroy") { %>
+<p>i can destroy</p>
+<% } %>
+`
+
+ctx := NewContext()
+
+// one() #=> 1
+ctx.Set("one", func() int {
+  return 1
+})
+
+// greet("mark") #=> "Hi mark"
+ctx.Set("greet", func(s string) string {
+  return fmt.Sprintf("Hi %s", s)
+})
+
+// can("update") #=> returns the block associated with it
+// can("adsf") #=> ""
+ctx.Set("can", func(s string, help HelperContext) (template.HTML, error) {
+  if s == "update" {
+    h, err := help.Block()
+    return template.HTML(h), err
+  }
+  return "", nil
+})
+
+s, err := Render(html, ctx)
+if err != nil {
+  log.Fatal(err)
+}
+fmt.Print(s)
+// output: <p>1</p>
+// <p>Hi mark</p>
+// <p>i can update</p>
+```
 
 ### Special Thanks
 
@@ -226,3 +338,4 @@ This package absolutely 100% could not have been written without the help of Tho
 Not only did the book make understanding the process of writing lexers, parsers, and asts, but it also provided the basis for the syntax of Plush itself.
 
 If you have yet to read Thorsten's book, I can't recommend it enough. Please go and buy it!
+

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"os"
 	"reflect"
 	"strings"
 
@@ -34,6 +35,7 @@ func init() {
 	Helpers.Add("range", rangeHelper)
 	Helpers.Add("between", betweenHelper)
 	Helpers.Add("until", untilHelper)
+	Helpers.Add("env", envHelper)
 	Helpers.AddMany(inflect.Helpers)
 }
 
@@ -100,4 +102,8 @@ func debugHelper(v interface{}) template.HTML {
 
 func inspectHelper(v interface{}) string {
 	return fmt.Sprintf("%+v", v)
+}
+
+func envHelper(k string) string {
+	return os.Getenv(k)
 }

@@ -86,17 +86,17 @@ func Test_Render_For_Nil(t *testing.T) {
 	r.Equal("", s)
 }
 
-func Test_Render_For_Nil2(t *testing.T) {
+func Test_Render_For_Map_Nil_Value(t *testing.T) {
 	r := require.New(t)
 	input := `
-<%= if (flash) { %>
 	<%= for (k, v) in flash["errors"] { %>
 		Flash:
 			<%= k %>:<%= v %>
 	<% } %>
-<% } %>
 `
-	s, err := Render(input, NewContext())
+	ctx := NewContext()
+	ctx.Set("flash", map[string][]string{})
+	s, err := Render(input, ctx)
 	r.NoError(err)
 	r.Equal("", s)
 }

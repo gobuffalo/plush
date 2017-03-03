@@ -184,7 +184,11 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 	rv := reflect.ValueOf(left)
 	switch rv.Kind() {
 	case reflect.Map:
-		return rv.MapIndex(reflect.ValueOf(index)).Interface(), nil
+		val := rv.MapIndex(reflect.ValueOf(index))
+		if !val.IsValid() {
+			return nil, nil
+		}
+		return val.Interface(), nil
 	case reflect.Array, reflect.Slice:
 		if i, ok := index.(int); ok {
 			return rv.Index(int(i)).Interface(), nil

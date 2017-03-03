@@ -85,3 +85,18 @@ func Test_Render_For_Nil(t *testing.T) {
 	r.NoError(err)
 	r.Equal("", s)
 }
+
+func Test_Render_For_Nil2(t *testing.T) {
+	r := require.New(t)
+	input := `
+<%= if (flash) { %>
+	<%= for (k, v) in flash["errors"] { %>
+		Flash:
+			<%= k %>:<%= v %>
+	<% } %>
+<% } %>
+`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("", s)
+}

@@ -489,6 +489,9 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 			}
 		}
 	default:
+		if iter == nil {
+			return nil, nil
+		}
 		if it, ok := iter.(Iterator); ok {
 			octx := c.ctx
 			i := 0

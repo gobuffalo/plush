@@ -75,3 +75,13 @@ func Test_Render_For_Array_Key_Value(t *testing.T) {
 	r.NoError(err)
 	r.Equal("0a1b2c", s)
 }
+
+func Test_Render_For_Nil(t *testing.T) {
+	r := require.New(t)
+	input := `<% for (i,v) in nilValue {return v} %>`
+	ctx := NewContext()
+	ctx.Set("nilValue", nil)
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("", s)
+}

@@ -10,11 +10,11 @@ import (
 func ExampleRender() {
 	html := `<html>
 <%= if (names && len(names) > 0) { %>
-	<ul>
-		<%= for (n) in names { %>
-			<li><%= capitalize(n) %></li>
-		<% } %>
-	</ul>
+<ul>
+<%= for (n) in names { %>
+	<li><%= capitalize(n) %></li>
+<% } %>
+</ul>
 <% } else { %>
 	<h1>Sorry, no names. :(</h1>
 <% } %>
@@ -30,12 +30,19 @@ func ExampleRender() {
 
 	fmt.Print(s)
 	// output: <html>
+	//
 	// <ul>
-	// 		<li>John</li>
-	// 		<li>Paul</li>
-	// 		<li>George</li>
-	// 		<li>Ringo</li>
-	// 		</ul>
+	//
+	//	<li>John</li>
+	//
+	//	<li>Paul</li>
+	//
+	//	<li>George</li>
+	//
+	//	<li>Ringo</li>
+	//
+	// </ul>
+	//
 	// </html>
 }
 
@@ -89,6 +96,7 @@ func ExampleRender_customHelperFunctions() {
 	fmt.Print(s)
 	// output: <p>1</p>
 	// <p>Hi mark</p>
+	//
 	// <p>i can update</p>
 }
 
@@ -111,7 +119,9 @@ func ExampleRender_nilValue() {
 	}
 	fmt.Print(s)
 	// output: <html>
-	// <h1>Sorry, no names. :(</h1>
+	//
+	// 	<h1>Sorry, no names. :(</h1>
+	//
 	// </html>
 }
 

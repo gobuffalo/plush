@@ -1,6 +1,7 @@
 package plush
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -98,5 +99,5 @@ func Test_Render_For_Map_Nil_Value(t *testing.T) {
 	ctx.Set("flash", map[string][]string{})
 	s, err := Render(input, ctx)
 	r.NoError(err)
-	r.Equal("", s)
+	r.Equal("", strings.TrimSpace(s))
 }

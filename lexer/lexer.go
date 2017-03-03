@@ -29,7 +29,7 @@ func (l *Lexer) NextToken() token.Token {
 	}
 	var tok token.Token
 
-	l.skipWhitespace()
+	// l.skipWhitespace()
 	if l.ch == 0 {
 		tok.Literal = ""
 		tok.Type = token.EOF

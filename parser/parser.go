@@ -91,6 +91,13 @@ func (p *parser) parseProgram() *ast.Program {
 
 	for !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
+		if t, ok := stmt.(*ast.ExpressionStatement); ok {
+			if _, ok := t.Expression.(*ast.HTMLLiteral); ok {
+				program.Statements = append(program.Statements, stmt)
+				p.nextToken()
+				continue
+			}
+		}
 		if stmt != nil && strings.TrimSpace(stmt.String()) != "" {
 			program.Statements = append(program.Statements, stmt)
 		}

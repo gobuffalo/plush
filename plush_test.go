@@ -16,6 +16,19 @@ func Test_Render_Simple_HTML(t *testing.T) {
 	r.Equal(input, s)
 }
 
+func Test_Render_Keeps_Spacing(t *testing.T) {
+	r := require.New(t)
+	input := `<%= greet %> <%= name %>`
+
+	ctx := NewContext()
+	ctx.Set("greet", "hi")
+	ctx.Set("name", "mark")
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("hi mark", s)
+}
+
 func Test_Render_HTML_InjectedString(t *testing.T) {
 	r := require.New(t)
 

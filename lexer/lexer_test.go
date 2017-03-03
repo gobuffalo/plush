@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -182,15 +183,19 @@ for (x) in range(1,3){return x}
 		{token.ASSIGN, "="},
 		{token.FLOAT, "1.23"},
 		{token.E_END, "%>"},
+		{token.HTML, "\n"},
 		{token.E_START, "<%="},
 		{token.INT, "1"},
 		{token.E_END, "%>"},
+		{token.HTML, "\n"},
 		{token.C_START, "<%#"},
 		{token.INT, "2"},
 		{token.E_END, "%>"},
+		{token.HTML, "\n"},
 		{token.S_START, "<%"},
 		{token.INT, "3"},
 		{token.E_END, "%>"},
+		{token.HTML, "\n"},
 		{token.S_START, "<%"},
 		{token.FOR, "for"},
 		{token.LPAREN, "("},
@@ -224,12 +229,14 @@ for (x) in range(1,3){return x}
 		{token.IDENT, "x"},
 		{token.RBRACE, "}"},
 		{token.E_END, "%>"},
+		{token.HTML, "\n"},
 		{token.EOF, ""},
 	}
 
 	l := New(input)
 
 	for _, tt := range tests {
+		fmt.Printf("### tt -> %+v\n", tt)
 		tok := l.NextToken()
 
 		r.Equal(tt.expectedLiteral, tok.Literal)

@@ -18,7 +18,7 @@ func Test_LetStatements(t *testing.T) {
 	}{
 		{"<% let x = 5; %>", "x", 5},
 		{"<% let y = true; %>", "y", true},
-		{"<% let foobar = y;%> ", "foobar", "y"},
+		{"<% let foobar = y;%>", "foobar", "y"},
 	}
 
 	for _, tt := range tests {
@@ -352,7 +352,7 @@ func Test_IfExpression(t *testing.T) {
 
 func Test_IfExpression_HTML(t *testing.T) {
 	r := require.New(t)
-	input := `<p><% if (x < y) { %> <%= x %> <% } %></p>`
+	input := `<p><% if (x < y) { %><%= x %><% } %></p>`
 
 	program, err := Parse(input)
 	r.NoError(err)

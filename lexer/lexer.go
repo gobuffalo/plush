@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/gobuffalo/plush/token"
 )
@@ -217,11 +218,17 @@ func (l *Lexer) readString() string {
 	position := l.position + 1
 	for {
 		l.readChar()
+		// check for quote escapes
+		if l.ch == '\\' && l.peekChar() == '"' {
+			l.readChar()
+			l.readChar()
+		}
 		if l.ch == '"' {
 			break
 		}
 	}
-	return l.input[position:l.position]
+	s := l.input[position:l.position]
+	return strings.Replace(s, "\\\"", "\"", -1)
 }
 
 func (l *Lexer) readHTML() string {

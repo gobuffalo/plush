@@ -48,6 +48,24 @@ func Test_EscapeStringQuote(t *testing.T) {
 	}
 }
 
+func Test_EscapeExpression(t *testing.T) {
+	r := require.New(t)
+	input := `<p>\<%= 1 %></p>`
+	tests := []struct {
+		tokenType    token.Type
+		tokenLiteral string
+	}{
+		{token.HTML, input},
+	}
+
+	l := New(input)
+	for _, tt := range tests {
+		tok := l.NextToken()
+		r.Equal(tt.tokenType, tok.Type)
+		r.Equal(tt.tokenLiteral, tok.Literal)
+	}
+}
+
 func Test_NextToken_WithHTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p class="foo"><%= 1 %></p>`

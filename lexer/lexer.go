@@ -235,6 +235,11 @@ func (l *Lexer) readHTML() string {
 	position := l.position
 
 	for l.ch != 0 {
+		// allow for expression escaping using \<% foo %>
+		if l.ch == '\\' && l.peekChar() == '<' {
+			l.readChar()
+			l.readChar()
+		}
 		if l.ch == '<' && l.peekChar() == '%' {
 			l.inside = true
 			break

@@ -23,7 +23,7 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 	return t.Exec(NewContextWith(data))
 }
 
-// Parse an input string and return a Template.
+// Parse an input string and return a Template, and caches the parsed template.
 func Parse(input string) (*Template, error) {
 	moot.Lock()
 	defer moot.Unlock()

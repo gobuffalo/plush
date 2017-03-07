@@ -17,7 +17,8 @@ type Template struct {
 }
 
 // NewTemplate from the input string. Adds all of the
-// global helper functions from "Helpers".
+// global helper functions from "Helpers", this function does not
+// cache the template.
 func NewTemplate(input string) (*Template, error) {
 	hm, err := NewHelperMap()
 	if err != nil {

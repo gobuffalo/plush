@@ -104,3 +104,18 @@ func Test_Render_Function_Call_On_Callee(t *testing.T) {
 	r.NoError(err)
 	r.Equal(`<p>hi mark!</p>`, s)
 }
+
+func Test_Render_Function_Optional_Map(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo() %>|<%= bar({a: "A"}) %>`
+	s, err := Render(input, NewContextWith(map[string]interface{}{
+		"foo": func(opts map[string]interface{}, help HelperContext) string {
+			return "foo"
+		},
+		"bar": func(opts map[string]interface{}) string {
+			return opts["a"].(string)
+		},
+	}))
+	r.NoError(err)
+	r.Equal("foo|A", s)
+}

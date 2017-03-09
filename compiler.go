@@ -415,18 +415,37 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	}
 
 	rt := rv.Type()
-	if rt.NumIn() > 0 {
-		last := rt.In(rt.NumIn() - 1)
-		if last.Name() == helperContextKind {
+
+	hc := func(arg reflect.Type) {
+		if arg.Name() == helperContextKind {
 			hargs := HelperContext{
 				Context:  c.ctx,
 				compiler: c,
 				block:    node.Block,
 			}
 			args = append(args, reflect.ValueOf(hargs))
+			return
 		}
-		if len(args) != rt.NumIn() && last.Kind() == reflect.Map {
+		if arg.Kind() == reflect.Map {
 			args = append(args, reflect.ValueOf(c.ctx.export()))
+		}
+	}
+
+	if len(args) < rt.NumIn() {
+		// missing some args, let's see if we can figure out what they are.
+		diff := rt.NumIn() - len(args)
+		switch diff {
+		case 2:
+			// check last is help
+			// check if last -1 is map
+			arg := rt.In(rt.NumIn() - 2)
+			hc(arg)
+			last := rt.In(rt.NumIn() - 1)
+			hc(last)
+		case 1:
+			// check if help or map
+			last := rt.In(rt.NumIn() - 1)
+			hc(last)
 		}
 	}
 

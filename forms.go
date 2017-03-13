@@ -10,36 +10,36 @@ import (
 )
 
 func FormHelper(opts tags.Options, help HelperContext) (template.HTML, error) {
-	return Helper(opts, help, func(opts tags.Options) Helperable {
+	return helper(opts, help, func(opts tags.Options) helperable {
 		return form.New(opts)
 	})
 }
 
 func FormForHelper(model interface{}, opts tags.Options, help HelperContext) (template.HTML, error) {
-	return Helper(opts, help, func(opts tags.Options) Helperable {
+	return helper(opts, help, func(opts tags.Options) helperable {
 		return form.NewFormFor(model, opts)
 	})
 }
 
 func BootstrapFormHelper(opts tags.Options, help HelperContext) (template.HTML, error) {
-	return Helper(opts, help, func(opts tags.Options) Helperable {
+	return helper(opts, help, func(opts tags.Options) helperable {
 		return bootstrap.New(opts)
 	})
 }
 
 func BootstrapFormForHelper(model interface{}, opts tags.Options, help HelperContext) (template.HTML, error) {
-	return Helper(opts, help, func(opts tags.Options) Helperable {
+	return helper(opts, help, func(opts tags.Options) helperable {
 		return bootstrap.NewFormFor(model, opts)
 	})
 }
 
-type Helperable interface {
+type helperable interface {
 	SetAuthenticityToken(string)
 	Append(...tags.Body)
 	HTMLer
 }
 
-func Helper(opts tags.Options, help HelperContext, fn func(opts tags.Options) Helperable) (template.HTML, error) {
+func helper(opts tags.Options, help HelperContext, fn func(opts tags.Options) helperable) (template.HTML, error) {
 	form := fn(opts)
 	if help.Value("authenticity_token") != nil {
 		form.SetAuthenticityToken(fmt.Sprint(help.Value("authenticity_token")))

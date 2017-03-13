@@ -136,3 +136,19 @@ func Test_Render_ScriptFunction(t *testing.T) {
 	}
 	r.Equal("4", s)
 }
+
+func Test_Render_HasBlock(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	ctx.Set("blockCheck", func(help HelperContext) string {
+		if help.HasBlock() {
+			s, _ := help.Block()
+			return s
+		}
+		return "no block"
+	})
+	input := `<%= blockCheck() {return "block"} %>|<%= blockCheck() %>`
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("block|no block", s)
+}

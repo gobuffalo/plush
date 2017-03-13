@@ -51,6 +51,11 @@ type HelperContext struct {
 
 const helperContextKind = "HelperContext"
 
+// HasBlock returns true if a block is associated with the helper function
+func (h HelperContext) HasBlock() bool {
+	return h.block != nil
+}
+
 // Block executes the block of template associated with
 // the helper, think the block inside of an "if" or "each"
 // statement.

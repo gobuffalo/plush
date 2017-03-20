@@ -246,7 +246,7 @@ func (l *Lexer) readHTML() string {
 		}
 		l.readChar()
 	}
-	return l.input[position:l.position]
+	return strings.Replace(l.input[position:l.position], "\\<%", "<%", -1)
 }
 
 func isLetter(ch byte) bool {

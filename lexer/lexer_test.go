@@ -55,7 +55,7 @@ func Test_EscapeExpression(t *testing.T) {
 		tokenType    token.Type
 		tokenLiteral string
 	}{
-		{token.HTML, input},
+		{token.HTML, `<p><%= 1 %></p>`},
 	}
 
 	l := New(input)

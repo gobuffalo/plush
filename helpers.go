@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/gobuffalo/plush/ast"
 
@@ -18,7 +19,9 @@ import (
 // Helpers contains all of the default helpers for
 // These will be available to all templates. You should add
 // any custom global helpers to this list.
-var Helpers = HelperMap{}
+var Helpers = HelperMap{
+	moot: &sync.Mutex{},
+}
 
 func init() {
 	Helpers.Add("json", toJSONHelper)

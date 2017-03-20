@@ -1,16 +1,22 @@
 package plush
 
-import "github.com/pkg/errors"
+import (
+	"sync"
+
+	"github.com/pkg/errors"
+)
 
 // HelperMap holds onto helpers and validates they are properly formed.
 type HelperMap struct {
 	helpers map[string]interface{}
+	moot    *sync.Mutex
 }
 
 // NewHelperMap containing all of the "default" helpers from "plush.Helpers".
 func NewHelperMap() (HelperMap, error) {
 	hm := HelperMap{
 		helpers: map[string]interface{}{},
+		moot:    &sync.Mutex{},
 	}
 
 	err := hm.AddMany(Helpers.Helpers())
@@ -23,6 +29,8 @@ func NewHelperMap() (HelperMap, error) {
 // Add a new helper to the map. New Helpers will be validated to ensure they
 // meet the requirements for a helper:
 func (h *HelperMap) Add(key string, helper interface{}) error {
+	h.moot.Lock()
+	defer h.moot.Unlock()
 	if h.helpers == nil {
 		h.helpers = map[string]interface{}{}
 	}

@@ -226,6 +226,9 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 			return nil, err
 		}
 		rv := reflect.ValueOf(c)
+		if !rv.IsValid() {
+			return nil, nil
+		}
 		if rv.Kind() == reflect.Ptr {
 			rv = rv.Elem()
 		}
@@ -426,8 +429,12 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			args = append(args, reflect.ValueOf(hargs))
 			return
 		}
-		if arg.Kind() == reflect.Map {
+		if arg.Name() == "Data" {
 			args = append(args, reflect.ValueOf(c.ctx.export()))
+			return
+		}
+		if arg.Kind() == reflect.Map {
+			args = append(args, reflect.ValueOf(map[string]interface{}{}))
 		}
 	}
 

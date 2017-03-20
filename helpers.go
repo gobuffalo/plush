@@ -26,7 +26,7 @@ var Helpers = HelperMap{
 func init() {
 	Helpers.Add("json", toJSONHelper)
 	Helpers.Add("jsEscape", template.JSEscapeString)
-	Helpers.Add("htmlEscape", template.HTMLEscapeString)
+	Helpers.Add("htmlEscape", htmlEscape)
 	Helpers.Add("upcase", strings.ToUpper)
 	Helpers.Add("downcase", strings.ToLower)
 	Helpers.Add("contentFor", contentForHelper)
@@ -114,4 +114,15 @@ func inspectHelper(v interface{}) string {
 
 func envHelper(k string) string {
 	return os.Getenv(k)
+}
+
+func htmlEscape(s string, help HelperContext) (string, error) {
+	var err error
+	if help.HasBlock() {
+		s, err = help.Block()
+	}
+	if err != nil {
+		return "", err
+	}
+	return template.HTMLEscapeString(s), nil
 }

@@ -194,3 +194,13 @@ func Test_Render_HashCall_OnAttribute_IntoFunction(t *testing.T) {
 	r.NoError(err)
 	r.Equal("<pre>A</pre>", s)
 }
+
+func Test_Render_UnknownAttribute_on_Callee(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	ctx.Set("m", struct{}{})
+	input := `<%= m.Foo %>`
+	_, err := Render(input, ctx)
+	r.Error(err)
+	r.Contains(err.Error(), "m.Foo")
+}

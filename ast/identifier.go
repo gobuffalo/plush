@@ -1,6 +1,10 @@
 package ast
 
-import "github.com/gobuffalo/plush/token"
+import (
+	"bytes"
+
+	"github.com/gobuffalo/plush/token"
+)
 
 type Identifier struct {
 	Token  token.Token
@@ -16,5 +20,11 @@ func (i *Identifier) TokenLiteral() string {
 }
 
 func (i *Identifier) String() string {
-	return i.Value
+	out := &bytes.Buffer{}
+	if i.Callee != nil {
+		out.WriteString(i.Callee.String())
+		out.WriteString(".")
+	}
+	out.WriteString(i.Value)
+	return out.String()
 }

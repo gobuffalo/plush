@@ -236,7 +236,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		if !f.IsValid() {
 			m := rv.MethodByName(node.Value)
 			if !m.IsValid() {
-				return nil, errors.WithStack(errors.Errorf("%+v (%T) is an invalid value - evalIdentifier", f, f))
+				return nil, errors.WithStack(errors.Errorf("%s is an invalid value - evalIdentifier", node))
 			}
 			return m.Interface(), nil
 		}

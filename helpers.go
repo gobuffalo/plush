@@ -38,6 +38,7 @@ func init() {
 	Helpers.Add("range", rangeHelper)
 	Helpers.Add("between", betweenHelper)
 	Helpers.Add("until", untilHelper)
+	Helpers.Add("groupBy", groupByHelper)
 	Helpers.Add("env", envHelper)
 	Helpers.AddMany(inflect.Helpers)
 }

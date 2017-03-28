@@ -269,6 +269,7 @@ fmt.Print(s)
 * `range` - interate between, and including two numbers
 * `between` - iterate between, but not including, two numbers
 * `until` - iterate until a number is reached
+* `groupBy` - splits a slice or array into `n` groups
 * `env` - returns the ENV variable for the specified key
 
 ### From github.com/markbates/inflect

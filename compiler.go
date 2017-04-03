@@ -46,7 +46,9 @@ func (c *compiler) compile() (string, error) {
 
 func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 	switch t := i.(type) {
-	case string, interfaceable, ast.Printable, bool:
+	case interfaceable:
+		bb.WriteString(template.HTMLEscaper(t.Interface()))
+	case string, ast.Printable, bool:
 		bb.WriteString(template.HTMLEscaper(t))
 	case template.HTML:
 		bb.WriteString(string(t))

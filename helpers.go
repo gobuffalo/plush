@@ -40,6 +40,8 @@ func init() {
 	Helpers.Add("until", untilHelper)
 	Helpers.Add("groupBy", groupByHelper)
 	Helpers.Add("env", envHelper)
+	Helpers.Add("form", BootstrapFormHelper)
+	Helpers.Add("form_for", BootstrapFormForHelper)
 	Helpers.AddMany(inflect.Helpers)
 }
 

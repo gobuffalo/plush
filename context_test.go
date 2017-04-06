@@ -3,6 +3,8 @@ package plush
 import (
 	"testing"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,6 +14,22 @@ func Test_Context_Set(t *testing.T) {
 	r.Nil(c.Value("foo"))
 	c.Set("foo", "bar")
 	r.NotNil(c.Value("foo"))
+}
+
+func Test_Context_Set_Concurrency(t *testing.T) {
+	r := require.New(t)
+	c := NewContext()
+
+	wg := errgroup.Group{}
+	f := func() error {
+		c.Set("a", "b")
+		return nil
+	}
+	wg.Go(f)
+	wg.Go(f)
+	wg.Go(f)
+	err := wg.Wait()
+	r.NoError(err)
 }
 
 func Test_Context_Get(t *testing.T) {

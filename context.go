@@ -1,6 +1,9 @@
 package plush
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 var _ context.Context = &Context{}
 
@@ -9,6 +12,7 @@ type Context struct {
 	context.Context
 	data  map[string]interface{}
 	outer *Context
+	moot  *sync.Mutex
 }
 
 // New context containing the current context. Values set on the new context
@@ -22,6 +26,8 @@ func (c *Context) New() *Context {
 
 // Set a value onto the context
 func (c *Context) Set(key string, value interface{}) {
+	c.moot.Lock()
+	defer c.moot.Unlock()
 	c.data[key] = value
 }
 
@@ -63,6 +69,7 @@ func NewContext() *Context {
 		Context: context.Background(),
 		data:    map[string]interface{}{},
 		outer:   nil,
+		moot:    &sync.Mutex{},
 	}
 }
 

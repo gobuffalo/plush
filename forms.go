@@ -40,12 +40,17 @@ type helperable interface {
 }
 
 func helper(opts tags.Options, help HelperContext, fn func(opts tags.Options) helperable) (template.HTML, error) {
+	hn := "f"
+	if n, ok := opts["var"]; ok {
+		hn = n.(string)
+		delete(opts, "var")
+	}
 	form := fn(opts)
 	if help.Value("authenticity_token") != nil {
 		form.SetAuthenticityToken(fmt.Sprint(help.Value("authenticity_token")))
 	}
 	ctx := help.Context.New()
-	ctx.Set("f", form)
+	ctx.Set(hn, form)
 	s, err := help.BlockWith(ctx)
 	if err != nil {
 		return "", err

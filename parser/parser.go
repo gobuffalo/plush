@@ -524,19 +524,28 @@ func (p *parser) parseFunctionParameters() []*ast.Identifier {
 
 func (p *parser) parseCallExpression(function ast.Expression) ast.Expression {
 	// fmt.Println("parseCallExpression")
-	ss := strings.Split(function.String(), ".")
 	exp := &ast.CallExpression{
 		Token:    p.curToken,
 		Function: function,
 	}
+	ss := strings.Split(function.String(), ".")
 	if len(ss) > 1 {
 		exp.Callee = &ast.Identifier{
 			Token: token.Token{Type: token.IDENT, Literal: ss[0]},
 			Value: ss[0],
 		}
+		for i := 1; i < len(ss)-1; i++ {
+			c := &ast.Identifier{
+				Token:  token.Token{Type: token.IDENT, Literal: ss[i]},
+				Value:  ss[i],
+				Callee: exp.Callee.(*ast.Identifier),
+			}
+			exp.Callee = c
+		}
 		exp.Function = &ast.Identifier{
-			Token: token.Token{Type: token.IDENT, Literal: ss[1]},
-			Value: ss[1],
+			Token:  token.Token{Type: token.IDENT, Literal: ss[len(ss)-1]},
+			Value:  ss[len(ss)-1],
+			Callee: exp.Callee.(*ast.Identifier),
 		}
 	}
 	exp.Arguments = p.parseExpressionList(token.RPAREN)

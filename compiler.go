@@ -380,7 +380,7 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 }
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
-
+	// fmt.Println("evalCallExpression")
 	var rv reflect.Value
 	if node.Callee != nil {
 		c, err := c.evalExpression(node.Callee)
@@ -388,7 +388,20 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			return nil, errors.WithStack(err)
 		}
 		rc := reflect.ValueOf(c)
-		rv = rc.MethodByName(node.Function.String())
+		mname := node.Function.String()
+		if i, ok := node.Function.(*ast.Identifier); ok {
+			mname = i.Value
+		}
+		rv = rc.MethodByName(mname)
+		if !rv.IsValid() {
+			if rv.Kind() == reflect.Slice {
+				rv = rc.FieldByName(mname)
+				if rv.IsValid() {
+					return rv.Interface(), nil
+				}
+			}
+			return rc.Interface(), nil
+		}
 	} else {
 		f, err := c.evalExpression(node.Function)
 		if err != nil {

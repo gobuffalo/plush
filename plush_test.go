@@ -2,6 +2,7 @@ package plush
 
 import (
 	"html/template"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -203,4 +204,27 @@ func Test_Render_UnknownAttribute_on_Callee(t *testing.T) {
 	_, err := Render(input, ctx)
 	r.Error(err)
 	r.Contains(err.Error(), "m.Foo")
+}
+
+type Robot struct {
+	Avatar Avatar
+}
+
+type Avatar string
+
+func (a Avatar) URL() string {
+	return strings.ToUpper(string(a))
+}
+
+func Test_Render_Function_on_sub_Struct(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	bender := Robot{
+		Avatar: Avatar("bender.jpg"),
+	}
+	ctx.Set("robot", bender)
+	input := `<%= robot.Avatar.URL() %>`
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("BENDER.JPG", s)
 }

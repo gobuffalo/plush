@@ -538,6 +538,26 @@ func Test_CallExpressionParsing_WithCallee(t *testing.T) {
 	r.Equal(exp.Arguments[0].String(), "mark")
 }
 
+func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
+	r := require.New(t)
+	input := `<%= g.Foo.Greet("mark"); %>`
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ReturnStatement)
+
+	exp := stmt.ReturnValue.(*ast.CallExpression)
+
+	ident := exp.Function.(*ast.Identifier)
+	r.Equal("Greet", ident.Value)
+
+	r.Len(exp.Arguments, 1)
+	r.Equal(exp.Arguments[0].String(), "mark")
+}
+
 func Test_CallExpressionParsing_WithBlock(t *testing.T) {
 	r := require.New(t)
 	input := `<p><%= foo() { %>hi<% } %></p>`

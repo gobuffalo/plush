@@ -42,6 +42,7 @@ func init() {
 	Helpers.Add("env", envHelper)
 	Helpers.Add("form", BootstrapFormHelper)
 	Helpers.Add("form_for", BootstrapFormForHelper)
+	Helpers.Add("truncate", truncateHelper)
 	Helpers.AddMany(inflect.Helpers)
 }
 
@@ -128,4 +129,19 @@ func htmlEscape(s string, help HelperContext) (string, error) {
 		return "", err
 	}
 	return template.HTMLEscapeString(s), nil
+}
+
+func truncateHelper(s string, opts map[string]interface{}) string {
+	if opts["size"] == nil {
+		opts["size"] = 50
+	}
+	if opts["trail"] == nil {
+		opts["trail"] = "..."
+	}
+	size := opts["size"].(int)
+	if len(s) <= size {
+		return s
+	}
+	trail := opts["trail"].(string)
+	return s[:size-len(trail)] + trail
 }

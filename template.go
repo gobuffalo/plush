@@ -1,6 +1,8 @@
 package plush
 
 import (
+	"sync"
+
 	"github.com/gobuffalo/plush/ast"
 
 	"github.com/gobuffalo/plush/parser"
@@ -14,6 +16,7 @@ type Template struct {
 	Input   string
 	Helpers HelperMap
 	program *ast.Program
+	moot    *sync.Mutex
 }
 
 // NewTemplate from the input string. Adds all of the
@@ -27,6 +30,7 @@ func NewTemplate(input string) (*Template, error) {
 	t := &Template{
 		Input:   input,
 		Helpers: hm,
+		moot:    &sync.Mutex{},
 	}
 	err = t.Parse()
 	if err != nil {
@@ -52,6 +56,8 @@ func (t *Template) Parse() error {
 
 // Exec the template using the content and return the results
 func (t *Template) Exec(ctx *Context) (string, error) {
+	t.moot.Lock()
+	defer t.moot.Unlock()
 	err := t.Parse()
 	if err != nil {
 		return "", err

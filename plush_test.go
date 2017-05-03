@@ -30,6 +30,20 @@ func Test_Render_Keeps_Spacing(t *testing.T) {
 	r.Equal("hi mark", s)
 }
 
+// support identifiers containing digits, but not starting with a digits
+func Test_Identifiers_With_Digits(t *testing.T) {
+	r := require.New(t)
+	input := `<%= my123greet %> <%= name3 %>`
+
+	ctx := NewContext()
+	ctx.Set("my123greet", "hi")
+	ctx.Set("name3", "mark")
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("hi mark", s)
+}
+
 func Test_Render_HTML_InjectedString(t *testing.T) {
 	r := require.New(t)
 

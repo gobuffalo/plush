@@ -45,6 +45,9 @@ func helper(opts tags.Options, help HelperContext, fn func(opts tags.Options) he
 		hn = n.(string)
 		delete(opts, "var")
 	}
+	if opts["errors"] == nil {
+		opts["errors"] = help.Context.Value("errors")
+	}
 	form := fn(opts)
 	if help.Value("authenticity_token") != nil {
 		form.SetAuthenticityToken(fmt.Sprint(help.Value("authenticity_token")))

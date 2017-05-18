@@ -173,7 +173,7 @@ func (l *Lexer) nextInsideToken() token.Token {
 	return tok
 }
 
-var floatX = regexp.MustCompile("\\d*\\.\\d*")
+var floatX = regexp.MustCompile(`\d*\.\d*`)
 
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {

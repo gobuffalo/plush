@@ -77,7 +77,7 @@ func Test_Render_Function_Call_With_Error(t *testing.T) {
 	input := `<p><%= f() %></p>`
 	_, err := Render(input, NewContextWith(map[string]interface{}{
 		"f": func() (string, error) {
-			return "hi!", errors.New("oops!")
+			return "hi!", errors.New("oops")
 		},
 	}))
 	r.Error(err)

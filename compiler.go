@@ -12,9 +12,8 @@ import (
 )
 
 type compiler struct {
-	ctx      *Context
-	program  *ast.Program
-	template *Template
+	ctx     *Context
+	program *ast.Program
 }
 
 func (c *compiler) compile() (string, error) {
@@ -193,7 +192,7 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 		return val.Interface(), nil
 	case reflect.Array, reflect.Slice:
 		if i, ok := index.(int); ok {
-			return rv.Index(int(i)).Interface(), nil
+			return rv.Index(i).Interface(), nil
 		}
 	}
 	return nil, errors.WithStack(errors.Errorf("could not index %T with %T", left, index))

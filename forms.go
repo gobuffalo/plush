@@ -9,24 +9,32 @@ import (
 	"github.com/gobuffalo/tags/form/bootstrap"
 )
 
+// FormHelper implements a Plush helper around the
+// form.New function in the github.com/gobuffalo/tags/form package
 func FormHelper(opts tags.Options, help HelperContext) (template.HTML, error) {
 	return helper(opts, help, func(opts tags.Options) helperable {
 		return form.New(opts)
 	})
 }
 
+// FormForHelper implements a Plush helper around the
+// form.NewFormFor function in the github.com/gobuffalo/tags/form package
 func FormForHelper(model interface{}, opts tags.Options, help HelperContext) (template.HTML, error) {
 	return helper(opts, help, func(opts tags.Options) helperable {
 		return form.NewFormFor(model, opts)
 	})
 }
 
+// BootstrapFormHelper implements a Plush helper around the
+// bootstrap.New function in the github.com/gobuffalo/tags/form/bootstrap package
 func BootstrapFormHelper(opts tags.Options, help HelperContext) (template.HTML, error) {
 	return helper(opts, help, func(opts tags.Options) helperable {
 		return bootstrap.New(opts)
 	})
 }
 
+// BootstrapFormForHelper implements a Plush helper around the
+// bootstrap.NewFormFor function in the github.com/gobuffalo/tags/form/bootstrap package
 func BootstrapFormForHelper(model interface{}, opts tags.Options, help HelperContext) (template.HTML, error) {
 	return helper(opts, help, func(opts tags.Options) helperable {
 		return bootstrap.NewFormFor(model, opts)

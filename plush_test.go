@@ -228,3 +228,13 @@ func Test_Render_Function_on_sub_Struct(t *testing.T) {
 	r.NoError(err)
 	r.Equal("BENDER.JPG", s)
 }
+
+func Test_Render_Var_ends_in_Number(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContextWith(map[string]interface{}{
+		"myvar1": []string{"john", "paul"},
+	})
+	s, err := Render(`<%= for (n) in myvar1 {return n}`, ctx)
+	r.NoError(err)
+	r.Equal("johnpaul", s)
+}

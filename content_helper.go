@@ -12,13 +12,14 @@ import (
 		<button>hi</button>
 	<% } %>
 */
-func contentForHelper(name string, help HelperContext) (string, error) {
+func contentForHelper(name string, help HelperContext) (template.HTML, error) {
 	body, err := help.Block()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	help.Set(name, template.HTML(body))
-	return "", nil
+	b := template.HTML(body)
+	help.Set(name, b)
+	return b, nil
 }
 
 // ContentOf retrieves a stored block for templating and renders it.

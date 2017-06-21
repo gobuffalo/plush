@@ -121,6 +121,7 @@ let fl = 1.23 %>
 a && b
 c || d
 for (x) in range(1,3){return x}
+myvar1
 %>
 `
 
@@ -265,6 +266,7 @@ for (x) in range(1,3){return x}
 		{token.RETURN, "return"},
 		{token.IDENT, "x"},
 		{token.RBRACE, "}"},
+		{token.IDENT, "myvar1"},
 		{token.E_END, "%>"},
 		{token.HTML, "\n"},
 		{token.EOF, ""},

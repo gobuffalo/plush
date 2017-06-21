@@ -271,23 +271,26 @@ fmt.Print(s)
 * `until` - iterate until a number is reached
 * `groupBy` - splits a slice or array into `n` groups
 * `env` - returns the ENV variable for the specified key
+* `truncate` - truncates a string to a specified length
+* `form` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version)
+* `form_for` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version) to build a form for a model
 
 ### From github.com/markbates/inflect
 
-* `asciffy` -
-* `camelize` -
-* `camelize_down_first` -
-* `capitalize` -
-* `dasherize` -
-* `humanize` -
-* `ordinalize` -
-* `parameterize` -
-* `pluralize` -
-* `pluralize_with_size` -
-* `singularize` -
-* `tableize` -
-* `typeify` -
-* `underscore` -
+* `asciffy`
+* `camelize`
+* `camelize_down_first`
+* `capitalize`
+* `dasherize`
+* `humanize`
+* `ordinalize`
+* `parameterize`
+* `pluralize`
+* `pluralize_with_size`
+* `singularize`
+* `tableize`
+* `typeify`
+* `underscore`
 
 ### Custom Helpers
 

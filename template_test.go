@@ -12,10 +12,9 @@ func Test_Template_Exec_Concurrency(t *testing.T) {
 	r := require.New(t)
 	tmpl, err := NewTemplate(``)
 	r.NoError(err)
-	tmpl.Helpers.Add("a", func() {})
 	exec := func() error {
-		_, err := tmpl.Exec(NewContext())
-		return err
+		_, e := tmpl.Exec(NewContext())
+		return e
 	}
 	wg := errgroup.Group{}
 	wg.Go(exec)

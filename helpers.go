@@ -39,7 +39,6 @@ func init() {
 	Helpers.Add("between", betweenHelper)
 	Helpers.Add("until", untilHelper)
 	Helpers.Add("groupBy", groupByHelper)
-	Helpers.Add("env", envHelper)
 	Helpers.Add("form", BootstrapFormHelper)
 	Helpers.Add("form_for", BootstrapFormForHelper)
 	Helpers.Add("truncate", truncateHelper)

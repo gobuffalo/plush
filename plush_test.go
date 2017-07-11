@@ -92,17 +92,17 @@ func Test_Render_Missing_Variable(t *testing.T) {
 func Test_Render_HTML_Escape(t *testing.T) {
 	r := require.New(t)
 
-	input := `<%= safe() %>|<%= unsafe() %>`
+	input := `<%= escapedHTML() %>|<%= unescapedHTML() %>|<%= raw("<b>unsafe</b>") %>`
 	s, err := Render(input, NewContextWith(map[string]interface{}{
-		"safe": func() string {
+		"escapedHTML": func() string {
 			return "<b>unsafe</b>"
 		},
-		"unsafe": func() template.HTML {
+		"unescapedHTML": func() template.HTML {
 			return "<b>unsafe</b>"
 		},
 	}))
 	r.NoError(err)
-	r.Equal("&lt;b&gt;unsafe&lt;/b&gt;|<b>unsafe</b>", s)
+	r.Equal("&lt;b&gt;unsafe&lt;/b&gt;|<b>unsafe</b>|<b>unsafe</b>", s)
 }
 
 func Test_Render_ShowNoShow(t *testing.T) {

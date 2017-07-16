@@ -238,3 +238,15 @@ func Test_Render_Var_ends_in_Number(t *testing.T) {
 	r.NoError(err)
 	r.Equal("johnpaul", s)
 }
+
+func Test_Render_Dash_in_Helper(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContextWith(map[string]interface{}{
+		"my-helper": func() string {
+			return "hello"
+		},
+	})
+	s, err := Render(`<%= my-helper() %>`, ctx)
+	r.NoError(err)
+	r.Equal("hello", s)
+}

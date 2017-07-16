@@ -122,6 +122,7 @@ a && b
 c || d
 for (x) in range(1,3){return x}
 myvar1
+my-helper()
 %>
 `
 
@@ -267,6 +268,9 @@ myvar1
 		{token.IDENT, "x"},
 		{token.RBRACE, "}"},
 		{token.IDENT, "myvar1"},
+		{token.IDENT, "my-helper"},
+		{token.LPAREN, "("},
+		{token.RPAREN, ")"},
 		{token.E_END, "%>"},
 		{token.HTML, "\n"},
 		{token.EOF, ""},

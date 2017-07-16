@@ -586,6 +586,8 @@ func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 		return nil, errors.WithStack(err)
 	case *ast.ReturnStatement:
 		return c.evalReturnStatement(t)
+	case *ast.LetStatement:
+		return c.evalLetStatement(t)
 	}
 	return nil, errors.WithStack(errors.Errorf("could not eval statement %T", node))
 }

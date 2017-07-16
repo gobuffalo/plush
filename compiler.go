@@ -25,11 +25,10 @@ func (c *compiler) compile() (string, error) {
 		case *ast.ReturnStatement:
 			res, err = c.evalReturnStatement(node)
 		case *ast.ExpressionStatement:
-			var s interface{}
-			s, err = c.evalExpression(node.Expression)
-			switch s.(type) {
-			case ast.Printable, template.HTML:
-				res = s
+			if h, ok := node.Expression.(*ast.HTMLLiteral); ok {
+				res = template.HTML(h.Value)
+			} else {
+				_, err = c.evalExpression(node.Expression)
 			}
 		case *ast.LetStatement:
 			res, err = c.evalLetStatement(node)

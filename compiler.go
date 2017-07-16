@@ -479,10 +479,8 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 	res := rv.Call(args)
 	if len(res) > 0 {
-		if len(res) > 1 {
-			if e, ok := res[1].Interface().(error); ok {
-				return nil, errors.WithStack(e)
-			}
+		if e, ok := res[len(res)-1].Interface().(error); ok {
+			return nil, errors.WithStack(e)
 		}
 		return res[0].Interface(), nil
 	}

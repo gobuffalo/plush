@@ -17,6 +17,17 @@ func Test_groupByHelper(t *testing.T) {
 	r.Nil(g.Next())
 }
 
+func Test_groupByHelper_Pointer(t *testing.T) {
+	r := require.New(t)
+	g, err := groupByHelper(2, &[]string{"a", "b", "c", "d", "e"})
+	r.NoError(err)
+	g1 := g.Next()
+	r.Equal([]string{"a", "b", "c"}, g1)
+	g2 := g.Next()
+	r.Equal([]string{"d", "e"}, g2)
+	r.Nil(g.Next())
+}
+
 func Test_groupByHelper_SmallGroup(t *testing.T) {
 	r := require.New(t)
 	g, err := groupByHelper(1, []string{"a", "b", "c", "d", "e"})

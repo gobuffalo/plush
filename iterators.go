@@ -40,10 +40,7 @@ func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	if size <= 0 {
 		return nil, errors.WithStack(errors.New("size must be greater than zero"))
 	}
-	u := reflect.ValueOf(underlying)
-	if u.Kind() == reflect.Ptr {
-		u = u.Elem()
-	}
+	u := reflect.Indirect(reflect.ValueOf(underlying))
 
 	group := []reflect.Value{}
 	switch u.Kind() {

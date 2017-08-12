@@ -297,3 +297,19 @@ func Test_Let_Inside_Helper(t *testing.T) {
 	r.Contains(s, "<li>2 - three</li>")
 	r.Contains(s, "<li>3 - four</li>")
 }
+
+func Test_(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo() %><%= name %>`
+	data := map[string]interface{}{
+		"name": "Ringo",
+	}
+	helpers := map[string]interface{}{
+		"foo": func() string {
+			return "George"
+		},
+	}
+	s, err := BuffaloRenderer(input, data, helpers)
+	r.NoError(err)
+	r.Equal("GeorgeRingo", s)
+}

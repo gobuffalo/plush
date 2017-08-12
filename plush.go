@@ -18,11 +18,9 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 		return "", err
 	}
 	if helpers != nil {
-		moot.Lock()
 		for k, v := range helpers {
 			data[k] = v
 		}
-		moot.Unlock()
 	}
 	return t.Exec(NewContextWith(data))
 }

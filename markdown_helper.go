@@ -3,6 +3,7 @@ package plush
 import (
 	"html/template"
 
+	_ "github.com/russross/blackfriday"
 	"github.com/shurcooL/github_flavored_markdown"
 )
 

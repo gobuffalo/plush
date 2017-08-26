@@ -60,6 +60,11 @@ type HelperContext struct {
 
 const helperContextKind = "HelperContext"
 
+// Render a string with the current context
+func (h HelperContext) Render(s string) (string, error) {
+	return Render(s, h.Context)
+}
+
 // HasBlock returns true if a block is associated with the helper function
 func (h HelperContext) HasBlock() bool {
 	return h.block != nil

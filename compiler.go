@@ -270,8 +270,8 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 	case string:
 		return c.stringsOperator(t, rres, node.Operator)
 	case int64:
-		if r, ok := rres.(int); ok {
-			return c.intsOperator(int(t), r, node.Operator)
+		if r, ok := rres.(int64); ok {
+			return c.intsOperator(int(t), int(r), node.Operator)
 		}
 	case int:
 		if r, ok := rres.(int); ok {

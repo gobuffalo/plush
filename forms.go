@@ -53,7 +53,7 @@ func helper(opts tags.Options, help HelperContext, fn func(opts tags.Options) he
 		hn = n.(string)
 		delete(opts, "var")
 	}
-	if opts["errors"] == nil {
+	if opts["errors"] == nil && help.Context.Value("errors") != nil {
 		opts["errors"] = help.Context.Value("errors")
 	}
 	form := fn(opts)

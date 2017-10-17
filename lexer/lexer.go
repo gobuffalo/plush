@@ -61,6 +61,23 @@ func (l *Lexer) nextInsideToken() token.Token {
 		} else {
 			tok = newToken(token.ASSIGN, l.ch)
 		}
+	case '.':
+		if isDigit(l.peekChar()) {
+			tok.Literal = l.readNumber()
+			tokSplit := strings.Split(tok.Literal, ".")
+			switch {
+			case len(tokSplit) > 2:
+				return newIllegalTokenLiteral(token.ILLEGAL, tok.Literal)
+			case len(tokSplit) == 2:
+				tok.Type = "FLOAT"
+			default:
+				tok.Type = "INT"
+			}
+
+			return tok
+		}
+		tok = newToken(token.DOT, l.ch)
+		return tok
 	case '+':
 		tok = newToken(token.PLUS, l.ch)
 	case '&':
@@ -158,11 +175,17 @@ func (l *Lexer) nextInsideToken() token.Token {
 			tok.Type = token.LookupIdent(tok.Literal)
 			return tok
 		} else if isDigit(l.ch) {
-			tok.Type = token.INT
 			tok.Literal = l.readNumber()
-			if floatX.MatchString(tok.Literal) {
-				tok.Type = token.FLOAT
+			tokSplit := strings.Split(tok.Literal, ".")
+			switch {
+			case len(tokSplit) > 2:
+				return newIllegalTokenLiteral(token.ILLEGAL, tok.Literal)
+			case len(tokSplit) == 2:
+				tok.Type = "FLOAT"
+			default:
+				tok.Type = "INT"
 			}
+
 			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
@@ -200,7 +223,7 @@ func (l *Lexer) peekChar() byte {
 
 func (l *Lexer) readIdentifier() string {
 	position := l.position
-	for isLetter(l.ch) || isDigit(l.ch) || l.ch == '.' {
+	for isLetter(l.ch) {
 		l.readChar()
 	}
 	return l.input[position:l.position]
@@ -208,7 +231,7 @@ func (l *Lexer) readIdentifier() string {
 
 func (l *Lexer) readNumber() string {
 	position := l.position
-	for isDigit(l.ch) {
+	for isDigit(l.ch) || isDot(l.ch) {
 		l.readChar()
 	}
 	return l.input[position:l.position]
@@ -257,6 +280,14 @@ func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9' || ch == '.'
 }
 
+func isDot(ch byte) bool {
+	return '.' == ch
+}
+
 func newToken(tokenType token.Type, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
+}
+
+func newIllegalTokenLiteral(tokenType token.Type, literal string) token.Token {
+	return token.Token{Type: tokenType, Literal: literal}
 }

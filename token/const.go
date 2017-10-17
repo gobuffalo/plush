@@ -10,6 +10,7 @@ const (
 	FLOAT  = "FLOAT"  // 12.34
 	STRING = "STRING" // "foobar"
 	HTML   = "HTML"   // <p>adf</p>
+	DOT    = "DOT" // .23
 
 	// Operators
 	ASSIGN   = "="

@@ -99,6 +99,9 @@ let add = fn(x, y) {
 let result = add(five, ten);
 !-/*5;
 5 < 10 > 5;
+.23
+23.2343
+23.23.23
 
 if (5 < 10) {
 	return true;
@@ -179,6 +182,9 @@ my-helper()
 		{token.GT, ">"},
 		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
+		{token.FLOAT, ".23"},
+		{token.FLOAT, "23.2343"},
+		{token.ILLEGAL, "23.23.23"},
 		{token.IF, "if"},
 		{token.LPAREN, "("},
 		{token.INT, "5"},

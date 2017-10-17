@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/gobuffalo/plush/token"

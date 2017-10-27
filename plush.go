@@ -55,6 +55,7 @@ func Render(input string, ctx *Context) (string, error) {
 	return t.Exec(ctx)
 }
 
+// RunScript allows for "pure" plush scripts to be executed.
 func RunScript(input string, ctx *Context) error {
 	input = "<% " + input + "%>"
 

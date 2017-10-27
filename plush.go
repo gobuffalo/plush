@@ -1,6 +1,7 @@
 package plush
 
 import (
+	"fmt"
 	"html/template"
 	"sync"
 
@@ -52,6 +53,21 @@ func Render(input string, ctx *Context) (string, error) {
 		return "", errors.WithStack(err)
 	}
 	return t.Exec(ctx)
+}
+
+func RunScript(input string, ctx *Context) error {
+	input = "<% " + input + "%>"
+
+	ctx = ctx.New()
+	ctx.Set("print", func(i interface{}) {
+		fmt.Print(i)
+	})
+	ctx.Set("println", func(i interface{}) {
+		fmt.Println(i)
+	})
+
+	_, err := Render(input, ctx)
+	return err
 }
 
 type interfaceable interface {

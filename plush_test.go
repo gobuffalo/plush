@@ -313,3 +313,24 @@ func Test_(t *testing.T) {
 	r.NoError(err)
 	r.Equal("GeorgeRingo", s)
 }
+
+func Test_Helper_Nil_Arg(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo(none, "k") %><%= foo(nil, "k") %><%= foo(one, "k") %>`
+	data := map[string]interface{}{
+		"one": map[string]string{
+			"k": "test",
+		},
+	}
+	helpers := map[string]interface{}{
+		"foo": func(a map[string]string, b string) string {
+			if a != nil {
+				return a[b]
+			}
+			return ""
+		},
+	}
+	s, err := BuffaloRenderer(input, data, helpers)
+	r.NoError(err)
+	r.Equal("test", s)
+}

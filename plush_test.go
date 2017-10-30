@@ -1,6 +1,8 @@
 package plush
 
 import (
+	"bytes"
+	"fmt"
 	"html/template"
 	"strings"
 	"testing"
@@ -314,6 +316,7 @@ func Test_(t *testing.T) {
 	r.Equal("GeorgeRingo", s)
 }
 
+
 func Test_Helper_Nil_Arg(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo(none, "k") %><%= foo(nil, "k") %><%= foo(one, "k") %>`
@@ -334,3 +337,37 @@ func Test_Helper_Nil_Arg(t *testing.T) {
 	r.NoError(err)
 	r.Equal("test", s)
 }
+
+func Test_RunScript(t *testing.T) {
+	r := require.New(t)
+	bb := &bytes.Buffer{}
+	ctx := NewContextWith(map[string]interface{}{
+		"out": func(i interface{}) {
+			bb.WriteString(fmt.Sprint(i))
+		},
+	})
+	err := RunScript(script, ctx)
+	r.NoError(err)
+	r.Equal("3hiasdfasdf", bb.String())
+}
+
+const script = `let x = "foo"
+
+let a = 1
+let b = 2
+let c = a + b
+
+out(c)
+
+if (c == 3) {
+  out("hi")
+}
+
+let x = fn(f) {
+  f()
+}
+
+x(fn() {
+  out("asdfasdf")
+})`
+

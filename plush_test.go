@@ -316,7 +316,6 @@ func Test_(t *testing.T) {
 	r.Equal("GeorgeRingo", s)
 }
 
-
 func Test_Helper_Nil_Arg(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo(none, "k") %><%= foo(nil, "k") %><%= foo(one, "k") %>`
@@ -370,4 +369,3 @@ let x = fn(f) {
 x(fn() {
   out("asdfasdf")
 })`
-

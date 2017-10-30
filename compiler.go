@@ -417,20 +417,35 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		return nil, errors.WithStack(errors.Errorf("%+v (%T) is an invalid function", node.String(), rv))
 	}
 
+	rt := rv.Type()
+	rtNumIn := rt.NumIn()
+
+	if len(node.Arguments) > rtNumIn {
+		return nil, errors.WithStack(errors.Errorf("%s too many arguments (%d for %d)", node.String(), len(node.Arguments), rtNumIn))
+	}
+
 	args := []reflect.Value{}
-	for _, a := range node.Arguments {
+	for pos, a := range node.Arguments {
 		v, err := c.evalExpression(a)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		ar := reflect.ValueOf(v)
-		if !ar.IsValid() {
-			return nil, errors.WithStack(errors.Errorf("%+v (%T) is an invalid value - evalCallExpression", v, v))
+
+		var ar reflect.Value
+		expectedT := rt.In(pos)
+		if v != nil {
+			ar = reflect.ValueOf(v)
+		} else {
+			ar = reflect.New(expectedT).Elem()
 		}
+
+		actualT := ar.Type()
+		if !actualT.AssignableTo(expectedT) {
+			return nil, errors.WithStack(errors.Errorf("%+v (%T) is an invalid argument for %s at pos %d - evalCallExpression", v, v, node.Function.String(), pos))
+		}
+
 		args = append(args, ar)
 	}
-
-	rt := rv.Type()
 
 	hc := func(arg reflect.Type) {
 		if arg.Name() == helperContextKind {
@@ -451,29 +466,29 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		}
 	}
 
-	if len(args) < rt.NumIn() {
+	if len(args) < rtNumIn {
 		// missing some args, let's see if we can figure out what they are.
-		diff := rt.NumIn() - len(args)
+		diff := rtNumIn - len(args)
 		switch diff {
 		case 2:
 			// check last is help
 			// check if last -1 is map
-			arg := rt.In(rt.NumIn() - 2)
+			arg := rt.In(rtNumIn - 2)
 			hc(arg)
-			last := rt.In(rt.NumIn() - 1)
+			last := rt.In(rtNumIn - 1)
 			hc(last)
 		case 1:
 			// check if help or map
-			last := rt.In(rt.NumIn() - 1)
+			last := rt.In(rtNumIn - 1)
 			hc(last)
 		}
 	}
 
-	if len(args) > rt.NumIn() {
-		return nil, errors.WithStack(errors.Errorf("%s too many arguments (%d for %d) - %+v", node.String(), len(args), rt.NumIn(), args))
+	if len(args) > rtNumIn {
+		return nil, errors.WithStack(errors.Errorf("%s too many arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args))
 	}
-	if len(args) < rt.NumIn() {
-		return nil, errors.WithStack(errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rt.NumIn(), args))
+	if len(args) < rtNumIn {
+		return nil, errors.WithStack(errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args))
 	}
 
 	res := rv.Call(args)

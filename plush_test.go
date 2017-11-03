@@ -220,7 +220,7 @@ func Test_Render_UnknownAttribute_on_Callee(t *testing.T) {
 	input := `<%= m.Foo %>`
 	_, err := Render(input, ctx)
 	r.Error(err)
-	r.Contains(err.Error(), "m.Foo")
+	r.Contains(err.Error(), "'m' does not have a field or method named 'Foo' (m.Foo)")
 }
 
 type Robot struct {

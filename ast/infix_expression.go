@@ -28,6 +28,9 @@ func (oe *InfixExpression) String() string {
 		out.WriteString(oe.Left.String())
 	}
 	out.WriteString(" " + oe.Operator + " ")
+	if oe.Right == nil {
+		panic("Missing \"%>\" closing tag")
+	}
 	out.WriteString(oe.Right.String())
 	out.WriteString(")")
 

@@ -145,23 +145,18 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 	// fmt.Println("evalIfExpression")
 	con, err := c.evalExpression(node.Condition)
 	if err != nil {
-		if errors.Cause(err) == ErrUnknownIdentifier {
-			return nil, nil
+		if errors.Cause(err) != ErrUnknownIdentifier {
+			return nil, errors.WithStack(err)
 		}
-		return nil, errors.WithStack(err)
 	}
 
 	var r interface{}
 	if c.isTruthy(con) {
-		r, err = c.evalBlockStatement(node.Block)
+		return c.evalBlockStatement(node.Block)
 	} else {
 		if node.ElseBlock != nil {
-			r, err = c.evalBlockStatement(node.ElseBlock)
+			return c.evalBlockStatement(node.ElseBlock)
 		}
-	}
-
-	if err != nil {
-		return nil, errors.WithStack(err)
 	}
 
 	return r, nil

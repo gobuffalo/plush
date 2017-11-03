@@ -49,8 +49,9 @@ func Test_Render_If_Or(t *testing.T) {
 func Test_Render_If_Nil(t *testing.T) {
 	r := require.New(t)
 	input := `<%= if (names && len(names) >= 1) { %>hi<%} %>`
-	_, err := Render(input, NewContext())
-	r.Error(err)
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("", s)
 }
 
 func Test_Render_If_Else_Return(t *testing.T) {

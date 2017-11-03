@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var ErrUnknownIdentifier = errors.New("unknown identifier")
+
 type compiler struct {
 	ctx     *Context
 	program *ast.Program
@@ -143,6 +145,9 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 	// fmt.Println("evalIfExpression")
 	con, err := c.evalExpression(node.Condition)
 	if err != nil {
+		if errors.Cause(err) == ErrUnknownIdentifier {
+			return nil, nil
+		}
 		return nil, errors.WithStack(err)
 	}
 
@@ -248,7 +253,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 	if node.Value == "nil" {
 		return nil, nil
 	}
-	return nil, errors.Errorf("could not find identifier '%s'", node.Value)
+	return nil, errors.Wrap(ErrUnknownIdentifier, node.Value)
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {

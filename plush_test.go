@@ -342,7 +342,7 @@ func Test_UndefinedArg(t *testing.T) {
 
 	_, err := Render(input, ctx)
 	r.Error(err)
-	r.Contains(err.Error(), "could not find identifier 'bar'")
+	r.Equal(ErrUnknownIdentifier, errors.Cause(err))
 }
 
 func Test_RunScript(t *testing.T) {

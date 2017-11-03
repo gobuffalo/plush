@@ -83,7 +83,7 @@ func Test_Render_For_Nil(t *testing.T) {
 	ctx := NewContext()
 	ctx.Set("nilValue", nil)
 	s, err := Render(input, ctx)
-	r.NoError(err)
+	r.Error(err)
 	r.Equal("", s)
 }
 

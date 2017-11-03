@@ -242,7 +242,13 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		}
 		return f.Interface(), nil
 	}
-	return c.ctx.Value(node.Value), nil
+	if c.ctx.Has(node.Value) {
+		return c.ctx.Value(node.Value), nil
+	}
+	if node.Value == "nil" {
+		return nil, nil
+	}
+	return nil, errors.Errorf("could not find identifier '%s'", node.Value)
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {

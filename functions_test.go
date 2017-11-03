@@ -27,7 +27,6 @@ func Test_Render_Unknown_Function_Call(t *testing.T) {
 	input := `<p><%= f() %></p>`
 	_, err := Render(input, NewContext())
 	r.Error(err)
-	r.Contains(err.Error(), "f()")
 }
 
 func Test_Render_Function_Call_With_Arg(t *testing.T) {

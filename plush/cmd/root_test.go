@@ -118,13 +118,9 @@ func TestRenderTmpl(t *testing.T) {
 	})
 
 	t.Run("Render without arguments", func(t *testing.T) {
-		out, err := renderTmpl("./testdata/greeting.plush", "", nil)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if out != "Hello, " {
-			t.Error("Expected output mismatch")
+		_, err := renderTmpl("./testdata/greeting.plush", "", nil)
+		if err == nil || err.Error() != "name: unknown identifier" {
+			t.Error("Should fail with unknown identifier")
 			return
 		}
 	})
@@ -135,7 +131,7 @@ func TestRenderTmpl(t *testing.T) {
 			t.Error(err)
 		}
 
-		if out != "Hello, piyush" {
+		if out != "Hello, piyush\n" {
 			t.Error("Expected output mismatch")
 			return
 		}
@@ -148,7 +144,7 @@ func TestRenderTmpl(t *testing.T) {
 				t.Error(err)
 			}
 
-			if out != "Hello, Piyush" {
+			if out != "Hello, Piyush\n" {
 				t.Error("Expected output mismatch")
 				return
 			}
@@ -160,7 +156,7 @@ func TestRenderTmpl(t *testing.T) {
 				t.Error(err)
 			}
 
-			if out != "Hello, meson10" {
+			if out != "Hello, meson10\n" {
 				t.Error("Expected output mismatch")
 				return
 			}

@@ -100,31 +100,6 @@ func ExampleRender_customHelperFunctions() {
 	// <p>i can update</p>
 }
 
-func ExampleRender_nilValue() {
-	html := `<html>
-<%= if (names && len(names) > 0) { %>
-	<ul>
-		<%= for (n) in names { %>
-			<li><%= capitalize(n) %></li>
-		<% } %>
-	</ul>
-<% } else { %>
-	<h1>Sorry, no names. :(</h1>
-<% } %>
-</html>`
-
-	s, err := Render(html, NewContext())
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Print(s)
-	// output: <html>
-	//
-	// 	<h1>Sorry, no names. :(</h1>
-	//
-	// </html>
-}
-
 func ExampleRender_forIterator() {
 	html := `<%= for (v) in between(3,6) { %><%=v%><% } %>`
 

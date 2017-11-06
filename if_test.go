@@ -54,6 +54,14 @@ func Test_Render_If_Nil(t *testing.T) {
 	r.Equal("", s)
 }
 
+func Test_Render_If_Nil_Else(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (names && len(names) >= 1) { %>hi<%} else { %>something else<% } %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("something else", s)
+}
+
 func Test_Render_If_Else_Return(t *testing.T) {
 	r := require.New(t)
 	input := `<p><%= if (false) { return "hi"} else { return "bye"} %></p>`

@@ -102,9 +102,8 @@ func Test_Render_Missing_Variable(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= name %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p></p>", s)
+	_, err := Render(input, NewContext())
+	r.Error(err)
 }
 
 func Test_Render_HTML_Escape(t *testing.T) {
@@ -221,7 +220,7 @@ func Test_Render_UnknownAttribute_on_Callee(t *testing.T) {
 	input := `<%= m.Foo %>`
 	_, err := Render(input, ctx)
 	r.Error(err)
-	r.Contains(err.Error(), "m.Foo")
+	r.Contains(err.Error(), "'m' does not have a field or method named 'Foo' (m.Foo)")
 }
 
 type Robot struct {
@@ -318,7 +317,7 @@ func Test_(t *testing.T) {
 
 func Test_Helper_Nil_Arg(t *testing.T) {
 	r := require.New(t)
-	input := `<%= foo(none, "k") %><%= foo(nil, "k") %><%= foo(one, "k") %>`
+	input := `<%= foo(nil, "k") %><%= foo(one, "k") %>`
 	ctx := NewContextWith(map[string]interface{}{
 		"one": map[string]string{
 			"k": "test",
@@ -333,6 +332,17 @@ func Test_Helper_Nil_Arg(t *testing.T) {
 	s, err := Render(input, ctx)
 	r.NoError(err)
 	r.Equal("test", s)
+}
+
+func Test_UndefinedArg(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo(bar) %>`
+	ctx := NewContext()
+	ctx.Set("foo", func(string) {})
+
+	_, err := Render(input, ctx)
+	r.Error(err)
+	r.Equal(ErrUnknownIdentifier, errors.Cause(err))
 }
 
 func Test_RunScript(t *testing.T) {

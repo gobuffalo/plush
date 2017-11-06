@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var ErrUnknownIdentifier = errors.New("unknown identifier")
+
 type compiler struct {
 	ctx     *Context
 	program *ast.Program
@@ -143,20 +145,18 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 	// fmt.Println("evalIfExpression")
 	con, err := c.evalExpression(node.Condition)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		if errors.Cause(err) != ErrUnknownIdentifier {
+			return nil, errors.WithStack(err)
+		}
 	}
 
 	var r interface{}
 	if c.isTruthy(con) {
-		r, err = c.evalBlockStatement(node.Block)
+		return c.evalBlockStatement(node.Block)
 	} else {
 		if node.ElseBlock != nil {
-			r, err = c.evalBlockStatement(node.ElseBlock)
+			return c.evalBlockStatement(node.ElseBlock)
 		}
-	}
-
-	if err != nil {
-		return nil, errors.WithStack(err)
 	}
 
 	return r, nil
@@ -236,13 +236,19 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		if !f.IsValid() {
 			m := rv.MethodByName(node.Value)
 			if !m.IsValid() {
-				return nil, errors.WithStack(errors.Errorf("%s is an invalid value - evalIdentifier", node))
+				return nil, errors.WithStack(errors.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node))
 			}
 			return m.Interface(), nil
 		}
 		return f.Interface(), nil
 	}
-	return c.ctx.Value(node.Value), nil
+	if c.ctx.Has(node.Value) {
+		return c.ctx.Value(node.Value), nil
+	}
+	if node.Value == "nil" {
+		return nil, nil
+	}
+	return nil, errors.Wrap(ErrUnknownIdentifier, node.Value)
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {

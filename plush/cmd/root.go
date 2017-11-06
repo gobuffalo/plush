@@ -5,11 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 
+	"encoding/json"
+	"strings"
+
 	"github.com/gobuffalo/plush"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"strings"
-	"encoding/json"
 )
 
 var ctxFile *string

@@ -150,22 +150,8 @@ func TestRenderTmpl(t *testing.T) {
 		}
 	})
 
-	file, err := ioutil.TempFile(os.TempDir(), "prefix")
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	template := "Hello, <%= name %>"
-	if _, err := file.WriteString(template); err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	defer os.Remove(file.Name())
-
 	t.Run("Render without arguments", func(t *testing.T) {
-		out, err := renderTmpl(file.Name(), "", nil)
+		out, err := renderTmpl("./testdata/greeting.plush", "", nil)
 		if err != nil {
 			t.Error(err)
 		}
@@ -177,7 +163,7 @@ func TestRenderTmpl(t *testing.T) {
 	})
 
 	t.Run("Render with arguments", func(t *testing.T) {
-		out, err := renderTmpl(file.Name(), "", []string{"name=piyush"})
+		out, err := renderTmpl("./testdata/greeting.plush", "", []string{"name=piyush"})
 		if err != nil {
 			t.Error(err)
 		}
@@ -210,7 +196,7 @@ func TestRenderTmpl(t *testing.T) {
 		}
 
 		t.Run("Run without variables override", func(t *testing.T) {
-			out, err := renderTmpl(file.Name(), ctxFile.Name(), []string{})
+			out, err := renderTmpl("./testdata/greeting.plush", ctxFile.Name(), []string{})
 			if err != nil {
 				t.Error(err)
 			}
@@ -222,7 +208,7 @@ func TestRenderTmpl(t *testing.T) {
 		})
 
 		t.Run("Run with variables override", func(t *testing.T) {
-			out, err := renderTmpl(file.Name(), ctxFile.Name(), []string{"name=meson10"})
+			out, err := renderTmpl("./testdata/greeting.plush", ctxFile.Name(), []string{"name=meson10"})
 			if err != nil {
 				t.Error(err)
 			}

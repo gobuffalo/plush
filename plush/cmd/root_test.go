@@ -3,8 +3,6 @@ package cmd
 import (
 	"testing"
 	"encoding/json"
-	"io/ioutil"
-	"os"
 )
 
 func TestParseContextVars(t *testing.T) {
@@ -96,49 +94,18 @@ func TestParseContextBytes(t *testing.T) {
 }
 
 func TestParseContextFile(t *testing.T) {
-	file, err := ioutil.TempFile(os.TempDir(), "prefix")
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	defer os.Remove(file.Name())
-
-	data := map[string]interface{}{"x": "y", "p": "q"}
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	if _, err := file.Write(bytes); err != nil {
-		t.Fatal(err)
-		return
-	}
-
 	x := map[string]interface{}{}
-	if err := parseContextFile(file.Name(), x); err != nil {
+	if err := parseContextFile("./testdata/greeting.json", x); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	t.Run("Validate x's presence in the map", func(t *testing.T) {
-		val, ok := x["x"]
-		if !ok {
-			t.Error("x should be present in the map")
-		} else if val != "y" {
-			t.Errorf("Value of x should be y. Found %v", val)
-		}
-	})
-
-	t.Run("Validate p's presence in the map", func(t *testing.T) {
-		val, ok := x["p"]
-		if !ok {
-			t.Error("p should be present in the map")
-		} else if val != "q" {
-			t.Errorf("Value of p should be 1. Found %v", val)
-		}
-	})
+	val, ok := x["name"]
+	if !ok {
+		t.Error("name should be present in the map")
+	} else if val != "Piyush" {
+		t.Errorf("Value of x should be y. Found %v", val)
+	}
 }
 
 func TestRenderTmpl(t *testing.T) {
@@ -175,28 +142,8 @@ func TestRenderTmpl(t *testing.T) {
 	})
 
 	t.Run("Render with File", func(t *testing.T) {
-		ctxFile, err := ioutil.TempFile(os.TempDir(), "prefix")
-		if err != nil {
-			t.Fatal(err)
-			return
-		}
-
-		defer os.Remove(ctxFile.Name())
-
-		data := map[string]interface{}{"name": "Piyush"}
-		bytes, err := json.Marshal(data)
-		if err != nil {
-			t.Fatal(err)
-			return
-		}
-
-		if _, err := ctxFile.Write(bytes); err != nil {
-			t.Fatal(err)
-			return
-		}
-
 		t.Run("Run without variables override", func(t *testing.T) {
-			out, err := renderTmpl("./testdata/greeting.plush", ctxFile.Name(), []string{})
+			out, err := renderTmpl("./testdata/greeting.plush", "./testdata/greeting.json", []string{})
 			if err != nil {
 				t.Error(err)
 			}
@@ -208,7 +155,7 @@ func TestRenderTmpl(t *testing.T) {
 		})
 
 		t.Run("Run with variables override", func(t *testing.T) {
-			out, err := renderTmpl("./testdata/greeting.plush", ctxFile.Name(), []string{"name=meson10"})
+			out, err := renderTmpl("./testdata/greeting.plush", "./testdata/greeting.json", []string{"name=meson10"})
 			if err != nil {
 				t.Error(err)
 			}

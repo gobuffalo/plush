@@ -342,7 +342,32 @@ func Test_UndefinedArg(t *testing.T) {
 
 	_, err := Render(input, ctx)
 	r.Error(err)
-	r.Equal(ErrUnknownIdentifier, errors.Cause(err))
+}
+
+func Test_VariadicHelper(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo(1, 2, 3) %>`
+	ctx := NewContext()
+	ctx.Set("foo", func(args ...int) int {
+		return len(args)
+	})
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("3", s)
+}
+
+func Test_VariadicHelperWithWrongParam(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo(1, 2, "test") %>`
+	ctx := NewContext()
+	ctx.Set("foo", func(args ...int) int {
+		return len(args)
+	})
+
+	_, err := Render(input, ctx)
+	r.Error(err)
+	r.Contains(err.Error(), "test (string) is an invalid argument for foo at pos 2: expected (int)")
 }
 
 func Test_RunScript(t *testing.T) {

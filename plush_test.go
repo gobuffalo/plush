@@ -342,6 +342,7 @@ func Test_UndefinedArg(t *testing.T) {
 
 	_, err := Render(input, ctx)
 	r.Error(err)
+	r.Equal(ErrUnknownIdentifier, errors.Cause(err))
 }
 
 func Test_VariadicHelper(t *testing.T) {

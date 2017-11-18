@@ -495,11 +495,14 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		if len(args) > rtNumIn {
 			return nil, errors.WithStack(errors.Errorf("%s too many arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args))
 		}
+		if len(args) < rtNumIn {
+			return nil, errors.WithStack(errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args))
+		}
 	} else {
 		// Variadic func
 		nodeArgs := node.Arguments
 		nodeArgsLen := len(nodeArgs)
-		if nodeArgsLen < rtNumIn {
+		if nodeArgsLen < rtNumIn-1 {
 			return nil, errors.WithStack(errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args))
 		}
 		var pos int
@@ -549,10 +552,6 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 			args = append(args, ar)
 		}
-	}
-
-	if len(args) < rtNumIn {
-		return nil, errors.WithStack(errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args))
 	}
 
 	res := rv.Call(args)

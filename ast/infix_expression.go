@@ -21,7 +21,11 @@ func (oe *InfixExpression) String() string {
 		out.WriteString(oe.Left.String())
 	}
 	out.WriteString(" " + oe.Operator + " ")
-	out.WriteString(oe.Right.String())
+	if oe.Right != nil {
+		out.WriteString(oe.Right.String())
+	} else {
+		out.WriteString(" !!MISSING '%>'!!")
+	}
 	out.WriteString(")")
 
 	return out.String()

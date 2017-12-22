@@ -298,6 +298,10 @@ func Test_OperatorPrecedence(t *testing.T) {
 			"foo ~= bar",
 			"(foo ~= bar)",
 		},
+		{
+			"1 != 2 || 2 != 1",
+			"((1 != 2) || (2 != 1))",
+		},
 	}
 
 	for _, tt := range tests {

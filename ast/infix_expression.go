@@ -2,23 +2,16 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/gobuffalo/plush/token"
 )
 
 type InfixExpression struct {
-	Token    token.Token
+	TokenAble
 	Left     Expression
 	Operator string
 	Right    Expression
 }
 
-func (oe *InfixExpression) expressionNode() {
-}
-
-func (oe *InfixExpression) TokenLiteral() string {
-	return oe.Token.Literal
-}
+func (oe *InfixExpression) expressionNode() {}
 
 func (oe *InfixExpression) String() string {
 	var out bytes.Buffer

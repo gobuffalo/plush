@@ -2,21 +2,15 @@ package ast
 
 import (
 	"bytes"
-	"github.com/gobuffalo/plush/token"
 )
 
 type LetStatement struct {
-	Token token.Token
+	TokenAble
 	Name  *Identifier
 	Value Expression
 }
 
-func (ls *LetStatement) statementNode() {
-}
-
-func (ls *LetStatement) TokenLiteral() string {
-	return ls.Token.Literal
-}
+func (ls *LetStatement) statementNode() {}
 
 func (ls *LetStatement) String() string {
 	var out bytes.Buffer

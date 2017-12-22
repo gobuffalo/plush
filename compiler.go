@@ -37,7 +37,7 @@ func (c *compiler) compile() (string, error) {
 			res, err = c.evalLetStatement(node)
 		}
 		if err != nil {
-			return "", errors.WithStack(err)
+			return "", errors.WithStack(errors.Wrapf(err, "line %d", stmt.T().LineNumber))
 		}
 
 		c.write(bb, res)

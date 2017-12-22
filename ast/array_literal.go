@@ -3,21 +3,14 @@ package ast
 import (
 	"bytes"
 	"strings"
-
-	"github.com/gobuffalo/plush/token"
 )
 
 type ArrayLiteral struct {
-	Token    token.Token
+	TokenAble
 	Elements []Expression
 }
 
-func (al *ArrayLiteral) expressionNode() {
-}
-
-func (al *ArrayLiteral) TokenLiteral() string {
-	return al.Token.Literal
-}
+func (al *ArrayLiteral) expressionNode() {}
 
 func (al *ArrayLiteral) String() string {
 	var out bytes.Buffer

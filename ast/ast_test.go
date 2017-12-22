@@ -12,14 +12,14 @@ func Test_Program_String(t *testing.T) {
 	program := &Program{
 		Statements: []Statement{
 			&LetStatement{
-				Token: token.Token{Type: token.LET, Literal: "let"},
+				TokenAble: TokenAble{token.Token{Type: token.LET, Literal: "let"}},
 				Name: &Identifier{
-					Token: token.Token{Type: token.IDENT, Literal: "myVar"},
-					Value: "myVar",
+					TokenAble: TokenAble{token.Token{Type: token.IDENT, Literal: "myVar"}},
+					Value:     "myVar",
 				},
 				Value: &Identifier{
-					Token: token.Token{Type: token.IDENT, Literal: "anotherVar"},
-					Value: "anotherVar",
+					TokenAble: TokenAble{token.Token{Type: token.IDENT, Literal: "anotherVar"}},
+					Value:     "anotherVar",
 				},
 			},
 		},

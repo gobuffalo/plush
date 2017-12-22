@@ -2,22 +2,15 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/gobuffalo/plush/token"
 )
 
 type Identifier struct {
-	Token  token.Token
+	TokenAble
 	Callee *Identifier
 	Value  string
 }
 
-func (i *Identifier) expressionNode() {
-}
-
-func (i *Identifier) TokenLiteral() string {
-	return i.Token.Literal
-}
+func (i *Identifier) expressionNode() {}
 
 func (i *Identifier) String() string {
 	out := &bytes.Buffer{}

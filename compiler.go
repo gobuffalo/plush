@@ -167,9 +167,15 @@ func (c *compiler) isTruthy(i interface{}) bool {
 	if i == nil {
 		return false
 	}
-	if b, ok := i.(bool); ok {
-		return b
+	switch t := i.(type) {
+	case bool:
+		return t
+	case string:
+		return t != ""
+	case template.HTML:
+		return t != ""
 	}
+
 	return true
 }
 

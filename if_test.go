@@ -128,8 +128,25 @@ func Test_Render_If_Else_True(t *testing.T) {
 
 func Test_Render_If_Matches(t *testing.T) {
 	r := require.New(t)
-	input := `<p><%= if ("foo" ~= "bar") { return "hi"} else { return "bye"} %></p>`
+	input := `<p><%= if ("foo" ~= "bar") { return "hi" } else { return "bye" } %></p>`
 	s, err := Render(input, NewContext())
 	r.NoError(err)
 	r.Equal("<p>bye</p>", s)
+}
+
+func Test_If_String_Truthy(t *testing.T) {
+	r := require.New(t)
+
+	ctx := NewContext()
+	ctx.Set("username", "")
+
+	input := `<p><%= if (username && username != "") { return "hi" } else { return "bye" } %></p>`
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("<p>bye</p>", s)
+
+	ctx.Set("username", "foo")
+	s, err = Render(input, ctx)
+	r.NoError(err)
+	r.Equal("<p>hi</p>", s)
 }

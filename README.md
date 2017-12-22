@@ -1,4 +1,4 @@
-# Plush [![Code Climate](https://codeclimate.com/github/gobuffalo/plush/badges/gpa.svg)](https://codeclimate.com/github/gobuffalo/plush) [![Build Status](https://travis-ci.org/gobuffalo/plush.svg?branch=master)](https://travis-ci.org/gobuffalo/plush) [![GoDoc](https://godoc.org/github.com/gobuffalo/plush?status.svg)](https://godoc.org/github.com/gobuffalo/plush)
+# Plush  [![Build Status](https://travis-ci.org/gobuffalo/plush.svg?branch=master)](https://travis-ci.org/gobuffalo/plush) [![GoDoc](https://godoc.org/github.com/gobuffalo/plush?status.svg)](https://godoc.org/github.com/gobuffalo/plush)
 
 Plush is the templating system that [Go](http://golang.org) both needs _and_ deserves. Powerful, flexible, and extendable, Plush is there to make writing your templates that much easier.
 
@@ -113,6 +113,7 @@ Complex `if` statements can be built in Plush using "common" operators:
 
 * `==` - checks equality of two expressions
 * `!=` - checks that the two expressions are not equal
+* `~=` - checks a string against a regular expression (`foo ~= "^fo"`)
 * `<` - checks the left expression is less than the right expression
 * `<=` - checks the left expression is less than or equal to the right expression
 * `>` - checks the left expression is greater than the right expression

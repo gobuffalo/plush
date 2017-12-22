@@ -109,3 +109,11 @@ func Test_Render_If_Else_True(t *testing.T) {
 	r.NoError(err)
 	r.Equal("<p>hi</p>", s)
 }
+
+func Test_Render_If_Matches(t *testing.T) {
+	r := require.New(t)
+	input := `<p><%= if ("foo" ~= "bar") { return "hi"} else { return "bye"} %></p>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("<p>bye</p>", s)
+}

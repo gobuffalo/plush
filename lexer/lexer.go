@@ -137,6 +137,13 @@ func (l *Lexer) nextInsideToken() token.Token {
 			break
 		}
 		tok = newToken(token.LT, l.ch)
+	case '~':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok = token.Token{Type: token.MATCHES, Literal: "~="}
+			break
+		}
+		tok = newToken(token.MATCHES, l.ch)
 	case '>':
 		if l.peekChar() == '=' {
 			l.readChar()

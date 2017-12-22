@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"reflect"
+	"regexp"
 
 	"github.com/gobuffalo/plush/ast"
 
@@ -379,6 +380,12 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 		return l <= rr, nil
 	case "==":
 		return l == rr, nil
+	case "~=":
+		x, err := regexp.Compile(rr)
+		if err != nil {
+			return nil, errors.WithStack(errors.Errorf("couldn't compile regex %s", rr))
+		}
+		return x.MatchString(l), nil
 	}
 	return nil, errors.WithStack(errors.Errorf("unknown operator for string %s", op))
 }

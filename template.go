@@ -51,12 +51,6 @@ func (t *Template) Exec(ctx *Context) (string, error) {
 		return "", err
 	}
 
-	// ctx = ctx.New()
-	moot.Lock()
-	for k, v := range Helpers.helpers {
-		ctx.Set(k, v)
-	}
-	moot.Unlock()
 	ev := compiler{
 		ctx:     ctx,
 		program: t.program,

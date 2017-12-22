@@ -38,6 +38,14 @@ func Test_Render_If_And(t *testing.T) {
 	r.Equal("", s)
 }
 
+func Test_Render_If_And_True_True(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (2 == 2 && 1 == 1) { return "hi" } %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
 func Test_Render_If_Or(t *testing.T) {
 	r := require.New(t)
 	input := `<%= if (false || true) { %>hi<%} %>`

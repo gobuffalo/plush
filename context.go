@@ -65,19 +65,21 @@ func (c *Context) export() map[string]interface{} {
 
 // NewContext returns a fully formed context ready to go
 func NewContext() *Context {
-	return &Context{
-		Context: context.Background(),
-		data:    map[string]interface{}{},
-		outer:   nil,
-		moot:    &sync.Mutex{},
-	}
+	return NewContextWith(map[string]interface{}{})
 }
 
 // NewContextWith returns a fully formed context using the data
 // provided.
 func NewContextWith(data map[string]interface{}) *Context {
-	c := NewContext()
-	c.data = data
+	c := &Context{
+		Context: context.Background(),
+		data:    data,
+		outer:   nil,
+		moot:    &sync.Mutex{},
+	}
+	for k, v := range Helpers.helpers {
+		c.Set(k, v)
+	}
 	return c
 }
 

@@ -1,6 +1,7 @@
 package plush
 
 import (
+	"html/template"
 	"testing"
 
 	"golang.org/x/sync/errgroup"
@@ -62,4 +63,14 @@ func Test_NewSubContext_Get(t *testing.T) {
 
 	sc := c.New()
 	r.Equal("bar", sc.Value("foo"))
+}
+
+func Test_Context_Override_Helper(t *testing.T) {
+	r := require.New(t)
+	c := NewContext()
+	c.Set("debug", func(i interface{}) template.HTML {
+		return template.HTML("DEBUG")
+	})
+	s := c.Value("debug").(func(interface{}) template.HTML)(nil)
+	r.Equal(template.HTML("DEBUG"), s)
 }

@@ -358,6 +358,19 @@ func Test_VariadicHelper(t *testing.T) {
 	r.Equal("3", s)
 }
 
+func Test_VariadicHelper_SecondArg(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo("hello") %>`
+	ctx := NewContext()
+	ctx.Set("foo", func(s string, args ...interface{}) string {
+		return s
+	})
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("hello", s)
+}
+
 func Test_VariadicHelperNoParam(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo() %>`

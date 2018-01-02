@@ -385,6 +385,52 @@ func Test_IfExpression_HTML(t *testing.T) {
 	r.Nil(ifs.ElseBlock)
 }
 
+func Test_IfExpression_HTML_NoClosingTag(t *testing.T) {
+	r := require.New(t)
+	// the template should have a missing '%>' after the if condition
+	input := `<p><% if (x < y) { <title>Hello Buffalo</title> <% } %>`
+	program, err := Parse(input)
+	r.Error(err, "Error parsing invalid if statement expected")
+
+	// but there should still be two parsed statements
+	r.Len(program.Statements, 2)
+
+	// the first should be the '<p>' HTML literal
+	es1 := program.Statements[0].(*ast.ExpressionStatement)
+	h := es1.Expression.(*ast.HTMLLiteral)
+	r.Equal("<p>", h.Value)
+
+	// the second should be the if condition
+	es2 := program.Statements[1].(*ast.ExpressionStatement)
+	ifExp := es2.Expression.(*ast.IfExpression)
+	r.Equal("(x < y)", ifExp.Condition.String())
+
+	// after that, parsing failed so don't expect any more expressions
+}
+
+func Test_IfExpression_Return_HTML_NoClosingTag(t *testing.T) {
+	r := require.New(t)
+	// the template should have a missing '%>' after the if condition
+	input := `<p><%= if (x < y) { <title>Hello Buffalo</title> <% } %>`
+	program, err := Parse(input)
+	r.Error(err, "Error parsing invalid if statement expected")
+
+	// but there should still be two parsed statements
+	r.Len(program.Statements, 2)
+
+	// the first should be the '<p>' HTML literal
+	es1 := program.Statements[0].(*ast.ExpressionStatement)
+	h := es1.Expression.(*ast.HTMLLiteral)
+	r.Equal("<p>", h.Value)
+
+	// the second should be the if condition
+	es2 := program.Statements[1].(*ast.ReturnStatement)
+	retVal := es2.ReturnValue.(*ast.IfExpression)
+	r.Equal("(x < y)", retVal.Condition.String())
+
+	// after that, parsing failed so don't expect any more expressions
+}
+
 func Test_IfElseExpression(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x < y) { x } else { y } %>`

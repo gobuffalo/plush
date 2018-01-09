@@ -17,6 +17,7 @@ var ErrUnknownIdentifier = errors.New("unknown identifier")
 type compiler struct {
 	ctx     *Context
 	program *ast.Program
+	curStmt ast.Statement
 }
 
 func (c *compiler) compile() (string, error) {
@@ -37,7 +38,11 @@ func (c *compiler) compile() (string, error) {
 			res, err = c.evalLetStatement(node)
 		}
 		if err != nil {
-			return "", errors.WithStack(errors.Wrapf(err, "line %d", stmt.T().LineNumber))
+			s := stmt
+			if c.curStmt != nil {
+				s = c.curStmt
+			}
+			return "", errors.WithStack(errors.Wrapf(err, "line %d", s.T().LineNumber))
 		}
 
 		c.write(bb, res)
@@ -238,6 +243,9 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		}
 		if rv.Kind() == reflect.Ptr {
 			rv = rv.Elem()
+		}
+		if rv.Kind() != reflect.Struct {
+			return nil, errors.WithStack(errors.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node))
 		}
 		f := rv.FieldByName(node.Value)
 		if !f.IsValid() {
@@ -665,6 +673,7 @@ func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, er
 }
 
 func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
+	c.curStmt = node
 	// fmt.Println("evalStatement")
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:

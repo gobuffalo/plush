@@ -250,7 +250,7 @@ func (l *Lexer) readNumber() string {
 
 func (l *Lexer) readString() string {
 	position := l.position + 1
-	for {
+	for l.ch != 0 {
 		l.readChar()
 		// check for quote escapes
 		if l.ch == '\\' && l.peekChar() == '"' {

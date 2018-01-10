@@ -457,6 +457,15 @@ func Test_MissingQuote(t *testing.T) {
 	r.Error(err)
 }
 
+func Test_MissingQuote_Variant(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo("test) %>".`
+	ctx := NewContext()
+	ctx.Set("foo", func(string) {})
+	_, err := Render(input, ctx)
+	r.Error(err)
+}
+
 func Test_RunScript(t *testing.T) {
 	r := require.New(t)
 	bb := &bytes.Buffer{}

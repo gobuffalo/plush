@@ -207,6 +207,10 @@ func (l *Lexer) nextInsideToken() token.Token {
 }
 
 func (l *Lexer) skipWhitespace() {
+	if l.readPosition >= len(l.input) {
+		l.readChar()
+		return
+	}
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
 		l.readChar()
 	}
@@ -226,6 +230,7 @@ func (l *Lexer) readChar() {
 }
 
 func (l *Lexer) peekChar() byte {
+
 	if l.readPosition >= len(l.input) {
 		return 0
 	}

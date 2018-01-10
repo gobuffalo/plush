@@ -76,10 +76,9 @@ func (l *Lexer) nextInsideToken() token.Token {
 				tok.Type = "INT"
 			}
 
-			return tok
+			break
 		}
 		tok = l.newToken(token.DOT)
-		return tok
 	case '+':
 		tok = l.newToken(token.PLUS)
 	case '&':

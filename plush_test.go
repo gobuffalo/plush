@@ -434,6 +434,21 @@ func Test_LineNumberErrors_ForLoop(t *testing.T) {
 	r.Contains(err.Error(), "line 2:")
 }
 
+func Test_LineNumberErrors_ForLoop2(t *testing.T) {
+	r := require.New(t)
+	input := `
+	<%= for (n in numbers.Foo { %>
+		<%= if (n == 3) { %>
+			<%= n %>
+		<% } %>
+	<% } %>
+	`
+
+	_, err := Parse(input)
+	r.Error(err)
+	r.Contains(err.Error(), "line 2:")
+}
+
 func Test_LineNumberErrors_InsideForLoop(t *testing.T) {
 	r := require.New(t)
 	input := `

@@ -376,11 +376,16 @@ func (p *parser) parseForExpression() ast.Expression {
 	if !p.expectPeek(token.LPAREN) {
 		return nil
 	}
+	ln := p.curToken.LineNumber
 
 	s := []string{}
 	for !p.curTokenIs(token.RPAREN) {
 		if p.curTokenIs(token.IDENT) {
 			s = append(s, p.curToken.Literal)
+		}
+		if p.peekTokenIs(token.LBRACE) || p.peekTokenIs(token.EOF) {
+			p.errors = append(p.errors, fmt.Sprintf("line %d: expected ) got %s", ln, p.peekToken.Literal))
+			return nil
 		}
 		p.nextToken()
 	}

@@ -60,7 +60,7 @@ func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 		bb.WriteString(string(t))
 	case HTMLer:
 		bb.WriteString(string(t.HTML()))
-	case int64, int, float64:
+	case uint, uint8, uint16, uint32, uint64, int, int8, int16, int32, int64, float32, float64:
 		bb.WriteString(fmt.Sprint(t))
 	case fmt.Stringer:
 		bb.WriteString(t.String())

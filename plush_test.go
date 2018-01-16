@@ -503,6 +503,20 @@ func Test_RunScript(t *testing.T) {
 	r.Equal("3hiasdfasdf", bb.String())
 }
 
+func Test_Render_AllowsManyNumericTypes(t *testing.T) {
+	r := require.New(t)
+	input := `<%= i32 %> <%= u32 %> <%= i8 %>`
+
+	ctx := NewContext()
+	ctx.Set("i32", int32(1))
+	ctx.Set("u32", uint32(2))
+	ctx.Set("i8", int8(3))
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("1 2 3", s)
+}
+
 const script = `let x = "foo"
 
 let a = 1

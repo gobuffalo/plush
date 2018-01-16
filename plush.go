@@ -8,6 +8,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DefaultTimeFormat is the default way of formatting a time.Time type.
+// This a **GLOBAL** variable, so if you change it, it will change for
+// templates rendered through the `plush` package. If you want to set a
+// specific time format for a particular call to `Render` you can set
+// the `TIME_FORMAT` in the context.
+//
+/*
+	ctx.Set("TIME_FORMAT", "2006-02-Jan")
+	s, err = Render(input, ctx)
+*/
+var DefaultTimeFormat = "January 02, 2006 15:04:05 -0700"
+
 var cache = map[string]*Template{}
 var moot = &sync.Mutex{}
 

@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"reflect"
 	"regexp"
+	"time"
 
 	"github.com/gobuffalo/plush/ast"
 
@@ -52,8 +53,16 @@ func (c *compiler) compile() (string, error) {
 
 func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 	switch t := i.(type) {
+	case time.Time:
+		if dtf, ok := c.ctx.Value("TIME_FORMAT").(string); ok {
+			bb.WriteString(t.Format(dtf))
+			return
+		}
+		bb.WriteString(t.Format(DefaultTimeFormat))
+	case *time.Time:
+		c.write(bb, *t)
 	case interfaceable:
-		bb.WriteString(template.HTMLEscaper(t.Interface()))
+		c.write(bb, t.Interface())
 	case string, ast.Printable, bool:
 		bb.WriteString(template.HTMLEscaper(t))
 	case template.HTML:

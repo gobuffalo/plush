@@ -116,10 +116,25 @@ func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
 		return c.evalPrefixExpression(s)
 	case *ast.FunctionLiteral:
 		return c.evalFunctionLiteral(s)
+	case *ast.AssignExpression:
+		return c.evalAssignExpression(s)
 	case nil:
 		return nil, nil
 	}
 	return nil, errors.WithStack(errors.Errorf("could not evaluate node %T", node))
+}
+
+func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}, error) {
+	v, err := c.evalExpression(node.Value)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	n := node.Name.Value
+	if !c.ctx.Has(n) {
+		return nil, errors.Errorf("could not find identifier named %s", n)
+	}
+	c.ctx.Set(n, v)
+	return nil, nil
 }
 
 func (c *compiler) evalUserFunction(node *userFunction, args []ast.Expression) (interface{}, error) {
@@ -595,6 +610,11 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 }
 
 func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, error) {
+	octx := c.ctx
+	defer func() {
+		c.ctx = octx
+	}()
+	c.ctx = octx.New()
 	iter, err := c.evalExpression(node.Iterable)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -606,30 +626,24 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 	ret := []interface{}{}
 	switch riter.Kind() {
 	case reflect.Map:
-		octx := c.ctx
 		keys := riter.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			k := keys[i]
 			v := riter.MapIndex(k)
-			c.ctx = octx.New()
 			c.ctx.Set(node.KeyName, k.Interface())
 			c.ctx.Set(node.ValueName, v.Interface())
 			res, err := c.evalBlockStatement(node.Block)
-			c.ctx = octx
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
 			ret = append(ret, res)
 		}
 	case reflect.Slice, reflect.Array:
-		octx := c.ctx
 		for i := 0; i < riter.Len(); i++ {
-			c.ctx = octx.New()
 			v := riter.Index(i)
 			c.ctx.Set(node.KeyName, i)
 			c.ctx.Set(node.ValueName, v.Interface())
 			res, err := c.evalBlockStatement(node.Block)
-			c.ctx = octx
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
@@ -642,14 +656,12 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 			return nil, nil
 		}
 		if it, ok := iter.(Iterator); ok {
-			octx := c.ctx
 			i := 0
 			ii := it.Next()
 			for ii != nil {
 				c.ctx.Set(node.KeyName, i)
 				c.ctx.Set(node.ValueName, ii)
 				res, err := c.evalBlockStatement(node.Block)
-				c.ctx = octx
 				if err != nil {
 					return nil, errors.WithStack(err)
 				}

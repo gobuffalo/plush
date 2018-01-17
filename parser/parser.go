@@ -257,6 +257,7 @@ func (p *parser) curPrecedence() int {
 
 func (p *parser) parseIdentifier() ast.Expression {
 	// fmt.Println("parseIdentifier")
+
 	id := &ast.Identifier{TokenAble: ast.TokenAble{p.curToken}}
 	ss := strings.Split(p.curToken.Literal, ".")
 	id.Value = ss[0]
@@ -265,7 +266,33 @@ func (p *parser) parseIdentifier() ast.Expression {
 		s := ss[i]
 		id = &ast.Identifier{TokenAble: ast.TokenAble{p.curToken}, Value: s, Callee: id}
 	}
+
+	if p.peekTokenIs(token.ASSIGN) {
+		return p.parseAssignExpression(id)
+	}
+
 	return id
+}
+
+func (p *parser) parseAssignExpression(id *ast.Identifier) ast.Expression {
+	// fmt.Println("parseAssignExpression")
+
+	ae := &ast.AssignExpression{TokenAble: ast.TokenAble{p.curToken}}
+	ae.Name = id
+
+	if !p.expectPeek(token.ASSIGN) {
+		return nil
+	}
+
+	p.nextToken()
+
+	ae.Value = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return ae
 }
 
 func (p *parser) parseIntegerLiteral() ast.Expression {

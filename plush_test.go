@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gobuffalo/tags"
 	"github.com/markbates/pop/nulls"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -77,15 +76,6 @@ func Test_Render_Injected_Variable(t *testing.T) {
 	}))
 	r.NoError(err)
 	r.Equal("<p>Mark</p>", s)
-}
-
-func Test_Render_Let_Hash(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let h = {"a": "A"} %><%= h["a"] %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>A</p>", s)
 }
 
 func Test_Render_Hash_Array_Index(t *testing.T) {
@@ -268,37 +258,6 @@ func Test_Render_Dash_in_Helper(t *testing.T) {
 	s, err := Render(`<%= my-helper() %>`, ctx)
 	r.NoError(err)
 	r.Equal("hello", s)
-}
-
-func Test_Let_Inside_Helper(t *testing.T) {
-	r := require.New(t)
-	ctx := NewContextWith(map[string]interface{}{
-		"divwrapper": func(opts map[string]interface{}, helper HelperContext) (template.HTML, error) {
-			body, err := helper.Block()
-			if err != nil {
-				return template.HTML(""), errors.WithStack(err)
-			}
-			t := tags.New("div", opts)
-			t.Append(body)
-			return t.HTML(), nil
-		},
-	})
-
-	input := `<%= divwrapper({"class": "myclass"}) { %>
-<ul>
-    <% let a = [1, 2, "three", "four"] %>
-    <%= for (index, name) in a { %>
-        <li><%=index%> - <%=name%></li>
-    <% } %>
-</ul>
-<% } %>`
-
-	s, err := Render(input, ctx)
-	r.NoError(err)
-	r.Contains(s, "<li>0 - 1</li>")
-	r.Contains(s, "<li>1 - 2</li>")
-	r.Contains(s, "<li>2 - three</li>")
-	r.Contains(s, "<li>3 - four</li>")
 }
 
 func Test_(t *testing.T) {

@@ -73,11 +73,15 @@ func NewContext() *Context {
 func NewContextWith(data map[string]interface{}) *Context {
 	c := &Context{
 		Context: context.Background(),
-		data:    data,
+		data:    map[string]interface{}{},
 		outer:   nil,
 		moot:    &sync.Mutex{},
 	}
 	for k, v := range Helpers.helpers {
+		c.Set(k, v)
+	}
+
+	for k, v := range data {
 		c.Set(k, v)
 	}
 	return c

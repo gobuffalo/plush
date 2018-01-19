@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/gobuffalo/plush/ast"
+	"github.com/kr/pretty"
 
 	"github.com/markbates/inflect"
 	"github.com/pkg/errors"
@@ -116,11 +117,11 @@ func lenHelper(v interface{}) int {
 
 // Debug by verbosely printing out using 'pre' tags.
 func debugHelper(v interface{}) template.HTML {
-	return template.HTML(fmt.Sprintf("<pre>%+v</pre>", v))
+	return template.HTML(fmt.Sprintf("<pre>%s</pre>", inspectHelper(v)))
 }
 
 func inspectHelper(v interface{}) string {
-	return fmt.Sprintf("%+v", v)
+	return pretty.Sprint(v)
 }
 
 func envHelper(k string) string {

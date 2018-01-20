@@ -8,7 +8,7 @@ import (
 
 // ContentFor stores a block of templating code to be re-used later in the template.
 /*
-	<%= contentFor("buttons") { %>
+	<% contentFor("buttons") { %>
 		<button>hi</button>
 	<% } %>
 */

@@ -27,3 +27,13 @@ func Test_truncateHelper(t *testing.T) {
 	r.Len(s, 10)
 	r.Equal("more", s[6:])
 }
+
+func Test_inspectHelper(t *testing.T) {
+	r := require.New(t)
+	s := struct {
+		Name string
+	}{"Ringo"}
+
+	o := inspectHelper(s)
+	r.Contains(o, "Ringo")
+}

@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/gobuffalo/plush/ast"
-	"github.com/kr/pretty"
 
 	"github.com/markbates/inflect"
 	"github.com/pkg/errors"
@@ -121,7 +120,7 @@ func debugHelper(v interface{}) template.HTML {
 }
 
 func inspectHelper(v interface{}) string {
-	return pretty.Sprint(v)
+	return fmt.Sprintf("%+v", v)
 }
 
 func envHelper(k string) string {

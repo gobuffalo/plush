@@ -26,6 +26,14 @@ func Test_truncateHelper(t *testing.T) {
 	})
 	r.Len(s, 10)
 	r.Equal("more", s[6:])
+
+	// Case size < len(trail)
+	s = truncateHelper(x, map[string]interface{}{
+		"size":  3,
+		"trail": "more",
+	})
+	r.Len(s, 4)
+	r.Equal("more", s)
 }
 
 func Test_inspectHelper(t *testing.T) {

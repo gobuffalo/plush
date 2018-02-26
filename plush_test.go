@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/markbates/pop/nulls"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -503,10 +502,6 @@ func Test_Default_Time_Format(t *testing.T) {
 	r.NoError(err)
 	r.Equal("2013-03-Feb", s)
 
-	ctx.Set("tm", nulls.NewTime(tm))
-	s, err = Render(input, ctx)
-	r.NoError(err)
-	r.Equal("2013-03-Feb", s)
 }
 
 const script = `let x = "foo"

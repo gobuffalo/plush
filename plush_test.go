@@ -477,6 +477,15 @@ func Test_Render_AllowsManyNumericTypes(t *testing.T) {
 	r.Equal("1 2 3", s)
 }
 
+func Test_Escaping_EscapeExpression(t *testing.T) {
+	r := require.New(t)
+	input := `C:\\<%= "temp" %>`
+
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal(`C:\temp`, s)
+}
+
 func Test_Default_Time_Format(t *testing.T) {
 	r := require.New(t)
 

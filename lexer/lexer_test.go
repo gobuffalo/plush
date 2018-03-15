@@ -66,6 +66,28 @@ func Test_EscapeExpression(t *testing.T) {
 	}
 }
 
+func Test_Escaping_EscapeExpression(t *testing.T) {
+	r := require.New(t)
+	input := `C:\\<%= "temp" %>`
+	l := New(input)
+
+	tests := []struct {
+		tokenType    token.Type
+		tokenLiteral string
+	}{
+		{token.HTML, `C:\`},
+		{token.E_START, "<%="},
+		{token.STRING, `temp`},
+		{token.E_END, "%>"},
+	}
+
+	for _, tt := range tests {
+		tok := l.NextToken()
+		r.Equal(tt.tokenType, tok.Type)
+		r.Equal(tt.tokenLiteral, tok.Literal)
+	}
+}
+
 func Test_NextToken_WithHTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p class="foo"><%= 1 %></p>`

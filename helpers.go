@@ -31,7 +31,7 @@ func init() {
 	Helpers.Add("downcase", strings.ToLower)
 	Helpers.Add("contentFor", contentForHelper)
 	Helpers.Add("contentOf", contentOfHelper)
-	Helpers.Add("markdown", markdownHelper)
+	Helpers.Add("markdown", MarkdownHelper)
 	Helpers.Add("len", lenHelper)
 	Helpers.Add("debug", debugHelper)
 	Helpers.Add("inspect", inspectHelper)

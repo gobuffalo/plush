@@ -83,6 +83,14 @@ fmt.Print(s)
 // 		</ul>
 // </html>
 ```
+## Comments
+
+You can add comments like this:
+
+```erb
+<%# This is a comment %>
+```
+
 ## If/Else Statements
 
 The basic syntax of `if/else` statements is as follows:

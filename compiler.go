@@ -521,6 +521,23 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			}
 		}
 
+		if (len(args) == rtNumIn) && rtNumIn > 0 {
+			// Merge local and global Data from exported context
+			// TODO: does this apply only to the last argument, or can it be in any position?
+			last := rt.In(rtNumIn - 1)
+			if last.Name() == "Data" {
+				i := args[rtNumIn-1].Interface()
+				data := i.(map[string]interface{}) // TODO: Can we use reflect.TypeOf(c.ctx.export())?
+
+				for k, v := range c.ctx.export() {
+					_, ok := data[k]
+					if !ok {
+						data[k] = v
+					}
+				}
+			}
+		}
+
 		if len(args) < rtNumIn {
 			// missing some args, let's see if we can figure out what they are.
 			diff := rtNumIn - len(args)

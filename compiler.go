@@ -521,7 +521,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			}
 		}
 
-		if len(args) == rtNumIn {
+		if (len(args) == rtNumIn) && rtNumIn > 0 {
 			// Merge local and global Data from exported context
 			// TODO: does this apply only to the last argument, or can it be in any position?
 			last := rt.In(rtNumIn - 1)

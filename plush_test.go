@@ -151,41 +151,41 @@ func Test_UndefinedArg(t *testing.T) {
 	r.Equal(ErrUnknownIdentifier, errors.Cause(err))
 }
 
-func Test_FizzParses(t *testing.T) {
-	r := require.New(t)
-	_, err := Parse(createTable)
-	r.NoError(err)
-}
+// func Test_FizzParses(t *testing.T) {
+// 	r := require.New(t)
+// 	_, err := Parse(createTable)
+// 	r.NoError(err)
+// }
 
-func Test_FizzWorks(t *testing.T) {
-	r := require.New(t)
-
-	table := &table{
-		data: map[string]column{},
-	}
-
-	ctx := NewContext()
-	ctx.Set("create_table", func(tn string, help HelperContext) error {
-		c := ctx.New()
-		c.Set("t", table)
-		_, err := help.BlockWith(c)
-		return err
-	})
-
-	err := RunScript(createTable, ctx)
-	r.NoError(err)
-	r.Len(table.data, 4)
-
-	c := table.data["id"]
-	r.Equal("id", c.name)
-	r.Equal("uuid", c.tiep)
-	r.True(c.opts["primary"].(bool))
-
-	c = table.data["name"]
-	r.Equal("name", c.name)
-	r.Equal("string", c.tiep)
-	r.Empty(c.opts)
-}
+// func Test_FizzWorks(t *testing.T) {
+// 	r := require.New(t)
+//
+// 	table := &table{
+// 		data: map[string]column{},
+// 	}
+//
+// 	ctx := NewContext()
+// 	ctx.Set("create_table", func(tn string, help HelperContext) error {
+// 		c := ctx.New()
+// 		c.Set("t", table)
+// 		_, err := help.BlockWith(c)
+// 		return err
+// 	})
+//
+// 	err := RunScript(createTable, ctx)
+// 	r.NoError(err)
+// 	r.Len(table.data, 4)
+//
+// 	c := table.data["id"]
+// 	r.Equal("id", c.name)
+// 	r.Equal("uuid", c.tiep)
+// 	r.True(c.opts["primary"].(bool))
+//
+// 	c = table.data["name"]
+// 	r.Equal("name", c.name)
+// 	r.Equal("string", c.tiep)
+// 	r.Empty(c.opts)
+// }
 
 type table struct {
 	data map[string]column

@@ -52,10 +52,10 @@ func (c *Context) Has(key string) bool {
 // Export all the known values in the context.
 // Note this can't reach up into other implemenations
 // of context.Context.
-func (c *Context) Export() map[string]interface{} {
+func (c *Context) export() map[string]interface{} {
 	m := map[string]interface{}{}
 	if c.outer != nil {
-		for k, v := range c.outer.Export() {
+		for k, v := range c.outer.export() {
 			m[k] = v
 		}
 	}

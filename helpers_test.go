@@ -5,6 +5,7 @@ import (
 
 	"github.com/markbates/going/randx"
 	"github.com/stretchr/testify/require"
+	"github.com/gobuffalo/envy"
 )
 
 func Test_Helpers_WithoutData(t *testing.T) {
@@ -74,4 +75,37 @@ func Test_inspectHelper(t *testing.T) {
 
 	o := inspectHelper(s)
 	r.Contains(o, "Ringo")
+}
+
+func Test_envHelper(t *testing.T) {
+	envy.Temp(func () {
+		r := require.New(t)
+		envy.Set("TEST_KEY", "TEST_VALUE")
+
+		value, err := envHelper("TEST_KEY")
+		r.Nil(err)
+		r.Equal("TEST_VALUE", value)
+	})
+}
+
+func Test_envHelperMissing(t *testing.T) {
+	r := require.New(t)
+	_, err := envHelper("MISSING_TEST_KEY")
+	r.NotNil(err)
+}
+
+func Test_envOrHelper(t *testing.T) {
+	envy.Temp(func() {
+		r := require.New(t)
+		envy.Set("TEST_KEY", "TEST_VALUE")
+
+		value := envOrHelper("TEST_KEY", "")
+		r.Equal("TEST_VALUE", value)
+	})
+}
+
+func Test_envOrHelperDefault(t *testing.T) {
+	r := require.New(t)
+	value := envOrHelper("MISSING_TEST_KEY", "DEFAULT")
+	r.Equal("DEFAULT", value)
 }

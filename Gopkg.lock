@@ -14,6 +14,19 @@
   version = "v1.0"
 
 [[projects]]
+  name = "github.com/gobuffalo/plush"
+  packages = [
+    ".",
+    "ast",
+    "lexer",
+    "parser",
+    "plush/cmd",
+    "token"
+  ]
+  revision = "2c66199a1b24507c54f4b9b478ead39890e86ff6"
+  version = "v3.7.1"
+
+[[projects]]
   name = "github.com/gobuffalo/tags"
   packages = [
     ".",
@@ -189,6 +202,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c062a1109afa02980aa1035bcce50b6115d0e57c519da90a52e306bf7f0bff8b"
+  inputs-digest = "454a7e882aa8d110b9c93129047499ac04d8dd6b346c8847c6efd7b938308fb9"
   solver-name = "gps-cdcl"
   solver-version = 1

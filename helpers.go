@@ -11,9 +11,9 @@ import (
 
 	"github.com/gobuffalo/plush/ast"
 
+	"github.com/gobuffalo/envy"
 	"github.com/markbates/inflect"
 	"github.com/pkg/errors"
-	"github.com/gobuffalo/envy"
 )
 
 // Helpers contains all of the default helpers for

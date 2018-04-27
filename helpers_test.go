@@ -3,9 +3,9 @@ package plush
 import (
 	"testing"
 
+	"github.com/gobuffalo/envy"
 	"github.com/markbates/going/randx"
 	"github.com/stretchr/testify/require"
-	"github.com/gobuffalo/envy"
 )
 
 func Test_Helpers_WithoutData(t *testing.T) {
@@ -78,7 +78,7 @@ func Test_inspectHelper(t *testing.T) {
 }
 
 func Test_envHelper(t *testing.T) {
-	envy.Temp(func () {
+	envy.Temp(func() {
 		r := require.New(t)
 		envy.Set("TEST_KEY", "TEST_VALUE")
 

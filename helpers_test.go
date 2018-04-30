@@ -77,35 +77,51 @@ func Test_inspectHelper(t *testing.T) {
 	r.Contains(o, "Ringo")
 }
 
-func Test_envHelper(t *testing.T) {
+func Test_env(t *testing.T) {
 	envy.Temp(func() {
 		r := require.New(t)
 		envy.Set("TEST_KEY", "TEST_VALUE")
+		input := `<%=env("TEST_KEY")%>`
 
-		value, err := envHelper("TEST_KEY")
-		r.Nil(err)
-		r.Equal("TEST_VALUE", value)
+		ctx := NewContext()
+		s, err := Render(input, ctx)
+
+		r.NoError(err)
+		r.Equal("TEST_VALUE", s)
 	})
 }
 
-func Test_envHelperMissing(t *testing.T) {
+func Test_envMissing(t *testing.T) {
 	r := require.New(t)
-	_, err := envHelper("MISSING_TEST_KEY")
-	r.NotNil(err)
+	input := `<%=env("TEST_KEY")%>`
+
+	ctx := NewContext()
+	_, err := Render(input, ctx)
+
+	r.Error(err);
 }
 
 func Test_envOrHelper(t *testing.T) {
 	envy.Temp(func() {
 		r := require.New(t)
 		envy.Set("TEST_KEY", "TEST_VALUE")
+		input := `<%=envOr("TEST_KEY", "")%>`
 
-		value := envOrHelper("TEST_KEY", "")
-		r.Equal("TEST_VALUE", value)
+		ctx := NewContext()
+		s, err := Render(input, ctx)
+
+		r.NoError(err)
+		r.Equal("TEST_VALUE", s)
 	})
 }
 
 func Test_envOrHelperDefault(t *testing.T) {
 	r := require.New(t)
-	value := envOrHelper("MISSING_TEST_KEY", "DEFAULT")
-	r.Equal("DEFAULT", value)
+	input := `<%=envOr("TEST_KEY", "DEFAULT")%>`
+
+	ctx := NewContext()
+	s, err := Render(input, ctx)
+
+	r.NoError(err)
+	r.Equal("DEFAULT", s)
 }

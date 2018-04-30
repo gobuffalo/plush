@@ -42,8 +42,8 @@ func init() {
 	Helpers.Add("form", BootstrapFormHelper)
 	Helpers.Add("form_for", BootstrapFormForHelper)
 	Helpers.Add("truncate", truncateHelper)
-	Helpers.Add("env", envHelper)
-	Helpers.Add("envOr", envOrHelper)
+	Helpers.Add("env", envy.MustGet)
+	Helpers.Add("envOr", envy.Get)
 	Helpers.Add("raw", func(s string) template.HTML {
 		return template.HTML(s)
 	})
@@ -123,14 +123,6 @@ func debugHelper(v interface{}) template.HTML {
 
 func inspectHelper(v interface{}) string {
 	return fmt.Sprintf("%+v", v)
-}
-
-func envHelper(k string) (string, error) {
-	return envy.MustGet(k)
-}
-
-func envOrHelper(k, or string) string {
-	return envy.Get(k, or)
 }
 
 func htmlEscape(s string, help HelperContext) (string, error) {

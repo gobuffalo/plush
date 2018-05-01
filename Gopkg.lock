@@ -14,6 +14,25 @@
   version = "v1.0"
 
 [[projects]]
+  name = "github.com/gobuffalo/envy"
+  packages = ["."]
+  revision = "ef60bfc50c8f92d1ee64674d8ce7a48f1f67625e"
+  version = "v1.6.2"
+
+[[projects]]
+  name = "github.com/gobuffalo/plush"
+  packages = [
+    ".",
+    "ast",
+    "lexer",
+    "parser",
+    "plush/cmd",
+    "token"
+  ]
+  revision = "2c66199a1b24507c54f4b9b478ead39890e86ff6"
+  version = "v3.7.1"
+
+[[projects]]
   name = "github.com/gobuffalo/tags"
   packages = [
     ".",
@@ -28,6 +47,12 @@
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  name = "github.com/joho/godotenv"
+  packages = ["."]
+  revision = "a79fa1e548e2c689c241d10173efd51e5d689d5b"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -189,6 +214,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c062a1109afa02980aa1035bcce50b6115d0e57c519da90a52e306bf7f0bff8b"
+  inputs-digest = "4c659a630ffafd941da7a550e9b8ba70b90307dccca0ddff1e3741759390de17"
   solver-name = "gps-cdcl"
   solver-version = 1

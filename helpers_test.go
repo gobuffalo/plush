@@ -80,48 +80,48 @@ func Test_inspectHelper(t *testing.T) {
 func Test_env(t *testing.T) {
 	envy.Temp(func() {
 		r := require.New(t)
-		envy.Set("TEST_KEY", "TEST_VALUE")
-		input := `<%=env("TEST_KEY")%>`
+		envy.Set("testKey", "test value")
+		input := `<%= env("testKey") %>`
 
 		ctx := NewContext()
 		s, err := Render(input, ctx)
 
 		r.NoError(err)
-		r.Equal("TEST_VALUE", s)
+		r.Equal("test value", s)
 	})
 }
 
 func Test_envMissing(t *testing.T) {
 	r := require.New(t)
-	input := `<%=env("TEST_KEY")%>`
+	input := `<%= env("testKey") %>`
 
 	ctx := NewContext()
 	_, err := Render(input, ctx)
 
-	r.Error(err);
+	r.Error(err)
 }
 
 func Test_envOrHelper(t *testing.T) {
 	envy.Temp(func() {
 		r := require.New(t)
-		envy.Set("TEST_KEY", "TEST_VALUE")
-		input := `<%=envOr("TEST_KEY", "")%>`
+		envy.Set("testKey", "test value")
+		input := `<%= envOr("testKey", "") %>`
 
 		ctx := NewContext()
 		s, err := Render(input, ctx)
 
 		r.NoError(err)
-		r.Equal("TEST_VALUE", s)
+		r.Equal("test value", s)
 	})
 }
 
 func Test_envOrHelperDefault(t *testing.T) {
 	r := require.New(t)
-	input := `<%=envOr("TEST_KEY", "DEFAULT")%>`
+	input := `<%= envOr("testKey", "default") %>`
 
 	ctx := NewContext()
 	s, err := Render(input, ctx)
 
 	r.NoError(err)
-	r.Equal("DEFAULT", s)
+	r.Equal("default", s)
 }

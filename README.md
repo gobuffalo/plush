@@ -12,7 +12,7 @@ $ go get -u github.com/gobuffalo/plush
 
 ## Usage
 
-Plush allows for the ebedding of dynamic code inside of your templates. Take the following example:
+Plush allows for the embedding of dynamic code inside of your templates. Take the following example:
 
 ```erb
 <!-- input -->

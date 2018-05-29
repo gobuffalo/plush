@@ -3,9 +3,8 @@ package plush
 import (
 	"testing"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 )
 
 func Test_Template_Exec_Concurrency(t *testing.T) {

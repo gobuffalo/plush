@@ -2,9 +2,7 @@ package plush
 
 import (
 	"github.com/gobuffalo/plush/ast"
-
 	"github.com/gobuffalo/plush/parser"
-
 	"github.com/pkg/errors"
 )
 

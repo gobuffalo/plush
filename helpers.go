@@ -9,9 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gobuffalo/plush/ast"
-
 	"github.com/gobuffalo/envy"
+	"github.com/gobuffalo/plush/ast"
 	"github.com/markbates/inflect"
 	"github.com/pkg/errors"
 )

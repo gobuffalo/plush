@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gobuffalo/plush/ast"
-
 	"github.com/pkg/errors"
 )
 

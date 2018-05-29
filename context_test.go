@@ -4,9 +4,8 @@ import (
 	"html/template"
 	"testing"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 )
 
 func Test_Context_Set(t *testing.T) {

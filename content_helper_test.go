@@ -35,5 +35,5 @@ func Test_ContentForOfWithData(t *testing.T) {
 	r.Contains(s, "<b0></b0>")
 	r.Contains(s, "<b1><button>Button One</button></b1>")
 	r.Contains(s, "<b2><button>Button Two</button></b2>")
-	r.Contains(s, "<b3>Outer label</b3>")
+	r.Contains(s, "<b3>Outer label</b3>", "the outer label shouldn't be affected by the map passed in")
 }

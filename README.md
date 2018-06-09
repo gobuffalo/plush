@@ -284,6 +284,30 @@ fmt.Print(s)
 * `form` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version)
 * `form_for` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version) to build a form for a model
 
+#### contentFor and contentOf
+
+Use the `contentFor` and `contentOf` helpers to dry up your templates with reusable components.
+
+For example:
+
+```
+<% contentFor("fancy-title") { %>
+  <h1 class='fancy'><%= title %></h1>
+<% } %>
+```
+
+Elsewhere...
+
+```
+<%= contentOf("fancy-title", {"title":"Welcome to Plush"}) %>
+```
+
+Would generate:
+
+```
+<h1 class='fancy'>Welcome to Plush</h1>
+```
+
 #### truncate
 
 `truncate` takes two optional parameters:

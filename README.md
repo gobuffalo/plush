@@ -303,6 +303,8 @@ in our template:
 <%= contentOf("fancy-title", {"title":"Welcome to Plush"}) %>
 ```
 
+* The second map argument is optional, for static content just use `<%= contentOf("fancy-title") %>`
+
 Rendering this would generate this output:
 
 ```

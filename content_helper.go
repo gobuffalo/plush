@@ -17,10 +17,15 @@ import (
 */
 func contentForHelper(name string, help HelperContext) {
 	help.Set("contentFor:"+name, func(data map[string]interface{}) (template.HTML, error) {
-		for k, v := range data {
-			help.Set(k, v)
+		subhelp := &HelperContext{
+			Context:  help.New(),
+			compiler: help.compiler,
+			block:    help.block,
 		}
-		body, err := help.Block()
+		for k, v := range data {
+			subhelp.Set(k, v)
+		}
+		body, err := subhelp.Block()
 		if err != nil {
 			return "", errors.WithStack(err)
 		}

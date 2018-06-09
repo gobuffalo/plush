@@ -288,7 +288,7 @@ fmt.Print(s)
 
 Use the `contentFor` and `contentOf` helpers to dry up your templates with reusable components.
 
-For example:
+For example, we can define a snippet that generates a fancy title using `contentFor`:
 
 ```
 <% contentFor("fancy-title") { %>
@@ -296,17 +296,20 @@ For example:
 <% } %>
 ```
 
-Elsewhere...
+The `fancy-title` name is how we will invoke this with `contentOf` elsewhere 
+in our template:
 
 ```
 <%= contentOf("fancy-title", {"title":"Welcome to Plush"}) %>
 ```
 
-Would generate:
+Rendering this would generate this output:
 
 ```
 <h1 class='fancy'>Welcome to Plush</h1>
 ```
+
+As you can see, the `<%= title %>` has been replaced with the `Welcome to Plush` string.
 
 #### truncate
 

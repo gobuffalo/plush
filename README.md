@@ -284,6 +284,35 @@ fmt.Print(s)
 * `form` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version)
 * `form_for` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version) to build a form for a model
 
+#### contentFor and contentOf
+
+Use the `contentFor` and `contentOf` helpers to dry up your templates with reusable components.
+
+For example, we can define a snippet that generates a fancy title using `contentFor`:
+
+```
+<% contentFor("fancy-title") { %>
+  <h1 class='fancy'><%= title %></h1>
+<% } %>
+```
+
+The `fancy-title` name is how we will invoke this with `contentOf` elsewhere 
+in our template:
+
+```
+<%= contentOf("fancy-title", {"title":"Welcome to Plush"}) %>
+```
+
+* The second map argument is optional, for static content just use `<%= contentOf("fancy-title") %>`
+
+Rendering this would generate this output:
+
+```
+<h1 class='fancy'>Welcome to Plush</h1>
+```
+
+As you can see, the `<%= title %>` has been replaced with the `Welcome to Plush` string.
+
 #### truncate
 
 `truncate` takes two optional parameters:

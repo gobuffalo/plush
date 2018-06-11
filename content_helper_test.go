@@ -37,3 +37,13 @@ func Test_ContentForOfWithData(t *testing.T) {
 	r.Contains(s, "<b2><button>Button Two</button></b2>")
 	r.Contains(s, "<b3>Outer label</b3>", "the outer label shouldn't be affected by the map passed in")
 }
+
+func Test_ContentForOf_MissingBlock(t *testing.T) {
+	r := require.New(t)
+	input := `
+	<b1><%= contentOf("buttons") %></b1>
+	<b2><%= contentOf("buttons") %></b2>
+	`
+	_, err := Render(input, NewContext())
+	r.EqualError(err, "line 2: missing contentOf block: buttons")
+}

@@ -36,6 +36,9 @@ func contentForHelper(name string, help HelperContext) {
 	<%= contentOf("buttons", {"label": "Click me"}) %>
 */
 func contentOfHelper(name string, data map[string]interface{}, help HelperContext) (template.HTML, error) {
-	fn := help.Value("contentFor:" + name).(func(data map[string]interface{}) (template.HTML, error))
+	fn, ok := help.Value("contentFor:" + name).(func(data map[string]interface{}) (template.HTML, error))
+	if !ok {
+		return template.HTML(""), errors.WithStack(errors.New("missing contentOf block: " + name))
+	}
 	return fn(data)
 }

@@ -141,6 +141,7 @@ func (c *compiler) evalUserFunction(node *userFunction, args []ast.Expression) (
 	octx := c.ctx
 	defer func() { c.ctx = octx }()
 	c.ctx = c.ctx.New()
+	c.ctx.Set("__user_function", true)
 	for i, p := range node.Parameters {
 		a := args[i]
 		v, err := c.evalExpression(a)
@@ -691,6 +692,9 @@ func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, er
 		if i != nil {
 			res = append(res, i)
 		}
+		if c.ctx.Has("__user_function") && c.ctx.Value("__user_function").(bool) && c.ctx.Has("__returned") && c.ctx.Value("__returned").(bool) {
+			return res, nil
+		}
 	}
 	return res, nil
 }
@@ -700,13 +704,20 @@ func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 	// fmt.Println("evalStatement")
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:
+		c.ctx.Set("__returned", false)
 		s, err := c.evalExpression(t.Expression)
 		switch s.(type) {
 		case ast.Printable, template.HTML:
 			return s, errors.WithStack(err)
 		}
+
+		if c.ctx.Has("__user_function") && c.ctx.Value("__user_function").(bool) && c.ctx.Has("__returned") && c.ctx.Value("__returned").(bool) {
+			return s, errors.WithStack(err)
+		}
+
 		return nil, errors.WithStack(err)
 	case *ast.ReturnStatement:
+		c.ctx.Set("__returned", true)
 		return c.evalReturnStatement(t)
 	case *ast.LetStatement:
 		return c.evalLetStatement(t)

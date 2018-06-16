@@ -22,8 +22,8 @@
 [[projects]]
   name = "github.com/gobuffalo/envy"
   packages = ["."]
-  revision = "ef60bfc50c8f92d1ee64674d8ce7a48f1f67625e"
-  version = "v1.6.2"
+  revision = "2d0f467653f3d961ce9ada4d32a230bdcb3bfe11"
+  version = "v1.6.3"
 
 [[projects]]
   name = "github.com/gobuffalo/tags"
@@ -63,7 +63,6 @@
   version = "v1.2.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/markbates/going"
   packages = [
     "defaults",
@@ -71,12 +70,13 @@
     "wait"
   ]
   revision = "0576708c56cea02331f864fe6e157ac7841923e4"
+  version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/markbates/inflect"
   packages = ["."]
   revision = "dd7de90c06bca70f18136e59dec2270c19a401e7"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -208,7 +208,7 @@
     "html",
     "html/atom"
   ]
-  revision = "1e491301e022f8f977054da4c2d852decd59571f"
+  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
   branch = "master"

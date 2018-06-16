@@ -3,14 +3,14 @@ module github.com/gobuffalo/plush
 require (
 	dmitri.shuralyov.com/text/kebabcase v0.0.0-20180217051803-40e40b42552a
 	github.com/fatih/structs v0.0.0-20170103081050-a720dfa8df58
-	github.com/gobuffalo/envy v1.6.2
+	github.com/gobuffalo/envy v1.6.3
 	github.com/gobuffalo/tags v0.0.0-20180320140155-82cd7696c84a
 	github.com/gobuffalo/uuid v0.0.0-20180207211247-3a9fb6c5c481
 	github.com/gobuffalo/validate v0.0.0-20180210182920-42d8db6e06e6
 	github.com/inconshreveable/mousetrap v0.0.0-20141017200713-76626ae9c91c
 	github.com/joho/godotenv v1.2.0
-	github.com/markbates/going v0.0.0-20170113214412-0576708c56ce
-	github.com/markbates/inflect v0.0.0-20180514174915-dd7de90c06bc
+	github.com/markbates/going v1.0.0
+	github.com/markbates/inflect v1.0.0
 	github.com/microcosm-cc/bluemonday v0.0.0-20180327211928-995366fdf961
 	github.com/pkg/errors v0.8.0
 	github.com/russross/blackfriday v0.0.0-20180428102519-11635eb403ff
@@ -29,6 +29,6 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.1
 	github.com/stretchr/testify v1.2.2
-	golang.org/x/net v0.0.0-20180530234432-1e491301e022
+	golang.org/x/net v0.0.0-20180611182652-db08ff08e862
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
 )

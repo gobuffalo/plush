@@ -47,3 +47,33 @@ func Test_ContentForOf_MissingBlock(t *testing.T) {
 	_, err := Render(input, NewContext())
 	r.EqualError(err, "line 2: missing contentOf block: buttons")
 }
+
+func Test_ContentForOf_MissingBlock_DefaultBlock(t *testing.T) {
+	r := require.New(t)
+	input := `
+	<b0><%= contentOf("my-block") { %>default<% } %></b0>
+	`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Contains(s, "<b0>default</b0>")
+}
+
+func Test_ContentForOf_MissingBlock_NoBlockContent(t *testing.T) {
+	r := require.New(t)
+	input := `
+	<b0><%= contentOf("buttons") %></b0>
+	`
+	_, err := Render(input, NewContext())
+	r.EqualError(err, "line 2: missing contentOf block: buttons")
+}
+
+func Test_ContentForOf_DefaultBlock(t *testing.T) {
+	r := require.New(t)
+	input := `
+	<b0><% contentFor("buttons") { %>custom<% } %></b0>
+	<b0><%= contentOf("buttons") { %>default<% } %></b0>
+	`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Contains(s, "<b0>custom</b0>")
+}

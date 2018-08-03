@@ -2,17 +2,19 @@ module github.com/gobuffalo/plush
 
 require (
 	dmitri.shuralyov.com/text/kebabcase v0.0.0-20180217051803-40e40b42552a
-	github.com/fatih/structs v0.0.0-20170103081050-a720dfa8df58
+	github.com/davecgh/go-spew v1.1.0
+	github.com/fatih/structs v1.0.0
 	github.com/gobuffalo/envy v1.6.3
-	github.com/gobuffalo/tags v0.0.0-20180320140155-82cd7696c84a
-	github.com/gobuffalo/uuid v0.0.0-20180207211247-3a9fb6c5c481
-	github.com/gobuffalo/validate v0.0.0-20180210182920-42d8db6e06e6
-	github.com/inconshreveable/mousetrap v0.0.0-20141017200713-76626ae9c91c
+	github.com/gobuffalo/tags v2.0.5+incompatible
+	github.com/gobuffalo/uuid v2.0.0+incompatible
+	github.com/gobuffalo/validate v2.0.0+incompatible
+	github.com/inconshreveable/mousetrap v1.0.0
 	github.com/joho/godotenv v1.2.0
 	github.com/markbates/going v1.0.0
 	github.com/markbates/inflect v1.0.0
 	github.com/microcosm-cc/bluemonday v0.0.0-20180327211928-995366fdf961
 	github.com/pkg/errors v0.8.0
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/russross/blackfriday v0.0.0-20180428102519-11635eb403ff
 	github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516
 	github.com/sergi/go-diff v1.0.0

@@ -3,8 +3,8 @@ package plush
 import (
 	"html/template"
 
+	"github.com/gobuffalo/github_flavored_markdown"
 	_ "github.com/russross/blackfriday"
-	"github.com/shurcooL/github_flavored_markdown"
 )
 
 // Markdown converts the string into HTML using GitHub flavored markdown.

@@ -4,7 +4,6 @@ import (
 	"html/template"
 
 	"github.com/gobuffalo/github_flavored_markdown"
-	_ "github.com/russross/blackfriday"
 )
 
 // Markdown converts the string into HTML using GitHub flavored markdown.

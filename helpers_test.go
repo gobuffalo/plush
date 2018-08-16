@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/envy"
-	"github.com/markbates/going/randx"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,7 +39,7 @@ func Test_Helpers_WithoutData(t *testing.T) {
 
 func Test_truncateHelper(t *testing.T) {
 	r := require.New(t)
-	x := randx.String(51)
+	x := "KEuFHyyImKUMhSkSolLqgqevKQNZUjpSZokrGbZqnUrUnWrTDwi"
 	s := truncateHelper(x, map[string]interface{}{})
 	r.Len(s, 50)
 	r.Equal("...", s[47:])

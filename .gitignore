@@ -30,3 +30,5 @@ gin-bin
 cover.out
 vendor/
 .idea/
+go.mod
+go.sum

@@ -650,6 +650,19 @@ func Test_StringLiteralExpression(t *testing.T) {
 	r.Equal("hello world", literal.Value)
 }
 
+func Test_StringBlockExpression(t *testing.T) {
+	r := require.New(t)
+	input := "<% `hello world`; %>"
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	literal := stmt.Expression.(*ast.StringLiteral)
+
+	r.Equal("hello world", literal.Value)
+}
+
 func Test_EmptyArrayLiterals(t *testing.T) {
 	r := require.New(t)
 	input := "<% [] %>"

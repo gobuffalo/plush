@@ -181,13 +181,31 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 		}
 	}
 
-	var r interface{}
 	if c.isTruthy(con) {
 		return c.evalBlockStatement(node.Block)
-	} else {
-		if node.ElseBlock != nil {
-			return c.evalBlockStatement(node.ElseBlock)
+	}
+
+	return c.evalElseAndElseIfExpressions(node)
+}
+
+func (c *compiler) evalElseAndElseIfExpressions(node *ast.IfExpression) (interface{}, error) {
+	// fmt.Println("evalElseIfExpression")
+	var r interface{}
+	for _, eiNode := range node.ElseIf {
+		eiCon, err := c.evalExpression(eiNode.Condition)
+		if err != nil {
+			if errors.Cause(err) != ErrUnknownIdentifier {
+				return nil, errors.WithStack(err)
+			}
 		}
+
+		if c.isTruthy(eiCon) {
+			return c.evalBlockStatement(eiNode.Block)
+		}
+	}
+
+	if node.ElseBlock != nil {
+		return c.evalBlockStatement(node.ElseBlock)
 	}
 
 	return r, nil

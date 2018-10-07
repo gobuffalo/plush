@@ -3,7 +3,7 @@ GO_BIN ?= go
 
 install:
 	packr
-	$(GO_BIN) install -v .
+	$(GO_BIN) install -v ./plush
 
 deps:
 	$(GO_BIN) get github.com/gobuffalo/release

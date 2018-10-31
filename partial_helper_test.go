@@ -53,7 +53,7 @@ func Test_PartialHelper_Invalid_Feeder(t *testing.T) {
 	name := "index"
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["partialFeeder"] = "me-rong"
+	help.Set("partialFeeder", "me-rong")
 
 	html, err := partialHelper(name, data, help)
 	r.Error(err)
@@ -67,9 +67,9 @@ func Test_PartialHelper_Invalid_FeederFunction(t *testing.T) {
 	name := "index"
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["partialFeeder"] = func(string) string {
+	help.Set("partialFeeder", func(string) string {
 		return "me-rong"
-	}
+	})
 
 	html, err := partialHelper(name, data, help)
 	r.Error(err)
@@ -83,9 +83,9 @@ func Test_PartialHelper_Feeder_Error(t *testing.T) {
 	name := "index"
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["partialFeeder"] = func(string) (string, error) {
+	help.Set("partialFeeder", func(string) (string, error) {
 		return "", errors.New("me-rong")
-	}
+	})
 
 	_, err := partialHelper(name, data, help)
 	r.Error(err)
@@ -98,9 +98,9 @@ func Test_PartialHelper_Good(t *testing.T) {
 	name := "index"
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["partialFeeder"] = func(string) (string, error) {
+	help.Set("partialFeeder", func(string) (string, error) {
 		return `<div class="test">Plush!</div>`, nil
-	}
+	})
 
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
@@ -113,9 +113,9 @@ func Test_PartialHelper_With_Data(t *testing.T) {
 	name := "index"
 	data := map[string]interface{}{"name": "Yonghwan"}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["partialFeeder"] = func(string) (string, error) {
+	help.Set("partialFeeder", func(string) (string, error) {
 		return `<div class="test">Hello <%= name %></div>`, nil
-	}
+	})
 
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
@@ -128,9 +128,9 @@ func Test_PartialHelper_Render_Error(t *testing.T) {
 	name := "index"
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["partialFeeder"] = func(string) (string, error) {
+	help.Set("partialFeeder", func(string) (string, error) {
 		return `<div class="test">Hello <%= name </div>`, nil
-	}
+	})
 
 	_, err := partialHelper(name, data, help)
 	r.Error(err)
@@ -145,12 +145,12 @@ func Test_PartialHelper_With_Layout(t *testing.T) {
 		"layout": "container",
 	}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["partialFeeder"] = func(name string) (string, error) {
+	help.Set("partialFeeder", func(name string) (string, error) {
 		if name == "container" {
 			return `<html><%= yield %></html>`, nil
 		}
 		return `<div class="test">Hello <%= name %></div>`, nil
-	}
+	})
 
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
@@ -163,10 +163,10 @@ func Test_PartialHelper_JavaScript(t *testing.T) {
 	name := "index.js"
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["contentType"] = "application/javascript"
-	help.Context.data["partialFeeder"] = func(string) (string, error) {
+	help.Set("contentType", "application/javascript")
+	help.Set("partialFeeder", func(string) (string, error) {
 		return `alert('\'Hello\'');`, nil
-	}
+	})
 
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
@@ -179,10 +179,10 @@ func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
 	name := "index.html"
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
-	help.Context.data["contentType"] = "application/javascript"
-	help.Context.data["partialFeeder"] = func(string) (string, error) {
+	help.Set("contentType", "application/javascript")
+	help.Set("partialFeeder", func(string) (string, error) {
 		return `alert('\'Hello\'');`, nil
-	}
+	})
 
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)

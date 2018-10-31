@@ -15,10 +15,10 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 		return "", errors.New("invalid context. abort")
 	}
 	for k, v := range data {
-		help.Context.data[k] = v
+		help.Set(k, v)
 	}
 
-	pf, ok := help.Context.data["partialFeeder"].(func(string) (string, error))
+	pf, ok := help.Value("partialFeeder").(func(string) (string, error))
 	if !ok {
 		return "", errors.New("could not found partial feeder from helpers")
 	}
@@ -40,7 +40,7 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 			help)
 	}
 
-	if ct, ok := help.Context.data["contentType"].(string); ok {
+	if ct, ok := help.Value("contentType").(string); ok {
 		if strings.Contains(ct, "javascript") && strings.HasSuffix(name, ".html") {
 			part = template.JSEscapeString(string(part))
 		}

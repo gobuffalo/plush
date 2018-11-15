@@ -29,6 +29,8 @@ matrix:
     env:
       - GO111MODULE=on
 
-install: make deps
+install: false
 
-script: make ci-test
+script:
+  - go get -v -t ./...
+  - go test -v  -timeout=5s -race ./...

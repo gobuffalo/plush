@@ -122,6 +122,47 @@ func Test_PartialHelper_With_Data(t *testing.T) {
 	r.Equal(`<div class="test">Hello Yonghwan</div>`, string(html))
 }
 
+func Test_PartialHelper_With_InternalChange(t *testing.T) {
+	r := require.New(t)
+
+	name := "index"
+	data := map[string]interface{}{}
+	help := HelperContext{Context: NewContextWith(map[string]interface{}{
+		"number": 3,
+	})}
+	help.Set("partialFeeder", func(string) (string, error) {
+		return `<% let number = number - 1
+		%><div class="test">Hello <%= number %></div>`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`<div class="test">Hello 2</div>`, string(html))
+	r.Equal(3, help.Value("number"))
+}
+
+func Test_PartialHelper_With_Recursion(t *testing.T) {
+	r := require.New(t)
+
+	name := "index"
+	data := map[string]interface{}{}
+	help := HelperContext{Context: NewContextWith(map[string]interface{}{
+		"number": 3,
+	})}
+	help.Set("partialFeeder", func(string) (string, error) {
+		return `<%=
+		if (number > 0) { %><%
+			let number = number - 1 %><%=
+			partial("index") %><%= number %>, <%
+		} %>`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`0, 1, 2, `, string(html))
+	r.Equal(3, help.Value("number"))
+}
+
 func Test_PartialHelper_Render_Error(t *testing.T) {
 	r := require.New(t)
 

@@ -43,12 +43,13 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 			help)
 	}
 
+	if strings.HasSuffix(name, ".md") {
+		part = string(github_flavored_markdown.Markdown([]byte(part)))
+	}
+
 	if ct, ok := help.Value("contentType").(string); ok {
 		if strings.Contains(ct, "javascript") && strings.HasSuffix(name, ".html") {
 			part = template.JSEscapeString(string(part))
-		}
-		if strings.Contains(ct, "markdown") || strings.HasSuffix(name, ".md") {
-			part = string(github_flavored_markdown.Markdown([]byte(part)))
 		}
 	}
 	return template.HTML(part), err

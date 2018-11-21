@@ -1,6 +1,7 @@
 package plush
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -228,4 +229,20 @@ func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
 	r.Equal(`alert(\'\\\'Hello\\\'\');`, string(html))
+}
+
+func Test_PartialHelper_Markdown(t *testing.T) {
+	r := require.New(t)
+
+	name := "index.md"
+	data := map[string]interface{}{}
+	help := HelperContext{Context: NewContext()}
+	help.Set("contentType", "text/markdown")
+	help.Set("partialFeeder", func(string) (string, error) {
+		return "`test`", nil
+	})
+
+	md, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`<p><code>test</code></p>`, strings.TrimSpace(string(md)))
 }

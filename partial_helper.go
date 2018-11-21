@@ -1,6 +1,7 @@
 package plush
 
 import (
+	"github.com/gobuffalo/github_flavored_markdown"
 	"html/template"
 	"strings"
 
@@ -45,6 +46,9 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 	if ct, ok := help.Value("contentType").(string); ok {
 		if strings.Contains(ct, "javascript") && strings.HasSuffix(name, ".html") {
 			part = template.JSEscapeString(string(part))
+		}
+		if strings.Contains(ct, "markdown") || strings.HasSuffix(name, ".md") {
+			part = string(github_flavored_markdown.Markdown([]byte(part)))
 		}
 	}
 	return template.HTML(part), err

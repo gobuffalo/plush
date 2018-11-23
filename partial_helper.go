@@ -36,15 +36,15 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 		return "", err
 	}
 
+	if strings.HasSuffix(name, ".md") {
+		part = string(github_flavored_markdown.Markdown([]byte(part)))
+	}
+
 	if layout, ok := data["layout"].(string); ok {
 		return partialHelper(
 			layout,
 			map[string]interface{}{"yield": template.HTML(part)},
 			help)
-	}
-
-	if strings.HasSuffix(name, ".md") {
-		part = string(github_flavored_markdown.Markdown([]byte(part)))
 	}
 
 	if ct, ok := help.Value("contentType").(string); ok {

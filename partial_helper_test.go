@@ -246,3 +246,43 @@ func Test_PartialHelper_Markdown(t *testing.T) {
 	r.NoError(err)
 	r.Equal(`<p><code>test</code></p>`, strings.TrimSpace(string(md)))
 }
+
+func Test_PartialHelper_Markdown_With_Layout(t *testing.T) {
+	r := require.New(t)
+
+	name := "index.md"
+	data := map[string]interface{}{
+		"layout": "container.html",
+	}
+	help := HelperContext{Context: NewContext()}
+	help.Set("partialFeeder", func(name string) (string, error) {
+		if name == data["layout"] {
+			return `<html>This <em>is</em> a <%= yield %></html>`, nil
+		}
+		return `**test**`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal("<html>This <em>is</em> a <p><strong>test</strong></p>\n</html>", string(html))
+}
+
+func Test_PartialHelper_Markdown_With_Layout_Reversed(t *testing.T) {
+	r := require.New(t)
+
+	name := "index.html"
+	data := map[string]interface{}{
+		"layout": "container.md",
+	}
+	help := HelperContext{Context: NewContext()}
+	help.Set("partialFeeder", func(name string) (string, error) {
+		if name == data["layout"] {
+			return `This *is* a <%= yield %>`, nil
+		}
+		return `<strong>test</strong>`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`<p>This <em>is</em> a <strong>test</strong></p>`, strings.TrimSpace(string(html)))
+}

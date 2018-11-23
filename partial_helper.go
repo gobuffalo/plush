@@ -48,7 +48,7 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 	}
 
 	if ct, ok := help.Value("contentType").(string); ok {
-		if strings.Contains(ct, "javascript") && strings.HasSuffix(name, ".html") {
+		if strings.Contains(ct, "javascript") && !strings.HasSuffix(name, ".js") {
 			part = template.JSEscapeString(string(part))
 		}
 	}

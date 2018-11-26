@@ -1,10 +1,11 @@
 package plush
 
 import (
-	"github.com/gobuffalo/github_flavored_markdown"
 	"html/template"
+	"path/filepath"
 	"strings"
 
+	"github.com/gobuffalo/github_flavored_markdown"
 	"github.com/pkg/errors"
 )
 
@@ -40,6 +41,13 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 		part = string(github_flavored_markdown.Markdown([]byte(part)))
 	}
 
+	if ct, ok := help.Value("contentType").(string); ok {
+		ext := filepath.Ext(name)
+		if strings.Contains(ct, "javascript") && ext != ".js" && ext != "" {
+			part = template.JSEscapeString(string(part))
+		}
+	}
+
 	if layout, ok := data["layout"].(string); ok {
 		return partialHelper(
 			layout,
@@ -47,10 +55,5 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 			help)
 	}
 
-	if ct, ok := help.Value("contentType").(string); ok {
-		if strings.Contains(ct, "javascript") && !strings.HasSuffix(name, ".js") {
-			part = template.JSEscapeString(string(part))
-		}
-	}
 	return template.HTML(part), err
 }

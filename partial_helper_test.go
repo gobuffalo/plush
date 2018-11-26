@@ -215,6 +215,22 @@ func Test_PartialHelper_JavaScript(t *testing.T) {
 	r.Equal(`alert('\'Hello\'');`, string(html))
 }
 
+func Test_PartialHelper_JavaScript_Without_Extension(t *testing.T) {
+	r := require.New(t)
+
+	name := "index"
+	data := map[string]interface{}{}
+	help := HelperContext{Context: NewContext()}
+	help.Set("contentType", "application/javascript")
+	help.Set("partialFeeder", func(string) (string, error) {
+		return `alert('\'Hello\'');`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`alert('\'Hello\'');`, string(html))
+}
+
 func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
 	r := require.New(t)
 

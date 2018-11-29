@@ -1,6 +1,7 @@
 package plush
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -214,6 +215,22 @@ func Test_PartialHelper_JavaScript(t *testing.T) {
 	r.Equal(`alert('\'Hello\'');`, string(html))
 }
 
+func Test_PartialHelper_JavaScript_Without_Extension(t *testing.T) {
+	r := require.New(t)
+
+	name := "index"
+	data := map[string]interface{}{}
+	help := HelperContext{Context: NewContext()}
+	help.Set("contentType", "application/javascript")
+	help.Set("partialFeeder", func(string) (string, error) {
+		return `alert('\'Hello\'');`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`alert('\'Hello\'');`, string(html))
+}
+
 func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
 	r := require.New(t)
 
@@ -228,4 +245,60 @@ func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
 	r.Equal(`alert(\'\\\'Hello\\\'\');`, string(html))
+}
+
+func Test_PartialHelper_Markdown(t *testing.T) {
+	r := require.New(t)
+
+	name := "index.md"
+	data := map[string]interface{}{}
+	help := HelperContext{Context: NewContext()}
+	help.Set("contentType", "text/markdown")
+	help.Set("partialFeeder", func(string) (string, error) {
+		return "`test`", nil
+	})
+
+	md, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`<p><code>test</code></p>`, strings.TrimSpace(string(md)))
+}
+
+func Test_PartialHelper_Markdown_With_Layout(t *testing.T) {
+	r := require.New(t)
+
+	name := "index.md"
+	data := map[string]interface{}{
+		"layout": "container.html",
+	}
+	help := HelperContext{Context: NewContext()}
+	help.Set("partialFeeder", func(name string) (string, error) {
+		if name == data["layout"] {
+			return `<html>This <em>is</em> a <%= yield %></html>`, nil
+		}
+		return `**test**`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal("<html>This <em>is</em> a <p><strong>test</strong></p>\n</html>", string(html))
+}
+
+func Test_PartialHelper_Markdown_With_Layout_Reversed(t *testing.T) {
+	r := require.New(t)
+
+	name := "index.html"
+	data := map[string]interface{}{
+		"layout": "container.md",
+	}
+	help := HelperContext{Context: NewContext()}
+	help.Set("partialFeeder", func(name string) (string, error) {
+		if name == data["layout"] {
+			return `This *is* a <%= yield %>`, nil
+		}
+		return `<strong>test</strong>`, nil
+	})
+
+	html, err := partialHelper(name, data, help)
+	r.NoError(err)
+	r.Equal(`<p>This <em>is</em> a <strong>test</strong></p>`, strings.TrimSpace(string(html)))
 }

@@ -43,7 +43,7 @@ func (c *compiler) compile() (string, error) {
 			if c.curStmt != nil {
 				s = c.curStmt
 			}
-			return "", errors.WithStack(errors.Wrapf(err, "line %d", s.T().LineNumber))
+			return "", errors.WithStack(errors.Errorf("line %d: %s", s.T().LineNumber, err))
 		}
 
 		c.write(bb, res)
@@ -131,7 +131,7 @@ func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}
 	}
 	n := node.Name.Value
 	if !c.ctx.Has(n) {
-		return nil, errors.Errorf("could not find identifier named %s", n)
+		return nil, errors.Wrap(ErrUnknownIdentifier, fmt.Sprintf("%q", n))
 	}
 	c.ctx.Set(n, v)
 	return nil, nil
@@ -307,7 +307,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 	if node.Value == "nil" {
 		return nil, nil
 	}
-	return nil, errors.Wrap(ErrUnknownIdentifier, node.Value)
+	return nil, errors.Wrap(ErrUnknownIdentifier, fmt.Sprintf("%q", node.Value))
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {

@@ -3,7 +3,6 @@ package plush
 import (
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -148,7 +147,7 @@ func Test_UndefinedArg(t *testing.T) {
 
 	_, err := Render(input, ctx)
 	r.Error(err)
-	r.Equal(ErrUnknownIdentifier, errors.Cause(err))
+	r.Equal(`line 1: "bar": unknown identifier`, err.Error())
 }
 
 // func Test_FizzParses(t *testing.T) {

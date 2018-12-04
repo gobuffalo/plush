@@ -462,6 +462,11 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			mname = i.Value
 		}
 		rv = rc.MethodByName(mname)
+		if !rv.IsValid() && rc.Type().Kind() != reflect.Ptr {
+			ptr := reflect.New(reflect.TypeOf(c))
+			ptr.Elem().Set(rc)
+			rv = ptr.MethodByName(mname)
+		}
 		if !rv.IsValid() {
 			if rv.Kind() == reflect.Slice {
 				rv = rc.FieldByName(mname)

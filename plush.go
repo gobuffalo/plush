@@ -3,6 +3,8 @@ package plush
 import (
 	"fmt"
 	"html/template"
+	"io"
+	"io/ioutil"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -65,6 +67,14 @@ func Render(input string, ctx *Context) (string, error) {
 		return "", errors.WithStack(err)
 	}
 	return t.Exec(ctx)
+}
+
+func RenderR(input io.Reader, ctx *Context) (string, error) {
+	b, err := ioutil.ReadAll(input)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return Render(string(b), ctx)
 }
 
 // RunScript allows for "pure" plush scripts to be executed.

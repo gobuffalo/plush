@@ -303,7 +303,7 @@ func Test_PartialHelper_Markdown_With_Layout_Reversed(t *testing.T) {
 	r.Equal(`<p>This <em>is</em> a <strong>test</strong></p>`, strings.TrimSpace(string(html)))
 }
 
-func Test_PartialHelpers_With_Indentatio(t *testing.T) {
+func Test_PartialHelpers_With_Indentation(t *testing.T) {
 	r := require.New(t)
 
 	main := `<div>

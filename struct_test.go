@@ -32,12 +32,17 @@ func Test_Render_UnknownAttribute_on_Callee(t *testing.T) {
 
 type Robot struct {
 	Avatar Avatar
+	name   string
 }
 
 type Avatar string
 
 func (a Avatar) URL() string {
 	return strings.ToUpper(string(a))
+}
+
+func (r *Robot) Name() string {
+	return r.name
 }
 
 func Test_Render_Function_on_sub_Struct(t *testing.T) {
@@ -51,4 +56,25 @@ func Test_Render_Function_on_sub_Struct(t *testing.T) {
 	s, err := Render(input, ctx)
 	r.NoError(err)
 	r.Equal("BENDER.JPG", s)
+}
+
+func Test_Render_Struct_PointerMethod(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	robot := Robot{name: "robot"}
+
+	t.Run("ByValue", func(t *testing.T) {
+		ctx.Set("robot", robot)
+		input := `<%= robot.Name() %>`
+		s, err := Render(input, ctx)
+		r.NoError(err)
+		r.Equal("robot", s)
+	})
+	t.Run("ByPointer", func(t *testing.T) {
+		ctx.Set("robot", &robot)
+		input := `<%= robot.Name() %>`
+		s, err := Render(input, ctx)
+		r.NoError(err)
+		r.Equal("robot", s)
+	})
 }

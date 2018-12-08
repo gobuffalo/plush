@@ -280,7 +280,7 @@ func Test_PartialHelper_Markdown_With_Layout(t *testing.T) {
 
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
-	r.Equal("<html>This <em>is</em> a <p><strong>test</strong></p>\n</html>", string(html))
+	r.Equal("<html>This <em>is</em> a <p><strong>test</strong></p></html>", string(html))
 }
 
 func Test_PartialHelper_Markdown_With_Layout_Reversed(t *testing.T) {
@@ -301,4 +301,36 @@ func Test_PartialHelper_Markdown_With_Layout_Reversed(t *testing.T) {
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
 	r.Equal(`<p>This <em>is</em> a <strong>test</strong></p>`, strings.TrimSpace(string(html)))
+}
+
+func Test_PartialHelpers_With_Indentation(t *testing.T) {
+	r := require.New(t)
+
+	main := `<div>
+    <div>
+        <%= partial("dummy.md") %>
+    </div>
+</div>`
+	partial := "```go\n" +
+		"if true {\n" +
+		"    fmt.Println()\n" +
+		"}\n" +
+		"```"
+
+	ctx := NewContext()
+	ctx.Set("partialFeeder", func(string) (string, error) {
+		return partial, nil
+	})
+
+	html, err := Render(main, ctx)
+	r.NoError(err)
+	r.Equal(`<div>
+    <div>
+        <div class="highlight highlight-go"><pre>if true {
+    fmt.Println()
+}
+</pre></div>
+    </div>
+</div>`,
+		string(html))
 }

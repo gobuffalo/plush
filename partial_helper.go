@@ -39,6 +39,7 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 
 	if strings.HasSuffix(name, ".md") {
 		part = string(github_flavored_markdown.Markdown([]byte(part)))
+		part = strings.TrimSuffix(part, "\n")
 	}
 
 	if ct, ok := help.Value("contentType").(string); ok {

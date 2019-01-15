@@ -17,6 +17,13 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 		return "", errors.New("invalid context. abort")
 	}
 
+	if ct, ok := help.Value("contentType").(string); ok {
+		ext := filepath.Ext(name)
+		if strings.Contains(ct, "javascript") && ext != ".js" && ext != "" && !help.Has("mustJSEscape") {
+			help.Set("mustJSEscape", name)
+		}
+	}
+	
 	help.Context = help.New()
 	for k, v := range data {
 		help.Set(k, v)
@@ -42,11 +49,8 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 		part = strings.TrimSuffix(part, "\n")
 	}
 
-	if ct, ok := help.Value("contentType").(string); ok {
-		ext := filepath.Ext(name)
-		if strings.Contains(ct, "javascript") && ext != ".js" && ext != "" {
-			part = template.JSEscapeString(string(part))
-		}
+	if mustEscape, ok := help.Value("mustJSEscape").(string); ok && mustEscape == name {
+		part = template.JSEscapeString(string(part))
 	}
 
 	if layout, ok := data["layout"].(string); ok {

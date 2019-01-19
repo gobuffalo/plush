@@ -5,8 +5,6 @@ github.com/gobuffalo/plush does not try to reinvent the wheel! Instead, it uses 
 Thank you to the following **GIANTS**:
 
 
-* [github.com/fatih/structs](https://godoc.org/github.com/fatih/structs)
-
 * [github.com/gobuffalo/envy](https://godoc.org/github.com/gobuffalo/envy)
 
 * [github.com/gobuffalo/flect](https://godoc.org/github.com/gobuffalo/flect)
@@ -45,13 +43,7 @@ Thank you to the following **GIANTS**:
 
 * [github.com/gobuffalo/validate/validators](https://godoc.org/github.com/gobuffalo/validate/validators)
 
-* [github.com/gofrs/uuid](https://godoc.org/github.com/gofrs/uuid)
-
 * [github.com/joho/godotenv](https://godoc.org/github.com/joho/godotenv)
-
-* [github.com/markbates/inflect](https://godoc.org/github.com/markbates/inflect)
-
-* [github.com/microcosm-cc/bluemonday](https://godoc.org/github.com/microcosm-cc/bluemonday)
 
 * [github.com/pkg/errors](https://godoc.org/github.com/pkg/errors)
 
@@ -60,14 +52,6 @@ Thank you to the following **GIANTS**:
 * [github.com/rogpeppe/go-internal/module](https://godoc.org/github.com/rogpeppe/go-internal/module)
 
 * [github.com/rogpeppe/go-internal/semver](https://godoc.org/github.com/rogpeppe/go-internal/semver)
-
-* [github.com/serenize/snaker](https://godoc.org/github.com/serenize/snaker)
-
-* [github.com/sergi/go-diff/diffmatchpatch](https://godoc.org/github.com/sergi/go-diff/diffmatchpatch)
-
-* [github.com/sourcegraph/annotate](https://godoc.org/github.com/sourcegraph/annotate)
-
-* [github.com/sourcegraph/syntaxhighlight](https://godoc.org/github.com/sourcegraph/syntaxhighlight)
 
 * [golang.org/x/net/html](https://godoc.org/golang.org/x/net/html)
 

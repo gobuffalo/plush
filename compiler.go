@@ -42,7 +42,7 @@ func (c *compiler) compile() (string, error) {
 			if c.curStmt != nil {
 				s = c.curStmt
 			}
-			return "", errors.WithStack(errors.Wrapf(err, "line %d", s.T().LineNumber))
+			return "", errors.WithStack(errors.Errorf("line %d: %s", s.T().LineNumber, err))
 		}
 
 		c.write(bb, res)
@@ -130,7 +130,7 @@ func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}
 	}
 	n := node.Name.Value
 	if !c.ctx.Has(n) {
-		return nil, errors.Errorf("could not find identifier named %s", n)
+		return nil, errors.Wrap(ErrUnknownIdentifier, fmt.Sprintf("%q", n))
 	}
 	c.ctx.Set(n, v)
 	return nil, nil
@@ -306,7 +306,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 	if node.Value == "nil" {
 		return nil, nil
 	}
-	return nil, errors.Wrap(ErrUnknownIdentifier, node.Value)
+	return nil, errors.Wrap(ErrUnknownIdentifier, fmt.Sprintf("%q", node.Value))
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
@@ -461,6 +461,11 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			mname = i.Value
 		}
 		rv = rc.MethodByName(mname)
+		if !rv.IsValid() && rc.Type().Kind() != reflect.Ptr {
+			ptr := reflect.New(reflect.TypeOf(c))
+			ptr.Elem().Set(rc)
+			rv = ptr.MethodByName(mname)
+		}
 		if !rv.IsValid() {
 			if rv.Kind() == reflect.Slice {
 				rv = rc.FieldByName(mname)
@@ -634,6 +639,11 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 		c.ctx = octx
 	}()
 	c.ctx = octx.New()
+	// must copy all data from original (it includes application defined helpers)
+	for k, v := range octx.data {
+		c.ctx.data[k] = v
+	}
+
 	iter, err := c.evalExpression(node.Iterable)
 	if err != nil {
 		return nil, errors.WithStack(err)

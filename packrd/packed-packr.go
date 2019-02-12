@@ -10,7 +10,7 @@ import (
 )
 
 var _ = func() error {
-	const gk = "e9da7a7f75c2e7eb304873a3606d3426"
+	const gk = "178fce2d7069ac089641e74a5aacb7e7"
 	g := packr.New(gk, "")
 	hgr, err := resolver.NewHexGzip(map[string]string{})
 	if err != nil {

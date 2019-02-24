@@ -13,9 +13,9 @@ jobs:
         go_version: "1.9"
       go 1.10:
         go_version: "1.10"
-      go 1.11 (on):
-        go_version: "1.11"
-        GO111MODULE: "on"
+      # go 1.11 (on):
+      #   go_version: "1.11"
+      #   GO111MODULE: "on"
       go 1.11 (off):
         go_version: "1.11"
         GO111MODULE: "off"
@@ -31,9 +31,9 @@ jobs:
         go_version: "1.9"
       go 1.10:
         go_version: "1.10"
-      go 1.11 (on):
-        go_version: "1.11"
-        GO111MODULE: "on"
+      # go 1.11 (on):
+      #   go_version: "1.11"
+      #   GO111MODULE: "on"
       go 1.11 (off):
         go_version: "1.11"
         GO111MODULE: "off"
@@ -49,9 +49,9 @@ jobs:
         go_version: "1.9"
       go 1.10:
         go_version: "1.10"
-      go 1.11 (on):
-        go_version: "1.11"
-        GO111MODULE: "on"
+      # go 1.11 (on):
+      #   go_version: "1.11"
+      #   GO111MODULE: "on"
       go 1.11 (off):
         go_version: "1.11"
         GO111MODULE: "off"

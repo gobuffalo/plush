@@ -2,9 +2,7 @@ package plush
 
 import (
 	"github.com/gobuffalo/plush/ast"
-
 	"github.com/gobuffalo/plush/parser"
-
 	"github.com/pkg/errors"
 )
 
@@ -67,4 +65,9 @@ func (t *Template) Clone() *Template {
 		program: t.program,
 	}
 	return t2
+}
+
+// Program exposes the template AST to allow node manipulation.
+func (t *Template) Program() *ast.Program {
+	return t.program
 }

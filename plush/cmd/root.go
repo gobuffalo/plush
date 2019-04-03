@@ -22,11 +22,11 @@ var RootCmd = &cobra.Command{
 		for _, a := range args {
 			b, err := ioutil.ReadFile(a)
 			if err != nil {
-				return errors.WithStack(err)
+				return err
 			}
 			err = plush.RunScript(string(b), plush.NewContext())
 			if err != nil {
-				return errors.WithStack(err)
+				return err
 			}
 
 		}

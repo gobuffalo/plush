@@ -104,7 +104,7 @@ func (h HelperContext) BlockWith(ctx *Context) (string, error) {
 func toJSONHelper(v interface{}) (template.HTML, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	return template.HTML(b), nil
 }

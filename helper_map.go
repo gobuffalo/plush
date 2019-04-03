@@ -2,8 +2,6 @@ package plush
 
 import (
 	"sync"
-
-	"github.com/pkg/errors"
 )
 
 // HelperMap holds onto helpers and validates they are properly formed.
@@ -21,7 +19,7 @@ func NewHelperMap() (HelperMap, error) {
 
 	err := hm.AddMany(Helpers.Helpers())
 	if err != nil {
-		return hm, errors.WithStack(err)
+		return hm, err
 	}
 	return hm, nil
 }
@@ -43,7 +41,7 @@ func (h *HelperMap) AddMany(helpers map[string]interface{}) error {
 	for k, v := range helpers {
 		err := h.Add(k, v)
 		if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 	}
 	return nil

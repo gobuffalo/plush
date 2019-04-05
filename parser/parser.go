@@ -680,6 +680,7 @@ func (p *parser) parseHashLiteral() ast.Expression {
 	// fmt.Println("parseHashLiteral")
 	hash := &ast.HashLiteral{TokenAble: ast.TokenAble{p.curToken}}
 	hash.Pairs = make(map[ast.Expression]ast.Expression)
+	hash.Order = make([]ast.Expression, 0)
 
 	for !p.peekTokenIs(token.RBRACE) {
 		p.nextToken()
@@ -693,6 +694,7 @@ func (p *parser) parseHashLiteral() ast.Expression {
 		value := p.parseExpression(LOWEST)
 
 		hash.Pairs[key] = value
+		hash.Order = append(hash.Order, key)
 
 		if !p.peekTokenIs(token.RBRACE) && !p.expectPeek(token.COMMA) {
 			return nil

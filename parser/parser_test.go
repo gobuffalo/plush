@@ -634,7 +634,7 @@ func Test_CallExpressionParsing_WithBlock(t *testing.T) {
 
 	r.Len(exp.Arguments, 0)
 	r.NotNil(exp.Block)
-	r.Equal("hi", exp.Block.String())
+	r.Equal("hi", exp.Block.Value())
 	r.Nil(exp.Callee)
 }
 
@@ -978,4 +978,32 @@ func Test_AndOrInfixExpressions(t *testing.T) {
 		ins := stmt.Expression.(*ast.InfixExpression)
 		r.Equal(ins.Right.String(), tt.rightValue)
 	}
+}
+
+func Test_String_Function(t *testing.T) {
+	r := require.New(t)
+	input := `create_table("users") {
+	t.Column("id", "int", {primary: true})
+	t.Column("name", "string", {})
+	t.Column("user_name", "string", {"size": 100})
+	t.Column("alive", "boolean", {"null": true})
+	t.Column("birth_date", "timestamp", {"null": true})
+	t.Column("bio", "text", {"null": true})
+	t.Column("price", "numeric", {"null": true, "default": "1.00"})
+	t.Column("email", "string", {"default": "foo@example.com", "size": 50})
+}
+create_table("users_2", {"timestamps": false}) {
+	t.Column("id", "int", {primary: true})
+	t.Column("name", "string", {})
+	t.Column("user_name", "string", {"size": 100})
+	t.Column("alive", "boolean", {"null": true})
+	t.Column("birth_date", "timestamp", {"null": true})
+	t.Column("bio", "text", {"null": true})
+	t.Column("price", "numeric", {"null": true, "default": "1.00"})
+	t.Column("email", "string", {"default": "foo@example.com", "size": 50})
+}
+`
+	p, err := Parse("<%" + input + "%>")
+	r.NoError(err)
+	r.Equal(input, p.String())
 }

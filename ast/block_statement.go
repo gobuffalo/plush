@@ -11,12 +11,18 @@ type BlockStatement struct {
 
 func (bs *BlockStatement) statementNode() {}
 
-func (bs *BlockStatement) String() string {
+func (bs *BlockStatement) Value() string {
 	var out bytes.Buffer
-
 	for _, s := range bs.Statements {
 		out.WriteString(s.String())
 	}
+	return out.String()
+}
 
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+	for _, s := range bs.Statements {
+		out.WriteString("\t" + s.String() + "\n")
+	}
 	return out.String()
 }

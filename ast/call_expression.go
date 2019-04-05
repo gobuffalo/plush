@@ -29,14 +29,17 @@ func (ce *CallExpression) String() string {
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
 	if ce.Block != nil {
-		out.WriteString(" { ")
+		out.WriteString(" {\n")
 		out.WriteString(ce.Block.String())
-		out.WriteString(" } ")
+		out.WriteString("}")
 	}
 	if ce.ElseBlock != nil {
 		out.WriteString(" else { ")
 		out.WriteString(ce.ElseBlock.String())
-		out.WriteString(" } ")
+		out.WriteString(" }")
+	}
+	if ce.Block != nil || ce.ElseBlock != nil {
+		out.WriteString("\n")
 	}
 
 	return out.String()

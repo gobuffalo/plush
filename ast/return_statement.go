@@ -2,9 +2,12 @@ package ast
 
 import (
 	"bytes"
+
+	"github.com/gobuffalo/plush/token"
 )
 
 type ReturnStatement struct {
+	Type string
 	TokenAble
 	ReturnValue Expression
 }
@@ -18,13 +21,21 @@ func (rs *ReturnStatement) statementNode() {}
 func (rs *ReturnStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString("return ")
+	if rs.Type == token.E_START {
+		out.WriteString("<%= ")
+	} else {
+		out.WriteString("return ")
+	}
 
 	if rs.ReturnValue != nil {
 		out.WriteString(rs.ReturnValue.String())
 	}
 
-	out.WriteString(";")
+	if rs.Type == token.E_START {
+		out.WriteString("; %>")
+	} else {
+		out.WriteString(";")
+	}
 
 	return out.String()
 }

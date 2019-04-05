@@ -7,6 +7,7 @@ import (
 
 type HashLiteral struct {
 	TokenAble
+	Order []Expression
 	Pairs map[Expression]Expression
 }
 
@@ -16,8 +17,9 @@ func (hl *HashLiteral) String() string {
 	var out bytes.Buffer
 
 	pairs := []string{}
-	for key, value := range hl.Pairs {
-		pairs = append(pairs, key.String()+":"+value.String())
+	for _, key := range hl.Order {
+		p := hl.Pairs[key]
+		pairs = append(pairs, key.String()+": "+p.String())
 	}
 
 	out.WriteString("{")

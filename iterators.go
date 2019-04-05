@@ -38,7 +38,7 @@ func untilHelper(a int) Iterator {
 
 func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	if size <= 0 {
-		return nil, errors.WithStack(errors.New("size must be greater than zero"))
+		return nil, errors.New("size must be greater than zero")
 	}
 	u := reflect.Indirect(reflect.ValueOf(underlying))
 
@@ -66,7 +66,7 @@ func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 			pos += groupSize
 		}
 	default:
-		return nil, errors.WithStack(errors.Errorf("can not use %T in groupBy", underlying))
+		return nil, errors.Errorf("can not use %T in groupBy", underlying)
 	}
 	g := &groupBy{
 		group: group,

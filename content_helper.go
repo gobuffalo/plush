@@ -23,7 +23,7 @@ func contentForHelper(name string, help HelperContext) {
 		}
 		body, err := help.BlockWith(ctx)
 		if err != nil {
-			return "", errors.WithStack(err)
+			return "", err
 		}
 		return template.HTML(body), nil
 	})
@@ -39,7 +39,7 @@ func contentOfHelper(name string, data map[string]interface{}, help HelperContex
 	fn, ok := help.Value("contentFor:" + name).(func(data map[string]interface{}) (template.HTML, error))
 	if !ok {
 		if !help.HasBlock() {
-			return template.HTML(""), errors.WithStack(errors.New("missing contentOf block: " + name))
+			return template.HTML(""), errors.New("missing contentOf block: " + name)
 		}
 
 		ctx := help.New()
@@ -48,7 +48,7 @@ func contentOfHelper(name string, data map[string]interface{}, help HelperContex
 		}
 		body, err := help.BlockWith(ctx)
 		if err != nil {
-			return template.HTML(""), errors.WithStack(err)
+			return template.HTML(""), err
 		}
 
 		return template.HTML(body), nil

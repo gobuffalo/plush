@@ -6,8 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"sync"
-
-	"github.com/pkg/errors"
 )
 
 // DefaultTimeFormat is the default way of formatting a time.Time type.
@@ -54,7 +52,7 @@ func Parse(input string) (*Template, error) {
 	}
 
 	if err != nil {
-		return t, errors.WithStack(err)
+		return t, err
 	}
 
 	return t, nil
@@ -64,7 +62,7 @@ func Parse(input string) (*Template, error) {
 func Render(input string, ctx *Context) (string, error) {
 	t, err := Parse(input)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	return t.Exec(ctx)
 }
@@ -72,7 +70,7 @@ func Render(input string, ctx *Context) (string, error) {
 func RenderR(input io.Reader, ctx *Context) (string, error) {
 	b, err := ioutil.ReadAll(input)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	return Render(string(b), ctx)
 }

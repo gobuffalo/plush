@@ -17,7 +17,7 @@ func (hl *HashLiteral) String() string {
 
 	pairs := []string{}
 	for key, value := range hl.Pairs {
-		pairs = append(pairs, key.String()+":"+value.String())
+		pairs = append(pairs, key.String()+": "+value.String())
 	}
 
 	out.WriteString("{")

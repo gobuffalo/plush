@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/plush/ast"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -590,7 +589,7 @@ func Test_CallExpressionParsing_WithCallee(t *testing.T) {
 	r.Equal("Greet", ident.Value)
 
 	r.Len(exp.Arguments, 1)
-	r.Equal(exp.Arguments[0].String(), "mark")
+	r.Equal(exp.Arguments[0].String(), "\"mark\"")
 }
 
 func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
@@ -611,7 +610,7 @@ func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
 	r.Equal("Greet", ident.Value)
 
 	r.Len(exp.Arguments, 1)
-	r.Equal(exp.Arguments[0].String(), "mark")
+	r.Equal(exp.Arguments[0].String(), "\"mark\"")
 }
 
 func Test_CallExpressionParsing_WithBlock(t *testing.T) {
@@ -744,7 +743,7 @@ func Test_HashLiteralsStringKeys(t *testing.T) {
 	for key, value := range hash.Pairs {
 		literal := key.(*ast.StringLiteral)
 
-		expectedValue := expected[literal.String()]
+		expectedValue := expected[literal.Value]
 		r.True(testIntegerLiteral(t, value, expectedValue))
 	}
 }
@@ -828,7 +827,7 @@ func Test_HashLiteralsWithExpressions(t *testing.T) {
 	for key, value := range hash.Pairs {
 		literal := key.(*ast.StringLiteral)
 
-		testFunc := tests[literal.String()]
+		testFunc := tests[literal.Value]
 		testFunc(value)
 	}
 }

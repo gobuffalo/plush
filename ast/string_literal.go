@@ -8,5 +8,5 @@ type StringLiteral struct {
 func (sl *StringLiteral) expressionNode() {}
 
 func (sl *StringLiteral) String() string {
-	return sl.Token.Literal
+	return "\"" + sl.Token.Literal + "\""
 }

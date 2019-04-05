@@ -634,7 +634,7 @@ func Test_CallExpressionParsing_WithBlock(t *testing.T) {
 
 	r.Len(exp.Arguments, 0)
 	r.NotNil(exp.Block)
-	r.Equal("hi", exp.Block.Value())
+	r.Equal("hi", exp.Block.InnerText())
 	r.Nil(exp.Callee)
 }
 

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/plush/ast"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -581,6 +580,7 @@ func Test_CallExpressionParsing_WithCallee(t *testing.T) {
 
 	r.Len(program.Statements, 1)
 
+	r.Equal(input, program.String())
 	stmt := program.Statements[0].(*ast.ReturnStatement)
 
 	exp := stmt.ReturnValue.(*ast.CallExpression)
@@ -589,7 +589,7 @@ func Test_CallExpressionParsing_WithCallee(t *testing.T) {
 	r.Equal("Greet", ident.Value)
 
 	r.Len(exp.Arguments, 1)
-	r.Equal(exp.Arguments[0].String(), "mark")
+	r.Equal(exp.Arguments[0].String(), "\"mark\"")
 }
 
 func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
@@ -601,6 +601,7 @@ func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
 
 	r.Len(program.Statements, 1)
 
+	r.Equal(input, program.String())
 	stmt := program.Statements[0].(*ast.ReturnStatement)
 
 	exp := stmt.ReturnValue.(*ast.CallExpression)
@@ -609,7 +610,7 @@ func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
 	r.Equal("Greet", ident.Value)
 
 	r.Len(exp.Arguments, 1)
-	r.Equal(exp.Arguments[0].String(), "mark")
+	r.Equal(exp.Arguments[0].String(), "\"mark\"")
 }
 
 func Test_CallExpressionParsing_WithBlock(t *testing.T) {
@@ -633,7 +634,7 @@ func Test_CallExpressionParsing_WithBlock(t *testing.T) {
 
 	r.Len(exp.Arguments, 0)
 	r.NotNil(exp.Block)
-	r.Equal("hi", exp.Block.String())
+	r.Equal("hi", exp.Block.InnerText())
 	r.Nil(exp.Callee)
 }
 
@@ -742,7 +743,7 @@ func Test_HashLiteralsStringKeys(t *testing.T) {
 	for key, value := range hash.Pairs {
 		literal := key.(*ast.StringLiteral)
 
-		expectedValue := expected[literal.String()]
+		expectedValue := expected[literal.Value]
 		r.True(testIntegerLiteral(t, value, expectedValue))
 	}
 }
@@ -826,7 +827,7 @@ func Test_HashLiteralsWithExpressions(t *testing.T) {
 	for key, value := range hash.Pairs {
 		literal := key.(*ast.StringLiteral)
 
-		testFunc := tests[literal.String()]
+		testFunc := tests[literal.Value]
 		testFunc(value)
 	}
 }
@@ -977,4 +978,32 @@ func Test_AndOrInfixExpressions(t *testing.T) {
 		ins := stmt.Expression.(*ast.InfixExpression)
 		r.Equal(ins.Right.String(), tt.rightValue)
 	}
+}
+
+func Test_String_Function(t *testing.T) {
+	r := require.New(t)
+	input := `create_table("users") {
+	t.Column("id", "int", {primary: true})
+	t.Column("name", "string", {})
+	t.Column("user_name", "string", {"size": 100})
+	t.Column("alive", "boolean", {"null": true})
+	t.Column("birth_date", "timestamp", {"null": true})
+	t.Column("bio", "text", {"null": true})
+	t.Column("price", "numeric", {"null": true, "default": "1.00"})
+	t.Column("email", "string", {"default": "foo@example.com", "size": 50})
+}
+create_table("users_2", {"timestamps": false}) {
+	t.Column("id", "int", {primary: true})
+	t.Column("name", "string", {})
+	t.Column("user_name", "string", {"size": 100})
+	t.Column("alive", "boolean", {"null": true})
+	t.Column("birth_date", "timestamp", {"null": true})
+	t.Column("bio", "text", {"null": true})
+	t.Column("price", "numeric", {"null": true, "default": "1.00"})
+	t.Column("email", "string", {"default": "foo@example.com", "size": 50})
+}
+`
+	p, err := Parse("<%" + input + "%>")
+	r.NoError(err)
+	r.Equal(input, p.String())
 }

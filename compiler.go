@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gobuffalo/plush/ast"
-
 	"github.com/pkg/errors"
 )
 
@@ -260,7 +259,7 @@ func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		m[ke.String()] = v
+		m[ke.TokenLiteral()] = v
 	}
 	return m, nil
 }

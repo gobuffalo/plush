@@ -151,9 +151,9 @@ func (p *parser) parseStatement() ast.Statement {
 		p.nextToken()
 		return p.parseStatement()
 	case token.RETURN:
-		return p.parseReturnStatement()
+		return p.parseReturnStatement(token.RETURN)
 	case token.E_START:
-		return p.parseReturnStatement()
+		return p.parseReturnStatement(token.E_START)
 	case token.RBRACE:
 		return nil
 	case token.EOF:
@@ -163,9 +163,9 @@ func (p *parser) parseStatement() ast.Statement {
 	}
 }
 
-func (p *parser) parseReturnStatement() *ast.ReturnStatement {
+func (p *parser) parseReturnStatement(t string) *ast.ReturnStatement {
 	// fmt.Println("parseReturnStatement")
-	stmt := &ast.ReturnStatement{TokenAble: ast.TokenAble{p.curToken}}
+	stmt := &ast.ReturnStatement{Type: t, TokenAble: ast.TokenAble{p.curToken}}
 
 	p.nextToken()
 
@@ -680,6 +680,7 @@ func (p *parser) parseHashLiteral() ast.Expression {
 	// fmt.Println("parseHashLiteral")
 	hash := &ast.HashLiteral{TokenAble: ast.TokenAble{p.curToken}}
 	hash.Pairs = make(map[ast.Expression]ast.Expression)
+	hash.Order = make([]ast.Expression, 0)
 
 	for !p.peekTokenIs(token.RBRACE) {
 		p.nextToken()
@@ -693,6 +694,7 @@ func (p *parser) parseHashLiteral() ast.Expression {
 		value := p.parseExpression(LOWEST)
 
 		hash.Pairs[key] = value
+		hash.Order = append(hash.Order, key)
 
 		if !p.peekTokenIs(token.RBRACE) && !p.expectPeek(token.COMMA) {
 			return nil

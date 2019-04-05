@@ -24,10 +24,6 @@ func (ce *CallExpression) String() string {
 		args = append(args, a.String())
 	}
 
-	if ce.Callee != nil {
-		out.WriteString(ce.Callee.String())
-		out.WriteString(".")
-	}
 	out.WriteString(ce.Function.String())
 	out.WriteString("(")
 	out.WriteString(strings.Join(args, ", "))

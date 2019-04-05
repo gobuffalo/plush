@@ -581,6 +581,7 @@ func Test_CallExpressionParsing_WithCallee(t *testing.T) {
 
 	r.Len(program.Statements, 1)
 
+	r.Equal(input, program.String())
 	stmt := program.Statements[0].(*ast.ReturnStatement)
 
 	exp := stmt.ReturnValue.(*ast.CallExpression)
@@ -601,6 +602,7 @@ func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
 
 	r.Len(program.Statements, 1)
 
+	r.Equal(input, program.String())
 	stmt := program.Statements[0].(*ast.ReturnStatement)
 
 	exp := stmt.ReturnValue.(*ast.CallExpression)

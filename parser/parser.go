@@ -151,9 +151,9 @@ func (p *parser) parseStatement() ast.Statement {
 		p.nextToken()
 		return p.parseStatement()
 	case token.RETURN:
-		return p.parseReturnStatement()
+		return p.parseReturnStatement(token.RETURN)
 	case token.E_START:
-		return p.parseReturnStatement()
+		return p.parseReturnStatement(token.E_START)
 	case token.RBRACE:
 		return nil
 	case token.EOF:
@@ -163,9 +163,9 @@ func (p *parser) parseStatement() ast.Statement {
 	}
 }
 
-func (p *parser) parseReturnStatement() *ast.ReturnStatement {
+func (p *parser) parseReturnStatement(t string) *ast.ReturnStatement {
 	// fmt.Println("parseReturnStatement")
-	stmt := &ast.ReturnStatement{TokenAble: ast.TokenAble{p.curToken}}
+	stmt := &ast.ReturnStatement{Type: t, TokenAble: ast.TokenAble{p.curToken}}
 
 	p.nextToken()
 

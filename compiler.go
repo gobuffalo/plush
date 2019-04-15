@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/gobuffalo/helpers/hctx"
 	"github.com/gobuffalo/plush/ast"
 	"github.com/pkg/errors"
 )
@@ -15,7 +16,7 @@ import (
 var ErrUnknownIdentifier = errors.New("unknown identifier")
 
 type compiler struct {
-	ctx     *Context
+	ctx     hctx.Context
 	program *ast.Program
 	curStmt ast.Statement
 }
@@ -525,7 +526,8 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		}
 
 		hc := func(arg reflect.Type) {
-			if arg.ConvertibleTo(reflect.TypeOf(HelperContext{})) {
+			hhc := reflect.TypeOf((*hctx.HelperContext)(nil)).Elem()
+			if arg.ConvertibleTo(reflect.TypeOf(HelperContext{})) || arg.Implements(hhc) {
 				hargs := HelperContext{
 					Context:  c.ctx,
 					compiler: c,
@@ -634,14 +636,14 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 }
 
 func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, error) {
-	octx := c.ctx
+	octx := c.ctx.(*Context)
 	defer func() {
 		c.ctx = octx
 	}()
 	c.ctx = octx.New()
 	// must copy all data from original (it includes application defined helpers)
 	for k, v := range octx.data {
-		c.ctx.data[k] = v
+		c.ctx.Set(k, v)
 	}
 
 	iter, err := c.evalExpression(node.Iterable)

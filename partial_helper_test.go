@@ -21,20 +21,6 @@ func Test_PartialHelper_Nil_Context(t *testing.T) {
 	r.Equal("", string(html))
 }
 
-func Test_PartialHelper_Blank_Data(t *testing.T) {
-	r := require.New(t)
-
-	name := "index"
-	data := map[string]interface{}{}
-	help := HelperContext{Context: NewContext()}
-	help.Context.data = nil
-
-	html, err := partialHelper(name, data, help)
-	r.Error(err)
-	r.Contains(err.Error(), "invalid context")
-	r.Equal("", string(html))
-}
-
 func Test_PartialHelper_Blank_Context(t *testing.T) {
 	r := require.New(t)
 

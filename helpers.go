@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/gobuffalo/helpers"
+	"github.com/gobuffalo/helpers/forms"
+	"github.com/gobuffalo/helpers/forms/bootstrap"
 	"github.com/gobuffalo/helpers/hctx"
 	"github.com/gobuffalo/plush/ast"
 
@@ -22,6 +24,9 @@ var Helpers = HelperMap{
 func init() {
 	Helpers.Add("partial", partialHelper)
 	Helpers.AddMany(helpers.ALL())
+	Helpers.Add(forms.FormKey, bootstrap.Form)
+	Helpers.Add(forms.FormForKey, bootstrap.FormFor)
+	Helpers.Add("form_for", bootstrap.FormFor)
 }
 
 var _ hctx.HelperContext = &HelperContext{}

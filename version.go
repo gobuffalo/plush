@@ -1,3 +1,3 @@
 package plush
 
-const Version = "v3.7.34"
+const Version = "v3.8.0"

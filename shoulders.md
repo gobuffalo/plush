@@ -5,32 +5,34 @@ github.com/gobuffalo/plush does not try to reinvent the wheel! Instead, it uses 
 Thank you to the following **GIANTS**:
 
 
-* [github.com/fatih/structs](https://godoc.org/github.com/fatih/structs)
-
-* [github.com/gobuffalo/envy](https://godoc.org/github.com/gobuffalo/envy)
-
-* [github.com/gobuffalo/flect](https://godoc.org/github.com/gobuffalo/flect)
-
 * [github.com/gobuffalo/github_flavored_markdown](https://godoc.org/github.com/gobuffalo/github_flavored_markdown)
 
-* [github.com/gobuffalo/packr/v2](https://godoc.org/github.com/gobuffalo/packr/v2)
+* [github.com/gobuffalo/helpers](https://godoc.org/github.com/gobuffalo/helpers)
 
 * [github.com/gobuffalo/tags](https://godoc.org/github.com/gobuffalo/tags)
 
-* [github.com/gobuffalo/uuid](https://godoc.org/github.com/gobuffalo/uuid)
+* [github.com/golang/protobuf](https://godoc.org/github.com/golang/protobuf)
 
-* [github.com/gobuffalo/validate](https://godoc.org/github.com/gobuffalo/validate)
+* [github.com/konsorten/go-windows-terminal-sequences](https://godoc.org/github.com/konsorten/go-windows-terminal-sequences)
 
-* [github.com/gofrs/uuid](https://godoc.org/github.com/gofrs/uuid)
+* [github.com/kr/pty](https://godoc.org/github.com/kr/pty)
 
-* [github.com/markbates/inflect](https://godoc.org/github.com/markbates/inflect)
+* [github.com/microcosm-cc/bluemonday](https://godoc.org/github.com/microcosm-cc/bluemonday)
 
 * [github.com/pkg/errors](https://godoc.org/github.com/pkg/errors)
 
-* [github.com/serenize/snaker](https://godoc.org/github.com/serenize/snaker)
-
 * [github.com/spf13/cobra](https://godoc.org/github.com/spf13/cobra)
+
+* [github.com/stretchr/objx](https://godoc.org/github.com/stretchr/objx)
 
 * [github.com/stretchr/testify](https://godoc.org/github.com/stretchr/testify)
 
+* [golang.org/x/crypto](https://godoc.org/golang.org/x/crypto)
+
+* [golang.org/x/net](https://godoc.org/golang.org/x/net)
+
 * [golang.org/x/sync](https://godoc.org/golang.org/x/sync)
+
+* [golang.org/x/sys](https://godoc.org/golang.org/x/sys)
+
+* [golang.org/x/tools](https://godoc.org/golang.org/x/tools)

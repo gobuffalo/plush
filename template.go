@@ -1,6 +1,7 @@
 package plush
 
 import (
+	"github.com/gobuffalo/helpers/hctx"
 	"github.com/gobuffalo/plush/ast"
 
 	"github.com/gobuffalo/plush/parser"
@@ -43,7 +44,7 @@ func (t *Template) Parse() error {
 }
 
 // Exec the template using the content and return the results
-func (t *Template) Exec(ctx *Context) (string, error) {
+func (t *Template) Exec(ctx hctx.Context) (string, error) {
 	err := t.Parse()
 	if err != nil {
 		return "", err

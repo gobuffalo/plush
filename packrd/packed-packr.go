@@ -11,10 +11,11 @@ import (
 )
 
 var _ = func() error {
-	const gk = "79f6b69329ab0d40f6d1c73754abe821"
+	const gk = "e9da7a7f75c2e7eb304873a3606d3426"
 	g := packr.New(gk, "")
 	hgr, err := resolver.NewHexGzip(map[string]string{
-		"e49bc58be56e15939b9351d0ec6db38a": "1f8b08000000000000ff9490cb4ef3301085f7798aa9aafc6a16b137ff86aa170995dba61bd845883af124b67032953d2e1215ef8e720116b0e9caf2f89cef1ccf1ceed11dd187242966c575b44ec3232b8ee17961988f6129a5c69350efd1a3a8a895adf2afa5620cb28c75ad1cc91775b4fdcd3a2dc3e0950d4d8fc28cf86de9555799bd6a71ddaac0e8b30b0246b6eb87bcd558dbceb2a5ee41afff5ffdfb4d2e66c51deda8fa4968485325c837b2b16c6239047d97945f25c7f6229c9aec526f96e4799eec8971094fc606a8ad43b0015464ca1becd02b462d6047b027861b6d79b024ab740d357958980c6c07130fce906e92f91c8a432f30a2ff20a49bc35fc546c56d746e526503d5d6b03062475506678f1c7d07fd7235bd75d3fca30f59a5309c9f010000ffff3df549080c020000",
+		"219f70cdf30f6f12b6c726d0cb3c36b8": "1f8b08000000000000ff948e3f4fc3301047777f8aabaaa06688bdb050f58f84cabfa50b6c11a24e7c892d9c5c659f3b80f8ee286d012124a48cf6e9fdde9bc23dfa3d8628443929af93f3061e59738acf33cbbc8f73a50c1ea47e4b01654d9dea7478ad346354556a1aed49bde8bd1b5ece1b158fac6ae97c94f634bfae82ee6bbbd51d2e3b1d19433e4270daf6c327af0d36ae77eca87f30cbcbab8bbfcbe5a4bca30dd53f86960cd59242ab5ac7365547d177a4fa8a3cd5cb7868f3b16c2e8aa2105b629cc39375111ae7115c049d988a167b0c9ad148d8106c89e1c6383e2262912da1a100339b83ebe1bc07ef90adc4740ae5ee3fad1a682b6f93f790ad7663ab7fe3b95864f031783f030000ffff84384b5017020000",
+		"2a0f82ff17c2398fa5a8a945b15210f2": "1f8b08000000000000ff7c90cd6a84301485d7739fe210082814dd97d1d5d04de96cfa04994c6264a209d1f407f1dd4b665a99d05257e6dc8fefdcc40b79119dc29e37f097ae7a352ecce0ad21ea079ffe0b625d3f9b78aaa41beace9da2d6c2bada28eb55986a23e70f46ec47f014ad056f199544d28d5312a4997601c5b9443f5eb1839276c202de5ea7e7ea280605de3eab4f346059c668cfb126b424d2719438aaf7a2446aae5e84c742bba0e618c62d5a08dfdfd6adffeacea8fb1d1ef3e8e18ebcadb25b6925fadf7e531c9c4c87371172279a5faf5e65c076edaf000000ffff29243437a5010000",
 	})
 	if err != nil {
 		panic(err)
@@ -23,7 +24,12 @@ var _ = func() error {
 
 	func() {
 		b := packr.New("github.com/gobuffalo/helpers/genny/docs/templates", "../docs/templates")
-		b.SetResolver("README.md.plush", packr.Pointer{ForwardBox: gk, ForwardPath: "e49bc58be56e15939b9351d0ec6db38a"})
+		b.SetResolver("README.md.plush", packr.Pointer{ForwardBox: gk, ForwardPath: "219f70cdf30f6f12b6c726d0cb3c36b8"})
+	}()
+
+	func() {
+		b := packr.New("github.com/gobuffalo/helpers/genny/stdlib/templates", "../stdlib/templates")
+		b.SetResolver("helpers.go.plush", packr.Pointer{ForwardBox: gk, ForwardPath: "2a0f82ff17c2398fa5a8a945b15210f2"})
 	}()
 
 	return nil

@@ -628,7 +628,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	res := rv.Call(args)
 	if len(res) > 0 {
 		if e, ok := res[len(res)-1].Interface().(error); ok {
-			return nil, e
+			return nil, errors.Wrap(e, fmt.Sprintf("could not call %s function", node.Function.String()))
 		}
 		return res[0].Interface(), nil
 	}

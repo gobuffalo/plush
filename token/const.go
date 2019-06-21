@@ -36,8 +36,8 @@ const (
 	// Delimiters
 
 	S_START = "<%"
-	C_START = "<%#"
-	E_START = "<%="
+	C_START = S_START + "#"
+	E_START = S_START + "="
 	E_END   = "%>"
 
 	COMMA     = ","

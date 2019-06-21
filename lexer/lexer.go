@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"strings"
+	// "fmt"
 
 	"github.com/gobuffalo/plush/token"
 )
@@ -38,7 +39,8 @@ func (l *Lexer) NextToken() token.Token {
 		return tok
 	}
 
-	if l.ch == '<' && l.peekChar() == '%' {
+	start := get(token.S_START)
+	if l.ch == start[0] && l.peekChar() == start[1] {
 		l.inside = true
 		return l.nextInsideToken()
 	}
@@ -49,10 +51,45 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
+func (l *Lexer) nextOutsideToken() (token.Token, bool) {
+	var tok token.Token
+	switch l.ch {
+	case get(token.E_END)[0]:
+		if l.peekChar() == get(token.E_END)[1] {
+			l.inside = false
+			l.readChar()
+			tt := get(token.E_END)
+			return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
+		}
+	case get(token.S_START)[0]:
+		if l.peekChar() == get(token.S_START)[1] {
+			l.inside = true
+			l.readChar()
+			tt := get(token.S_START)
+			switch l.peekChar() {
+			case '#':
+				l.readChar()
+				tt = get(token.C_START)
+			case '=':
+				l.readChar()
+				tt = get(token.E_START)
+			}
+			return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
+		}
+	}
+	return tok, false
+}
+
 func (l *Lexer) nextInsideToken() token.Token {
 	var tok token.Token
 
 	l.skipWhitespace()
+
+	if tok, ok := l.nextOutsideToken(); ok {
+		l.readChar()
+		tok.LineNumber = l.curLine
+		return tok
+	}
 
 	switch l.ch {
 	case '=':
@@ -110,29 +147,8 @@ func (l *Lexer) nextInsideToken() token.Token {
 	case '*':
 		tok = l.newToken(token.ASTERISK)
 	case '%':
-		if l.peekChar() == '>' {
-			l.inside = false
-			l.readChar()
-			tok = token.Token{Type: token.E_END, Literal: "%>", LineNumber: l.curLine}
-			break
-		}
 		tok = l.newToken(token.ILLEGAL)
 	case '<':
-		if l.peekChar() == '%' {
-			l.inside = true
-			l.readChar()
-			switch l.peekChar() {
-			case '#':
-				l.readChar()
-				tok = token.Token{Type: token.C_START, Literal: "<%#", LineNumber: l.curLine}
-			case '=':
-				l.readChar()
-				tok = token.Token{Type: token.E_START, Literal: "<%=", LineNumber: l.curLine}
-			default:
-				tok = token.Token{Type: token.S_START, Literal: "<%", LineNumber: l.curLine}
-			}
-			break
-		}
 		if l.peekChar() == '=' {
 			l.readChar()
 			tok = token.Token{Type: token.LTEQ, Literal: "<=", LineNumber: l.curLine}
@@ -334,4 +350,8 @@ func (l *Lexer) newToken(tokenType token.Type) token.Token {
 
 func (l *Lexer) newIllegalTokenLiteral(tokenType token.Type, literal string) token.Token {
 	return token.Token{Type: tokenType, Literal: literal, LineNumber: l.curLine}
+}
+
+func get(tokenType token.Type) token.Type {
+	return token.Resolve(tokenType)
 }

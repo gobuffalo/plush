@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/gobuffalo/plush/token"
+	"github.com/bart84ek/plush/token"
 )
 
 func Test_NextToken_Simple(t *testing.T) {
@@ -311,5 +310,28 @@ my-helper()
 
 		r.Equal(tt.expectedLiteral, tok.Literal)
 		r.Equal(tt.expectedType, tok.Type)
+	}
+}
+
+func Test_CustomOutsideTokens(t *testing.T) {
+	r := require.New(t)
+	input := `{{= 1 }}`
+
+	token.SetTemplateDelimeters("{{", "}}")
+
+	tests := []struct {
+		tokenType    token.Type
+		tokenLiteral string
+	}{
+		{token.Resolve(token.E_START), "{{="},
+		{token.INT, "1"},
+		{token.Resolve(token.E_END), "}}"},
+	}
+
+	l := New(input)
+	for _, tt := range tests {
+		tok := l.NextToken()
+		r.Equal(tt.tokenType, tok.Type)
+		r.Equal(tt.tokenLiteral, tok.Literal)
 	}
 }

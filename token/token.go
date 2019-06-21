@@ -1,5 +1,7 @@
 package token
 
+import "fmt"
+
 // Type represents each type of token.
 type Type string
 
@@ -23,10 +25,30 @@ var keywords = map[string]Type{
 	"in":     IN,
 }
 
+var dynamic = map[Type]Type{}
+
 // LookupIdent an ident and return a keyword type, or a plain ident
 func LookupIdent(ident string) Type {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}
 	return IDENT
+}
+
+func SetTemplatingDelimiters(start, end rune) {
+	replace(S_START, Type(start))
+	replace(C_START, Type(fmt.Sprintf("%v#", start)))
+	replace(E_START, Type(fmt.Sprintf("%v=", start)))
+	replace(E_END, Type(end))
+}
+
+func replace(token Type, replacement Type) {
+      dynamic[token] = replacement
+}
+
+func Resolve(token Type) Type {
+	if tok, ok := dynamic[token]; ok {
+		return tok
+	}
+	return token
 }

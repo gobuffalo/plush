@@ -35,7 +35,7 @@ func LookupIdent(ident string) Type {
 	return IDENT
 }
 
-func SetTemplatingDelimiters(start, end rune) {
+func SetTemplatingDelimiters(start, end string) {
 	replace(S_START, Type(start))
 	replace(C_START, Type(fmt.Sprintf("%v#", start)))
 	replace(E_START, Type(fmt.Sprintf("%v=", start)))

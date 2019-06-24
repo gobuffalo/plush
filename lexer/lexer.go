@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"strings"
-	// "fmt"
 
 	"github.com/gobuffalo/plush/token"
 )

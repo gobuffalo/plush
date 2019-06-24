@@ -48,8 +48,8 @@ func newParser(l *lexer.Lexer) *parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(token.HTML, p.parseHTMLLiteral)
-	p.registerPrefix(token.C_START, p.parseCommentLiteral)
-	p.registerPrefix(token.E_END, func() ast.Expression { return nil })
+	p.registerPrefix(token.Resolve(token.C_START), p.parseCommentLiteral)
+	p.registerPrefix(token.Resolve(token.E_END), func() ast.Expression { return nil })
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -147,13 +147,13 @@ func (p *parser) parseStatement() ast.Statement {
 	case token.LET:
 		l := p.parseLetStatement()
 		return l
-	case token.S_START:
+	case token.Resolve(token.S_START):
 		p.nextToken()
 		return p.parseStatement()
 	case token.RETURN:
 		return p.parseReturnStatement(token.RETURN)
-	case token.E_START:
-		return p.parseReturnStatement(token.E_START)
+	case token.Resolve(token.E_START):
+		return p.parseReturnStatement(string(token.Resolve(token.E_START)))
 	case token.RBRACE:
 		return nil
 	case token.EOF:
@@ -335,7 +335,7 @@ func (p *parser) parseStringLiteral() ast.Expression {
 
 func (p *parser) parseCommentLiteral() ast.Expression {
 	// fmt.Println("parseCommentLiteral")
-	for p.curToken.Type != token.E_END {
+	for p.curToken.Type != token.Resolve(token.E_END) {
 		p.nextToken()
 	}
 	return &ast.StringLiteral{TokenAble: ast.TokenAble{p.curToken}, Value: ""}
@@ -531,7 +531,7 @@ func (p *parser) parseBlockStatement() *ast.BlockStatement {
 	p.nextToken()
 
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
-		if p.curTokenIs(token.S_START) || p.curTokenIs(token.E_END) {
+		if p.curTokenIs(token.Resolve(token.S_START)) || p.curTokenIs(token.Resolve(token.E_END)) {
 			p.nextToken()
 			continue
 		}

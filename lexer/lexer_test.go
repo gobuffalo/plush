@@ -313,12 +313,10 @@ my-helper()
 	}
 }
 
-func Test_CustomOutsideTokens(t *testing.T) {
+func Test_DynamicTokens(t *testing.T) {
 	r := require.New(t)
+	token.SetTemplatingDelimiters("{{", "}}")
 	input := `{{= 1 }}`
-
-	token.SetTemplateDelimeters("{{", "}}")
-
 	tests := []struct {
 		tokenType    token.Type
 		tokenLiteral string
@@ -333,5 +331,36 @@ func Test_CustomOutsideTokens(t *testing.T) {
 		tok := l.NextToken()
 		r.Equal(tt.tokenType, tok.Type)
 		r.Equal(tt.tokenLiteral, tok.Literal)
+	}
+}
+
+func Test_DynamicTokensComplete(t *testing.T) {
+	r := require.New(t)
+	token.SetTemplatingDelimiters("{{", "}}")
+	input := `{{= 1 }}
+{{# 2 }}
+{{ 3 }}
+<%= "AAAA" %>
+`
+	tests := []struct {
+		expectedType    token.Type
+		expectedLiteral string
+	}{
+		{token.Resolve(token.E_START), "{{="},
+		{token.INT, "1"},
+		{token.Resolve(token.E_END), "}}"},
+		{token.HTML, "\n"},
+		{token.Resolve(token.C_START), "{{="},
+		{token.INT, "2"},
+		{token.Resolve(token.E_END), "}}"},
+		{token.HTML, "\n"},
+	}
+
+	l := New(input)
+	for _, tt := range tests {
+		tok := l.NextToken()
+
+		r.Equal(tt.expectedLiteral, tok.Literal)
+		r.Equal(tt.expectedType, tok.Type)
 	}
 }

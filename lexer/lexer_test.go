@@ -339,9 +339,7 @@ func Test_DynamicTokensComplete(t *testing.T) {
 	token.SetTemplatingDelimiters("{{", "}}")
 	input := `{{= 1 }}
 {{# 2 }}
-{{ 3 }}
-<%= "AAAA" %>
-`
+{{ 3 }}`
 	tests := []struct {
 		expectedType    token.Type
 		expectedLiteral string
@@ -350,10 +348,13 @@ func Test_DynamicTokensComplete(t *testing.T) {
 		{token.INT, "1"},
 		{token.Resolve(token.E_END), "}}"},
 		{token.HTML, "\n"},
-		{token.Resolve(token.C_START), "{{="},
+		{token.Resolve(token.C_START), "{{#"},
 		{token.INT, "2"},
 		{token.Resolve(token.E_END), "}}"},
 		{token.HTML, "\n"},
+		{token.Resolve(token.S_START), "{{"},
+		{token.INT, "3"},
+		{token.Resolve(token.E_END), "}}"},
 	}
 
 	l := New(input)

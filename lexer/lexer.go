@@ -3,7 +3,7 @@ package lexer
 import (
 	"strings"
 
-	"github.com/bart84ek/plush/token"
+	"github.com/gobuffalo/plush/token"
 )
 
 // Lexer moves through the source input and tokenizes its content
@@ -307,10 +307,10 @@ func (l *Lexer) readBString() string {
 
 func (l *Lexer) readHTML() string {
 	position := l.position
-
+	start := get(token.S_START)
 	for l.ch != 0 {
 
-		if l.ch == '\\' && l.prevChar() == '\\' && l.peekChar() == '<' {
+		if l.ch == '\\' && l.prevChar() == '\\' && l.peekChar() == start[0] {
 			// escape escaping
 			l.readChar()
 			x := l.input[position : l.position-1]
@@ -318,17 +318,17 @@ func (l *Lexer) readHTML() string {
 		}
 
 		// allow for expression escaping using \<% foo %>
-		if l.ch == '\\' && l.peekChar() == '<' {
+		if l.ch == '\\' && l.peekChar() == start[0] {
 			l.readChar()
 			l.readChar()
 		}
-		if l.ch == '<' && l.peekChar() == '%' {
+		if l.ch == start[0] && l.peekChar() == start[1] {
 			l.inside = true
 			break
 		}
 		l.readChar()
 	}
-	return strings.Replace(l.input[position:l.position], "\\<%", "<%", -1)
+	return strings.Replace(l.input[position:l.position], "\\"+string(start), string(start), -1)
 }
 
 func isLetter(ch byte) bool {

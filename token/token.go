@@ -12,6 +12,16 @@ type Token struct {
 	LineNumber int
 }
 
+const TEMPLATE_DELIMITERS_LEN = 2
+
+type DelimitersLengthError struct {
+	Delimiters []string
+	Length     int
+}
+
+func (e *DelimitersLengthError) Error() string {
+	return fmt.Sprintf("Incorrect delimiters \"%s\" length. %v chars allowed", e.Delimiters, e.Length)
+}
 var keywords = map[string]Type{
 	"fn":     FUNCTION,
 	"func":   FUNCTION,
@@ -35,11 +45,16 @@ func LookupIdent(ident string) Type {
 	return IDENT
 }
 
-func SetTemplatingDelimiters(start, end string) {
+func SetTemplatingDelimiters(start, end string) error {
+	if len(start) != TEMPLATE_DELIMITERS_LEN ||
+		len(end) != TEMPLATE_DELIMITERS_LEN {
+		return &DelimitersLengthError{[]string{start, end}, TEMPLATE_DELIMITERS_LEN}
+	}
 	replace(S_START, Type(start))
 	replace(C_START, Type(fmt.Sprintf("%v#", start)))
 	replace(E_START, Type(fmt.Sprintf("%v=", start)))
 	replace(E_END, Type(end))
+	return nil
 }
 
 func replace(token Type, replacement Type) {

@@ -48,8 +48,8 @@ func newParser(l *lexer.Lexer) *parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(token.HTML, p.parseHTMLLiteral)
-	p.registerPrefix(token.Resolve(token.C_START), p.parseCommentLiteral)
-	p.registerPrefix(token.Resolve(token.E_END), func() ast.Expression { return nil })
+	p.registerPrefix(get(token.C_START), p.parseCommentLiteral)
+	p.registerPrefix(get(token.E_END), func() ast.Expression { return nil })
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -147,13 +147,13 @@ func (p *parser) parseStatement() ast.Statement {
 	case token.LET:
 		l := p.parseLetStatement()
 		return l
-	case token.Resolve(token.S_START):
+	case get(token.S_START):
 		p.nextToken()
 		return p.parseStatement()
 	case token.RETURN:
 		return p.parseReturnStatement(token.RETURN)
-	case token.Resolve(token.E_START):
-		return p.parseReturnStatement(string(token.Resolve(token.E_START)))
+	case get(token.E_START):
+		return p.parseReturnStatement(string(get(token.E_START)))
 	case token.RBRACE:
 		return nil
 	case token.EOF:
@@ -335,7 +335,7 @@ func (p *parser) parseStringLiteral() ast.Expression {
 
 func (p *parser) parseCommentLiteral() ast.Expression {
 	// fmt.Println("parseCommentLiteral")
-	for p.curToken.Type != token.Resolve(token.E_END) {
+	for p.curToken.Type != get(token.E_END) {
 		p.nextToken()
 	}
 	return &ast.StringLiteral{TokenAble: ast.TokenAble{p.curToken}, Value: ""}
@@ -531,7 +531,7 @@ func (p *parser) parseBlockStatement() *ast.BlockStatement {
 	p.nextToken()
 
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
-		if p.curTokenIs(token.Resolve(token.S_START)) || p.curTokenIs(token.Resolve(token.E_END)) {
+		if p.curTokenIs(get(token.S_START)) || p.curTokenIs(get(token.E_END)) {
 			p.nextToken()
 			continue
 		}
@@ -714,4 +714,8 @@ func (p *parser) registerPrefix(tokenType token.Type, fn prefixParseFn) {
 
 func (p *parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
+}
+
+func get(tokenType token.Type) token.Type {
+	return token.Resolve(tokenType)
 }

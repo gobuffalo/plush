@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/plush/ast"
-	"github.com/gobuffalo/plush/lexer"
-	"github.com/gobuffalo/plush/token"
+	"github.com/bart84ek/plush/lexer"
+	"github.com/bart84ek/plush/token"
 )
 
 type (

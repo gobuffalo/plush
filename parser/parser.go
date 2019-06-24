@@ -48,8 +48,8 @@ func newParser(l *lexer.Lexer) *parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(token.HTML, p.parseHTMLLiteral)
-	p.registerPrefix(get(token.C_START), p.parseCommentLiteral)
-	p.registerPrefix(get(token.E_END), func() ast.Expression { return nil })
+	p.registerPrefix(resolve(token.C_START), p.parseCommentLiteral)
+	p.registerPrefix(resolve(token.E_END), func() ast.Expression { return nil })
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -147,13 +147,13 @@ func (p *parser) parseStatement() ast.Statement {
 	case token.LET:
 		l := p.parseLetStatement()
 		return l
-	case get(token.S_START):
+	case resolve(token.S_START):
 		p.nextToken()
 		return p.parseStatement()
 	case token.RETURN:
 		return p.parseReturnStatement(token.RETURN)
-	case get(token.E_START):
-		return p.parseReturnStatement(string(get(token.E_START)))
+	case resolve(token.E_START):
+		return p.parseReturnStatement(string(resolve(token.E_START)))
 	case token.RBRACE:
 		return nil
 	case token.EOF:
@@ -335,7 +335,7 @@ func (p *parser) parseStringLiteral() ast.Expression {
 
 func (p *parser) parseCommentLiteral() ast.Expression {
 	// fmt.Println("parseCommentLiteral")
-	for p.curToken.Type != get(token.E_END) {
+	for p.curToken.Type != resolve(token.E_END) {
 		p.nextToken()
 	}
 	return &ast.StringLiteral{TokenAble: ast.TokenAble{p.curToken}, Value: ""}
@@ -531,7 +531,7 @@ func (p *parser) parseBlockStatement() *ast.BlockStatement {
 	p.nextToken()
 
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
-		if p.curTokenIs(get(token.S_START)) || p.curTokenIs(get(token.E_END)) {
+		if p.curTokenIs(resolve(token.S_START)) || p.curTokenIs(resolve(token.E_END)) {
 			p.nextToken()
 			continue
 		}
@@ -716,6 +716,6 @@ func (p *parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
-func get(tokenType token.Type) token.Type {
+func resolve(tokenType token.Type) token.Type {
 	return token.Resolve(tokenType)
 }

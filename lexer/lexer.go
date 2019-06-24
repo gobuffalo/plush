@@ -38,7 +38,7 @@ func (l *Lexer) NextToken() token.Token {
 		return tok
 	}
 
-	start := get(token.S_START)
+	start := resolve(token.S_START)
 	if l.ch == start[0] && l.peekChar() == start[1] {
 		l.inside = true
 		return l.nextInsideToken()
@@ -53,25 +53,25 @@ func (l *Lexer) NextToken() token.Token {
 func (l *Lexer) nextOutsideToken() (token.Token, bool) {
 	var tok token.Token
 	switch l.ch {
-	case get(token.E_END)[0]:
-		if l.peekChar() == get(token.E_END)[1] {
+	case resolve(token.E_END)[0]:
+		if l.peekChar() == resolve(token.E_END)[1] {
 			l.inside = false
 			l.readChar()
-			tt := get(token.E_END)
+			tt := resolve(token.E_END)
 			return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
 		}
-	case get(token.S_START)[0]:
-		if l.peekChar() == get(token.S_START)[1] {
+	case resolve(token.S_START)[0]:
+		if l.peekChar() == resolve(token.S_START)[1] {
 			l.inside = true
 			l.readChar()
-			tt := get(token.S_START)
+			tt := resolve(token.S_START)
 			switch l.peekChar() {
 			case '#':
 				l.readChar()
-				tt = get(token.C_START)
+				tt = resolve(token.C_START)
 			case '=':
 				l.readChar()
-				tt = get(token.E_START)
+				tt = resolve(token.E_START)
 			}
 			return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
 		}
@@ -307,7 +307,7 @@ func (l *Lexer) readBString() string {
 
 func (l *Lexer) readHTML() string {
 	position := l.position
-	start := get(token.S_START)
+	start := resolve(token.S_START)
 	for l.ch != 0 {
 
 		if l.ch == '\\' && l.prevChar() == '\\' && l.peekChar() == start[0] {
@@ -351,6 +351,6 @@ func (l *Lexer) newIllegalTokenLiteral(tokenType token.Type, literal string) tok
 	return token.Token{Type: tokenType, Literal: literal, LineNumber: l.curLine}
 }
 
-func get(tokenType token.Type) token.Type {
+func resolve(tokenType token.Type) token.Type {
 	return token.Resolve(tokenType)
 }

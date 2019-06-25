@@ -52,15 +52,11 @@ func SetTemplatingDelimiters(start, end string) error {
 		len(end) != templateDelimitersLen {
 		return &delimitersLengthError{[]string{start, end}, templateDelimitersLen}
 	}
-	replace(S_START, Type(start))
-	replace(C_START, Type(fmt.Sprintf("%v#", start)))
-	replace(E_START, Type(fmt.Sprintf("%v=", start)))
-	replace(E_END, Type(end))
+	dynamic[S_START] = Type(start)
+	dynamic[C_START] = Type(fmt.Sprintf("%v#", start))
+	dynamic[E_START] = Type(fmt.Sprintf("%v=", start))
+	dynamic[E_END] = Type(end)
 	return nil
-}
-
-func replace(token, replacement Type) {
-	dynamic[token] = replacement
 }
 
 // Resolve token.Type, return dynamic replacement if found or default Type

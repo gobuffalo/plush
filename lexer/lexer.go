@@ -51,7 +51,6 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func (l *Lexer) nextOutsideToken() (token.Token, bool) {
-	var tok token.Token
 	switch l.ch {
 	case resolve(token.E_END)[0]:
 		if l.peekChar() == resolve(token.E_END)[1] {
@@ -76,7 +75,7 @@ func (l *Lexer) nextOutsideToken() (token.Token, bool) {
 			return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
 		}
 	}
-	return tok, false
+	return token.Token{}, false
 }
 
 func (l *Lexer) nextInsideToken() token.Token {

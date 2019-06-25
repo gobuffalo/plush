@@ -22,6 +22,7 @@ type delimitersLengthError struct {
 func (e *delimitersLengthError) Error() string {
 	return fmt.Sprintf("Incorrect delimiters \"%s\" length. %v chars allowed", e.Delimiters, e.Length)
 }
+
 var keywords = map[string]Type{
 	"fn":     FUNCTION,
 	"func":   FUNCTION,

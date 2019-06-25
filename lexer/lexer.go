@@ -38,8 +38,7 @@ func (l *Lexer) NextToken() token.Token {
 		return tok
 	}
 
-	start := resolve(token.S_START)
-	if l.ch == start[0] && l.peekChar() == start[1] {
+	if token.MatchAhead(token.S_START, l.ch, l.peekChar()) {
 		l.inside = true
 		return l.nextInsideToken()
 	}
@@ -51,29 +50,25 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func (l *Lexer) nextOutsideToken() (token.Token, bool) {
-	switch l.ch {
-	case resolve(token.E_END)[0]:
-		if l.peekChar() == resolve(token.E_END)[1] {
-			l.inside = false
+	if token.MatchAhead(token.E_END, l.ch, l.peekChar()) {
+		l.inside = false
+		l.readChar()
+		tt := resolve(token.E_END)
+		return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
+	}
+	if token.MatchAhead(token.S_START, l.ch, l.peekChar()) {
+		l.inside = true
+		l.readChar()
+		tt := resolve(token.S_START)
+		switch l.peekChar() {
+		case '#':
 			l.readChar()
-			tt := resolve(token.E_END)
-			return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
-		}
-	case resolve(token.S_START)[0]:
-		if l.peekChar() == resolve(token.S_START)[1] {
-			l.inside = true
+			tt = resolve(token.C_START)
+		case '=':
 			l.readChar()
-			tt := resolve(token.S_START)
-			switch l.peekChar() {
-			case '#':
-				l.readChar()
-				tt = resolve(token.C_START)
-			case '=':
-				l.readChar()
-				tt = resolve(token.E_START)
-			}
-			return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
+			tt = resolve(token.E_START)
 		}
+		return token.Token{Type: tt, Literal: string(tt), LineNumber: l.curLine}, true
 	}
 	return token.Token{}, false
 }
@@ -309,7 +304,7 @@ func (l *Lexer) readHTML() string {
 	start := resolve(token.S_START)
 	for l.ch != 0 {
 
-		if l.ch == '\\' && l.prevChar() == '\\' && l.peekChar() == start[0] {
+		if l.ch == '\\' && l.prevChar() == '\\' && start.BeginsWith(l.peekChar()) {
 			// escape escaping
 			l.readChar()
 			x := l.input[position : l.position-1]
@@ -317,11 +312,12 @@ func (l *Lexer) readHTML() string {
 		}
 
 		// allow for expression escaping using \<% foo %>
-		if l.ch == '\\' && l.peekChar() == start[0] {
+		if l.ch == '\\' && start.BeginsWith(l.peekChar()) {
 			l.readChar()
 			l.readChar()
 		}
-		if l.ch == start[0] && l.peekChar() == start[1] {
+
+		if token.MatchAhead(token.S_START, l.ch, l.peekChar()) {
 			l.inside = true
 			break
 		}

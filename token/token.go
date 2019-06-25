@@ -14,13 +14,13 @@ type Token struct {
 
 const templateDelimitersLen = 2
 
-type delimitersLengthError struct {
-	Delimiters []string
-	Length     int
+type delimiterLengthError struct {
+	Delimiter string
+	Length    int
 }
 
-func (e *delimitersLengthError) Error() string {
-	return fmt.Sprintf("Incorrect delimiters \"%s\" length. %v chars allowed", e.Delimiters, e.Length)
+func (e *delimiterLengthError) Error() string {
+	return fmt.Sprintf("Incorrect delimiter \"%s\" length. %v chars allowed", e.Delimiter, e.Length)
 }
 
 var keywords = map[string]Type{
@@ -48,9 +48,8 @@ func LookupIdent(ident string) Type {
 
 // SetTemplatingDelimiters to start and end, or return delimitersLengthError if delimiters length is incorrect
 func SetTemplatingDelimiters(start, end string) error {
-	if len(start) != templateDelimitersLen ||
-		len(end) != templateDelimitersLen {
-		return &delimitersLengthError{[]string{start, end}, templateDelimitersLen}
+	if err := checkDelimitersLength([]string{start, end}); err != nil {
+		return err
 	}
 	dynamic[S_START] = Type(start)
 	dynamic[C_START] = Type(fmt.Sprintf("%v#", start))
@@ -65,4 +64,24 @@ func Resolve(token Type) Type {
 		return tok
 	}
 	return token
+}
+
+func checkDelimitersLength(arr []string) error {
+	for _, d := range arr {
+		if len(d) != templateDelimitersLen {
+			return &delimiterLengthError{d, templateDelimitersLen}
+		}
+	}
+	return nil
+}
+
+// BeginsWith returns true if char of type matches input
+func (t *Type) BeginsWith(ch byte) bool {
+	return (*t)[0] == ch
+}
+
+// MatchAhead returns true if token matches firstChar and nextChar
+func MatchAhead(token Type, firstChar, nextChar byte) bool {
+	token = Resolve(token)
+	return token.BeginsWith(firstChar) && token[1] == nextChar
 }

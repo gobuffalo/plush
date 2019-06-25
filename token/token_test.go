@@ -3,8 +3,8 @@ package token
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/gobuffalo/plush/token"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Resolve_Default(t *testing.T) {

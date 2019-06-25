@@ -3,7 +3,6 @@ package token
 import (
 	"testing"
 
-	"github.com/gobuffalo/plush/token"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,10 +12,10 @@ func Test_Resolve_Default(t *testing.T) {
 		tokenType    Type
 		tokenLiteral string
 	}{
-		{token.S_START, "<%"},
-		{token.C_START, "<%#"},
-		{token.E_START, "<%="},
-		{token.E_END, "%>"},
+		{S_START, "<%"},
+		{C_START, "<%#"},
+		{E_START, "<%="},
+		{E_END, "%>"},
 	}
 
 	for _, tt := range tests {
@@ -34,10 +33,10 @@ func Test_SetTemplatingDelimiters(t *testing.T) {
 		tokenType    Type
 		tokenLiteral string
 	}{
-		{token.S_START, "{{"},
-		{token.C_START, "{{#"},
-		{token.E_START, "{{="},
-		{token.E_END, "}}"},
+		{S_START, "{{"},
+		{C_START, "{{#"},
+		{E_START, "{{="},
+		{E_END, "}}"},
 	}
 
 	for _, tt := range tests {

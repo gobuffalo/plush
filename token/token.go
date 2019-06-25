@@ -75,7 +75,7 @@ func checkDelimitersLength(arr []string) error {
 	return nil
 }
 
-// BeginsWith returns true if char of type matches input
+// BeginsWith returns true if first char of type matches input
 func (t *Type) BeginsWith(ch byte) bool {
 	return (*t)[0] == ch
 }

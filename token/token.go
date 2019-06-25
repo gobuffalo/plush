@@ -12,14 +12,14 @@ type Token struct {
 	LineNumber int
 }
 
-const TEMPLATE_DELIMITERS_LEN = 2
+const templateDelimitersLen = 2
 
-type DelimitersLengthError struct {
+type delimitersLengthError struct {
 	Delimiters []string
 	Length     int
 }
 
-func (e *DelimitersLengthError) Error() string {
+func (e *delimitersLengthError) Error() string {
 	return fmt.Sprintf("Incorrect delimiters \"%s\" length. %v chars allowed", e.Delimiters, e.Length)
 }
 var keywords = map[string]Type{
@@ -45,10 +45,11 @@ func LookupIdent(ident string) Type {
 	return IDENT
 }
 
+// SetTemplatingDelimiters to start and end, or return delimitersLengthError if delimiters length is incorrect
 func SetTemplatingDelimiters(start, end string) error {
-	if len(start) != TEMPLATE_DELIMITERS_LEN ||
-		len(end) != TEMPLATE_DELIMITERS_LEN {
-		return &DelimitersLengthError{[]string{start, end}, TEMPLATE_DELIMITERS_LEN}
+	if len(start) != templateDelimitersLen ||
+		len(end) != templateDelimitersLen {
+		return &delimitersLengthError{[]string{start, end}, templateDelimitersLen}
 	}
 	replace(S_START, Type(start))
 	replace(C_START, Type(fmt.Sprintf("%v#", start)))
@@ -58,9 +59,10 @@ func SetTemplatingDelimiters(start, end string) error {
 }
 
 func replace(token Type, replacement Type) {
-      dynamic[token] = replacement
+	dynamic[token] = replacement
 }
 
+// Resolve token.Type, return dynamic replacement if found or default Type
 func Resolve(token Type) Type {
 	if tok, ok := dynamic[token]; ok {
 		return tok

@@ -53,10 +53,10 @@ func Test_SetTemplatingDelimiters_LengthErrors(t *testing.T) {
 		end   string
 		error error
 	}{
-		{"{", "}", &DelimitersLengthError{[]string{"{", "}"}, TEMPLATE_DELIMITERS_LEN}},
-		{"###", "###", &DelimitersLengthError{[]string{"###", "###"}, TEMPLATE_DELIMITERS_LEN}},
-		{"{%", "}", &DelimitersLengthError{[]string{"{%", "}"}, TEMPLATE_DELIMITERS_LEN}},
-		{"{{{", "%}", &DelimitersLengthError{[]string{"{{{", "%}"}, TEMPLATE_DELIMITERS_LEN}},
+		{"{", "}", &delimitersLengthError{[]string{"{", "}"}, templateDelimitersLen}},
+		{"###", "###", &delimitersLengthError{[]string{"###", "###"}, templateDelimitersLen}},
+		{"{%", "}", &delimitersLengthError{[]string{"{%", "}"}, templateDelimitersLen}},
+		{"{{{", "%}", &delimitersLengthError{[]string{"{{{", "%}"}, templateDelimitersLen}},
 		{"{%", "%}", nil},
 	}
 	for _, tt := range tests {

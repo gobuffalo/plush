@@ -80,8 +80,12 @@ func (t *Type) BeginsWith(ch byte) bool {
 	return (*t)[0] == ch
 }
 
+func (t *Type) endsWith(ch byte) bool {
+	return (*t)[1] == ch
+}
+
 // MatchAhead returns true if token matches firstChar and nextChar
-func MatchAhead(token Type, firstChar, nextChar byte) bool {
+func MatchAhead(token Type, firstChar, lastChar byte) bool {
 	token = Resolve(token)
-	return token.BeginsWith(firstChar) && token[1] == nextChar
+	return token.BeginsWith(firstChar) && token.endsWith(lastChar)
 }

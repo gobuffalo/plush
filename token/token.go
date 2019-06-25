@@ -58,7 +58,7 @@ func SetTemplatingDelimiters(start, end string) error {
 	return nil
 }
 
-func replace(token Type, replacement Type) {
+func replace(token, replacement Type) {
 	dynamic[token] = replacement
 }
 

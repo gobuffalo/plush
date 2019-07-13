@@ -307,7 +307,7 @@ func Test_OperatorPrecedence(t *testing.T) {
 		program, err := Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
-		r.Equal(tt.expected, program.String())
+		r.Equal(tt.expected, program.InnerText())
 	}
 }
 
@@ -1002,7 +1002,8 @@ create_table("users_2", {"timestamps": false}) {
 	t.Column("price", "numeric", {"null": true, "default": "1.00"})
 	t.Column("email", "string", {"default": "foo@example.com", "size": 50})
 }
-`
+drop_column("table_name", "column1_name")
+drop_column("table_name", "column2_name")`
 	p, err := Parse("<%" + input + "%>")
 	r.NoError(err)
 	r.Equal(input, p.String())

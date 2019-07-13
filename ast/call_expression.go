@@ -38,9 +38,6 @@ func (ce *CallExpression) String() string {
 		out.WriteString(ce.ElseBlock.String())
 		out.WriteString(" }")
 	}
-	if ce.Block != nil || ce.ElseBlock != nil {
-		out.WriteString("\n")
-	}
 
 	return out.String()
 }

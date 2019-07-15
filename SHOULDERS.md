@@ -21,6 +21,12 @@ Thank you to the following **GIANTS**:
 
 * [github.com/gofrs/uuid](https://godoc.org/github.com/gofrs/uuid)
 
+* [github.com/golang/protobuf](https://godoc.org/github.com/golang/protobuf)
+
+* [github.com/onsi/ginkgo](https://godoc.org/github.com/onsi/ginkgo)
+
+* [github.com/onsi/gomega](https://godoc.org/github.com/onsi/gomega)
+
 * [github.com/pkg/errors](https://godoc.org/github.com/pkg/errors)
 
 * [github.com/serenize/snaker](https://godoc.org/github.com/serenize/snaker)
@@ -30,3 +36,5 @@ Thank you to the following **GIANTS**:
 * [github.com/stretchr/testify](https://godoc.org/github.com/stretchr/testify)
 
 * [golang.org/x/sync](https://godoc.org/golang.org/x/sync)
+
+* [golang.org/x/text](https://godoc.org/golang.org/x/text)

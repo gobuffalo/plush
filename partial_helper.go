@@ -1,12 +1,12 @@
 package plush
 
 import (
+	"fmt"
 	"html/template"
 	"path/filepath"
 	"strings"
 
 	"github.com/gobuffalo/github_flavored_markdown"
-	"github.com/pkg/errors"
 )
 
 // PartialFeeder is callback function should implemented on application side.
@@ -14,7 +14,7 @@ type PartialFeeder func(string) (string, error)
 
 func partialHelper(name string, data map[string]interface{}, help HelperContext) (template.HTML, error) {
 	if help.Context == nil {
-		return "", errors.New("invalid context. abort")
+		return "", fmt.Errorf("invalid context. abort")
 	}
 
 	help.Context = help.New()
@@ -24,7 +24,7 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 
 	pf, ok := help.Value("partialFeeder").(func(string) (string, error))
 	if !ok {
-		return "", errors.New("could not found partial feeder from helpers")
+		return "", fmt.Errorf("could not found partial feeder from helpers")
 	}
 
 	var part string

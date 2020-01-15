@@ -3,7 +3,7 @@ package ast
 import (
 	"testing"
 
-	"github.com/gobuffalo/plush/token"
+	"github.com/gobuffalo/plush/v4/token"
 	"github.com/stretchr/testify/require"
 )
 

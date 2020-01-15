@@ -1,10 +1,10 @@
 package plush
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -71,7 +71,7 @@ func Test_PartialHelper_Feeder_Error(t *testing.T) {
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
 	help.Set("partialFeeder", func(string) (string, error) {
-		return "", errors.New("me-rong")
+		return "", fmt.Errorf("me-rong")
 	})
 
 	_, err := partialHelper(name, data, help)

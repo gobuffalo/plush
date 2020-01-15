@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/gobuffalo/plush/ast"
+	"github.com/gobuffalo/plush/v4/ast"
 )
 
 type userFunction struct {

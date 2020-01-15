@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/gobuffalo/plush/token"
+	"github.com/gobuffalo/plush/v4/token"
 )
 
 func Test_NextToken_Simple(t *testing.T) {

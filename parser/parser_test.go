@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gobuffalo/plush/ast"
+	"github.com/gobuffalo/plush/v4/ast"
 	"github.com/stretchr/testify/require"
 )
 

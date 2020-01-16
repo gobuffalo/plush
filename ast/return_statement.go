@@ -3,7 +3,7 @@ package ast
 import (
 	"bytes"
 
-	"github.com/gobuffalo/plush/token"
+	"github.com/gobuffalo/plush/v4/token"
 )
 
 type ReturnStatement struct {

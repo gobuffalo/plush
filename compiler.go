@@ -9,11 +9,22 @@ import (
 	"time"
 
 	"github.com/gobuffalo/helpers/hctx"
-	"github.com/gobuffalo/plush/ast"
-	"github.com/pkg/errors"
+	"github.com/gobuffalo/plush/v4/ast"
 )
 
-var ErrUnknownIdentifier = errors.New("unknown identifier")
+// var ErrUnknownIdentifier = fmt.Errorf("unknown identifier")
+
+type ErrUnknownIdentifier struct {
+	ID  string
+	Err error
+}
+
+func (e *ErrUnknownIdentifier) Error() string {
+	if e.Err == nil {
+		e.Err = fmt.Errorf("unknown identifier")
+	}
+	return fmt.Sprintf("%q: %s", e.ID, e.Err)
+}
 
 type compiler struct {
 	ctx     hctx.Context
@@ -43,7 +54,7 @@ func (c *compiler) compile() (string, error) {
 			if c.curStmt != nil {
 				s = c.curStmt
 			}
-			return "", errors.Errorf("line %d: %s", s.T().LineNumber, err)
+			return "", fmt.Errorf("line %d: %s", s.T().LineNumber, err)
 		}
 
 		c.write(bb, res)
@@ -121,7 +132,7 @@ func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
 	case nil:
 		return nil, nil
 	}
-	return nil, errors.Errorf("could not evaluate node %T", node)
+	return nil, fmt.Errorf("could not evaluate node %T", node)
 }
 
 func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}, error) {
@@ -131,7 +142,9 @@ func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}
 	}
 	n := node.Name.Value
 	if !c.ctx.Has(n) {
-		return nil, errors.Wrap(ErrUnknownIdentifier, fmt.Sprintf("%q", n))
+		return nil, &ErrUnknownIdentifier{
+			ID: n,
+		}
 	}
 	c.ctx.Set(n, v)
 	return nil, nil
@@ -162,7 +175,7 @@ func (c *compiler) evalFunctionLiteral(node *ast.FunctionLiteral) (interface{}, 
 func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}, error) {
 	res, err := c.evalExpression(node.Right)
 	if err != nil {
-		if errors.Cause(err) != ErrUnknownIdentifier {
+		if _, ok := err.(*ErrUnknownIdentifier); !ok {
 			return nil, err
 		}
 	}
@@ -170,14 +183,14 @@ func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}
 	case "!":
 		return !c.isTruthy(res), nil
 	}
-	return nil, errors.Errorf("unknown operator %s", node.Operator)
+	return nil, fmt.Errorf("unknown operator %s", node.Operator)
 }
 
 func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
 	// fmt.Println("evalIfExpression")
 	con, err := c.evalExpression(node.Condition)
 	if err != nil {
-		if errors.Cause(err) != ErrUnknownIdentifier {
+		if _, ok := err.(*ErrUnknownIdentifier); !ok {
 			return nil, err
 		}
 	}
@@ -195,7 +208,7 @@ func (c *compiler) evalElseAndElseIfExpressions(node *ast.IfExpression) (interfa
 	for _, eiNode := range node.ElseIf {
 		eiCon, err := c.evalExpression(eiNode.Condition)
 		if err != nil {
-			if errors.Cause(err) != ErrUnknownIdentifier {
+			if _, ok := err.(*ErrUnknownIdentifier); !ok {
 				return nil, err
 			}
 		}
@@ -250,7 +263,7 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 			return rv.Index(i).Interface(), nil
 		}
 	}
-	return nil, errors.Errorf("could not index %T with %T", left, index)
+	return nil, fmt.Errorf("could not index %T with %T", left, index)
 }
 
 func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
@@ -289,13 +302,13 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 			rv = rv.Elem()
 		}
 		if rv.Kind() != reflect.Struct {
-			return nil, errors.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
+			return nil, fmt.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
 		}
 		f := rv.FieldByName(node.Value)
 		if !f.IsValid() {
 			m := rv.MethodByName(node.Value)
 			if !m.IsValid() {
-				return nil, errors.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
+				return nil, fmt.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
 			}
 			return m.Interface(), nil
 		}
@@ -307,7 +320,9 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 	if node.Value == "nil" {
 		return nil, nil
 	}
-	return nil, errors.Wrap(ErrUnknownIdentifier, fmt.Sprintf("%q", node.Value))
+	return nil, &ErrUnknownIdentifier{
+		ID: node.Value,
+	}
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
@@ -351,7 +366,7 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 	case nil:
 		return nil, nil
 	}
-	return nil, errors.Errorf("unable to operate (%s) on %T and %T ", node.Operator, lres, rres)
+	return nil, fmt.Errorf("unable to operate (%s) on %T and %T ", node.Operator, lres, rres)
 }
 
 func (c *compiler) boolsOperator(l interface{}, r interface{}, op string) (interface{}, error) {
@@ -386,7 +401,7 @@ func (c *compiler) intsOperator(l int, r int, op string) (interface{}, error) {
 	case "==":
 		return l == r, nil
 	}
-	return nil, errors.Errorf("unknown operator for integer %s", op)
+	return nil, fmt.Errorf("unknown operator for integer %s", op)
 }
 
 func (c *compiler) floatsOperator(l float64, r float64, op string) (interface{}, error) {
@@ -412,7 +427,7 @@ func (c *compiler) floatsOperator(l float64, r float64, op string) (interface{},
 	case "==":
 		return l == r, nil
 	}
-	return nil, errors.Errorf("unknown operator for float %s", op)
+	return nil, fmt.Errorf("unknown operator for float %s", op)
 }
 
 func (c *compiler) stringsOperator(l string, r interface{}, op string) (interface{}, error) {
@@ -441,11 +456,11 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 	case "~=":
 		x, err := regexp.Compile(rr)
 		if err != nil {
-			return nil, errors.Errorf("couldn't compile regex %s", rr)
+			return nil, fmt.Errorf("couldn't compile regex %s", rr)
 		}
 		return x.MatchString(l), nil
 	}
-	return nil, errors.Errorf("unknown operator for string %s", op)
+	return nil, fmt.Errorf("unknown operator for string %s", op)
 }
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
@@ -490,7 +505,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		rv = rv.Elem()
 	}
 	if !rv.IsValid() {
-		return nil, errors.Errorf("%+v (%T) is an invalid function", node.String(), rv)
+		return nil, fmt.Errorf("%+v (%T) is an invalid function", node.String(), rv)
 	}
 
 	rt := rv.Type()
@@ -500,7 +515,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 	if !isVariadic {
 		if len(node.Arguments) > rtNumIn {
-			return nil, errors.Errorf("%s too many arguments (%d for %d)", node.String(), len(node.Arguments), rtNumIn)
+			return nil, fmt.Errorf("%s too many arguments (%d for %d)", node.String(), len(node.Arguments), rtNumIn)
 		}
 
 		for pos, a := range node.Arguments {
@@ -519,7 +534,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 			actualT := ar.Type()
 			if !actualT.AssignableTo(expectedT) {
-				return nil, errors.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
+				return nil, fmt.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
 			}
 
 			args = append(args, ar)
@@ -563,10 +578,10 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		}
 
 		if len(args) > rtNumIn {
-			return nil, errors.Errorf("%s too many arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args)
+			return nil, fmt.Errorf("%s too many arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args)
 		}
 		if len(args) < rtNumIn {
-			return nil, errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args)
+			return nil, fmt.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args)
 		}
 
 	} else {
@@ -574,7 +589,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		nodeArgs := node.Arguments
 		nodeArgsLen := len(nodeArgs)
 		if nodeArgsLen < rtNumIn-1 {
-			return nil, errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args)
+			return nil, fmt.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args)
 		}
 		var pos int
 
@@ -595,7 +610,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 			actualT := ar.Type()
 			if !actualT.AssignableTo(expectedT) {
-				return nil, errors.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
+				return nil, fmt.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
 			}
 
 			args = append(args, ar)
@@ -618,7 +633,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 			actualT := ar.Type()
 			if !actualT.AssignableTo(expectedT) {
-				return nil, errors.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
+				return nil, fmt.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
 			}
 
 			args = append(args, ar)
@@ -628,7 +643,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	res := rv.Call(args)
 	if len(res) > 0 {
 		if e, ok := res[len(res)-1].Interface().(error); ok {
-			return nil, errors.Wrap(e, fmt.Sprintf("could not call %s function", node.Function.String()))
+			return nil, fmt.Errorf("could not call %s function: %s", node.Function, e)
 		}
 		return res[0].Interface(), nil
 	}
@@ -704,7 +719,7 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 			}
 			return ret, nil
 		}
-		return ret, errors.Errorf("could not iterate over %T", iter)
+		return ret, fmt.Errorf("could not iterate over %T", iter)
 	}
 	return ret, nil
 }
@@ -740,7 +755,7 @@ func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 	case *ast.LetStatement:
 		return c.evalLetStatement(t)
 	}
-	return nil, errors.Errorf("could not eval statement %T", node)
+	return nil, fmt.Errorf("could not eval statement %T", node)
 }
 
 func (c *compiler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, error) {

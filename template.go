@@ -2,9 +2,9 @@ package plush
 
 import (
 	"github.com/gobuffalo/helpers/hctx"
-	"github.com/gobuffalo/plush/ast"
+	"github.com/gobuffalo/plush/v4/ast"
 
-	"github.com/gobuffalo/plush/parser"
+	"github.com/gobuffalo/plush/v4/parser"
 )
 
 // Template represents an input and helpers to be used

@@ -9,9 +9,7 @@ import (
 	"github.com/gobuffalo/helpers/forms"
 	"github.com/gobuffalo/helpers/forms/bootstrap"
 	"github.com/gobuffalo/helpers/hctx"
-	"github.com/gobuffalo/plush/ast"
-
-	"github.com/pkg/errors"
+	"github.com/gobuffalo/plush/v4/ast"
 )
 
 // Helpers contains all of the default helpers for
@@ -73,7 +71,7 @@ func (h HelperContext) BlockWith(hc hctx.Context) (string, error) {
 	h.compiler.ctx = ctx
 
 	if h.block == nil {
-		return "", errors.New("no block defined")
+		return "", fmt.Errorf("no block defined")
 	}
 	i, err := h.compiler.evalBlockStatement(h.block)
 	if err != nil {

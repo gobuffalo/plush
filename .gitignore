@@ -27,4 +27,4 @@ generated/
 bin/*
 gin-bin
 .idea/
-go.*
+cover.out

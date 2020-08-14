@@ -28,6 +28,30 @@ func Test_NextToken_Simple(t *testing.T) {
 	}
 }
 
+func Test_NextToken_SkipLineComments(t *testing.T) {
+	r := require.New(t)
+	input := `<%= 
+		# comment
+		1
+		# another line comment
+		 %>`
+	tests := []struct {
+		tokenType    token.Type
+		tokenLiteral string
+	}{
+		{token.E_START, "<%="},
+		{token.INT, "1"},
+		{token.E_END, "%>"},
+	}
+
+	l := New(input)
+	for _, tt := range tests {
+		tok := l.NextToken()
+		r.Equal(tt.tokenType, tok.Type)
+		r.Equal(tt.tokenLiteral, tok.Literal)
+	}
+}
+
 func Test_EscapeStringQuote(t *testing.T) {
 	r := require.New(t)
 	input := `<%= "mark \"cool\" bates" %>`

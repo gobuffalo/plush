@@ -43,22 +43,23 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 
 // Parse an input string and return a Template, and caches the parsed template.
 func Parse(input string) (*Template, error) {
+	if !cacheEnabled {
+		return NewTemplate(input)
+	}
+
 	moot.Lock()
 	defer moot.Unlock()
 	t, ok := cache[input]
-	if cacheEnabled && ok {
+	if ok {
 		return t, nil
 	}
 
 	t, err := NewTemplate(input)
-	if cacheEnabled && err == nil {
-		cache[input] = t
-	}
-
 	if err != nil {
 		return t, err
 	}
 
+	cache[input] = t
 	return t, nil
 }
 

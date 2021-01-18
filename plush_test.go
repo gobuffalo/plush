@@ -210,3 +210,22 @@ const createTable = `create_table("toys") {
 	t.Column("description", "text", {null: true})
 	t.Column("size", "integer")
 }`
+
+func Test_Caching(t *testing.T) {
+	r := require.New(t)
+
+	template, err := NewTemplate("<%= \"AA\" %>")
+	r.NoError(err)
+
+	cache["<%= a %>"] = template
+	CacheEnabled = true
+
+	tc, err := Parse("<%= a %>")
+	r.NoError(err)
+	r.Equal(tc, template)
+
+	CacheEnabled = false
+	tc, err = Parse("<%= a %>")
+	r.NoError(err)
+	r.NotEqual(tc, template)
+}

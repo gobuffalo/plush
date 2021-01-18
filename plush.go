@@ -22,6 +22,7 @@ import (
 */
 var DefaultTimeFormat = "January 02, 2006 15:04:05 -0700"
 
+var cacheEnabled bool
 var cache = map[string]*Template{}
 var moot = &sync.Mutex{}
 
@@ -32,11 +33,11 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 	if err != nil {
 		return "", err
 	}
-	if helpers != nil {
-		for k, v := range helpers {
-			data[k] = v
-		}
+
+	for k, v := range helpers {
+		data[k] = v
 	}
+
 	return t.Exec(NewContextWith(data))
 }
 
@@ -44,12 +45,13 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 func Parse(input string) (*Template, error) {
 	moot.Lock()
 	defer moot.Unlock()
-	if t, ok := cache[input]; ok {
+	t, ok := cache[input]
+	if cacheEnabled && ok {
 		return t, nil
 	}
-	t, err := NewTemplate(input)
 
-	if err == nil {
+	t, err := NewTemplate(input)
+	if cacheEnabled && err == nil {
 		cache[input] = t
 	}
 

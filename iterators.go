@@ -1,9 +1,8 @@
 package plush
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 // Iterator type can be implemented and used by the `for` command to build loops in templates
@@ -38,7 +37,7 @@ func untilHelper(a int) Iterator {
 
 func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	if size <= 0 {
-		return nil, errors.WithStack(errors.New("size must be greater than zero"))
+		return nil, fmt.Errorf("size must be greater than zero")
 	}
 	u := reflect.Indirect(reflect.ValueOf(underlying))
 
@@ -66,7 +65,7 @@ func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 			pos += groupSize
 		}
 	default:
-		return nil, errors.WithStack(errors.Errorf("can not use %T in groupBy", underlying))
+		return nil, fmt.Errorf("can not use %T in groupBy", underlying)
 	}
 	g := &groupBy{
 		group: group,

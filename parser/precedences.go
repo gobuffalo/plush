@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/gobuffalo/plush/token"
+import "github.com/gobuffalo/plush/v4/token"
 
 const (
 	_           int = iota

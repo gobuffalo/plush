@@ -5,8 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gobuffalo/tags"
-	"github.com/pkg/errors"
+	"github.com/gobuffalo/tags/v3"
 	"github.com/stretchr/testify/require"
 )
 
@@ -46,7 +45,7 @@ func Test_Let_Inside_Helper(t *testing.T) {
 		"divwrapper": func(opts map[string]interface{}, helper HelperContext) (template.HTML, error) {
 			body, err := helper.Block()
 			if err != nil {
-				return template.HTML(""), errors.WithStack(err)
+				return template.HTML(""), err
 			}
 			t := tags.New("div", opts)
 			t.Append(body)

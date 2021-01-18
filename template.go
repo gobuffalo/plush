@@ -1,11 +1,10 @@
 package plush
 
 import (
-	"github.com/gobuffalo/plush/ast"
+	"github.com/gobuffalo/helpers/hctx"
+	"github.com/gobuffalo/plush/v4/ast"
 
-	"github.com/gobuffalo/plush/parser"
-
-	"github.com/pkg/errors"
+	"github.com/gobuffalo/plush/v4/parser"
 )
 
 // Template represents an input and helpers to be used
@@ -24,7 +23,7 @@ func NewTemplate(input string) (*Template, error) {
 	}
 	err := t.Parse()
 	if err != nil {
-		return t, errors.WithStack(err)
+		return t, err
 	}
 	return t, nil
 }
@@ -38,14 +37,14 @@ func (t *Template) Parse() error {
 	}
 	program, err := parser.Parse(t.Input)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	t.program = program
 	return nil
 }
 
 // Exec the template using the content and return the results
-func (t *Template) Exec(ctx *Context) (string, error) {
+func (t *Template) Exec(ctx hctx.Context) (string, error) {
 	err := t.Parse()
 	if err != nil {
 		return "", err

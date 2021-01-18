@@ -3,6 +3,8 @@ package plush
 import (
 	"context"
 	"sync"
+
+	"github.com/gobuffalo/helpers/hctx"
 )
 
 var _ context.Context = &Context{}
@@ -18,7 +20,7 @@ type Context struct {
 // New context containing the current context. Values set on the new context
 // will not be set onto the original context, however, the original context's
 // values will be available to the new context.
-func (c *Context) New() *Context {
+func (c *Context) New() hctx.Context {
 	cc := NewContext()
 	cc.outer = c
 	return cc

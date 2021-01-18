@@ -1,6 +1,9 @@
 package ast
 
-import "bytes"
+import (
+	"bytes"
+	"strings"
+)
 
 type Program struct {
 	Statements []Statement
@@ -9,12 +12,12 @@ type Program struct {
 func (p *Program) TokenLiteral() string {
 	if len(p.Statements) > 0 {
 		return p.Statements[0].TokenLiteral()
-	} else {
-		return ""
 	}
+	return ""
 }
 
-func (p *Program) String() string {
+// InnerText gets the raw string representation of the program's contents.
+func (p *Program) InnerText() string {
 	var out bytes.Buffer
 
 	for _, s := range p.Statements {
@@ -22,4 +25,14 @@ func (p *Program) String() string {
 	}
 
 	return out.String()
+}
+
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.String() + "\n")
+	}
+
+	return strings.TrimRight(out.String(), "\n")
 }

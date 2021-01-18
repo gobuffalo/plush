@@ -3,7 +3,7 @@ package lexer
 import (
 	"strings"
 
-	"github.com/gobuffalo/plush/token"
+	"github.com/gobuffalo/plush/v4/token"
 )
 
 // Lexer moves through the source input and tokenizes its content

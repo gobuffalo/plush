@@ -1,10 +1,10 @@
 package plush
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,20 +14,6 @@ func Test_PartialHelper_Nil_Context(t *testing.T) {
 	name := "index"
 	data := map[string]interface{}{}
 	help := HelperContext{}
-
-	html, err := partialHelper(name, data, help)
-	r.Error(err)
-	r.Contains(err.Error(), "invalid context")
-	r.Equal("", string(html))
-}
-
-func Test_PartialHelper_Blank_Data(t *testing.T) {
-	r := require.New(t)
-
-	name := "index"
-	data := map[string]interface{}{}
-	help := HelperContext{Context: NewContext()}
-	help.Context.data = nil
 
 	html, err := partialHelper(name, data, help)
 	r.Error(err)
@@ -85,7 +71,7 @@ func Test_PartialHelper_Feeder_Error(t *testing.T) {
 	data := map[string]interface{}{}
 	help := HelperContext{Context: NewContext()}
 	help.Set("partialFeeder", func(string) (string, error) {
-		return "", errors.New("me-rong")
+		return "", fmt.Errorf("me-rong")
 	})
 
 	_, err := partialHelper(name, data, help)

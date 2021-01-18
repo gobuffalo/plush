@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/gobuffalo/helpers/hctx"
 )
 
 // DefaultTimeFormat is the default way of formatting a time.Time type.
@@ -54,31 +54,31 @@ func Parse(input string) (*Template, error) {
 	}
 
 	if err != nil {
-		return t, errors.WithStack(err)
+		return t, err
 	}
 
 	return t, nil
 }
 
 // Render a string using the given the context.
-func Render(input string, ctx *Context) (string, error) {
+func Render(input string, ctx hctx.Context) (string, error) {
 	t, err := Parse(input)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	return t.Exec(ctx)
 }
 
-func RenderR(input io.Reader, ctx *Context) (string, error) {
+func RenderR(input io.Reader, ctx hctx.Context) (string, error) {
 	b, err := ioutil.ReadAll(input)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	return Render(string(b), ctx)
 }
 
 // RunScript allows for "pure" plush scripts to be executed.
-func RunScript(input string, ctx *Context) error {
+func RunScript(input string, ctx hctx.Context) error {
 	input = "<% " + input + "%>"
 
 	ctx = ctx.New()

@@ -22,7 +22,7 @@ import (
 */
 var DefaultTimeFormat = "January 02, 2006 15:04:05 -0700"
 
-var cacheEnabled bool
+var CacheEnabled bool
 var cache = map[string]*Template{}
 var moot = &sync.Mutex{}
 
@@ -43,7 +43,7 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 
 // Parse an input string and return a Template, and caches the parsed template.
 func Parse(input string) (*Template, error) {
-	if !cacheEnabled {
+	if !CacheEnabled {
 		return NewTemplate(input)
 	}
 

@@ -150,63 +150,21 @@ func Test_UndefinedArg(t *testing.T) {
 	r.Equal(`line 1: "bar": unknown identifier`, err.Error())
 }
 
-// func Test_FizzParses(t *testing.T) {
-// 	r := require.New(t)
-// 	_, err := Parse(createTable)
-// 	r.NoError(err)
-// }
+func Test_Caching(t *testing.T) {
+	r := require.New(t)
 
-// func Test_FizzWorks(t *testing.T) {
-// 	r := require.New(t)
-//
-// 	table := &table{
-// 		data: map[string]column{},
-// 	}
-//
-// 	ctx := NewContext()
-// 	ctx.Set("create_table", func(tn string, help HelperContext) error {
-// 		c := ctx.New()
-// 		c.Set("t", table)
-// 		_, err := help.BlockWith(c)
-// 		return err
-// 	})
-//
-// 	err := RunScript(createTable, ctx)
-// 	r.NoError(err)
-// 	r.Len(table.data, 4)
-//
-// 	c := table.data["id"]
-// 	r.Equal("id", c.name)
-// 	r.Equal("uuid", c.tiep)
-// 	r.True(c.opts["primary"].(bool))
-//
-// 	c = table.data["name"]
-// 	r.Equal("name", c.name)
-// 	r.Equal("string", c.tiep)
-// 	r.Empty(c.opts)
-// }
+	template, err := NewTemplate("<%= \"AA\" %>")
+	r.NoError(err)
 
-type table struct {
-	data map[string]column
+	cache["<%= a %>"] = template
+	CacheEnabled = true
+
+	tc, err := Parse("<%= a %>")
+	r.NoError(err)
+	r.Equal(tc, template)
+
+	CacheEnabled = false
+	tc, err = Parse("<%= a %>")
+	r.NoError(err)
+	r.NotEqual(tc, template)
 }
-
-type column struct {
-	name string
-	tiep string
-	opts map[string]interface{}
-}
-
-func (table *table) Column(n string, t string, opts map[string]interface{}) {
-	table.data[n] = column{
-		name: n,
-		tiep: t,
-		opts: opts,
-	}
-}
-
-const createTable = `create_table("toys") {
-	t.Column("id", "uuid", {primary: true})
-	t.Column("name", "string")
-	t.Column("description", "text", {null: true})
-	t.Column("size", "integer")
-}`

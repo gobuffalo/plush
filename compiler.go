@@ -10,10 +10,15 @@ import (
 
 	"github.com/gobuffalo/helpers/hctx"
 	"github.com/gobuffalo/plush/v4/ast"
+	"github.com/gobuffalo/plush/v4/token"
 )
 
-// var ErrUnknownIdentifier = fmt.Errorf("unknown identifier")
 
+type returnValue struct {
+	Value []interface{}
+}
+
+// var ErrUnknownIdentifier = fmt.Errorf("unknown identifier")
 type ErrUnknownIdentifier struct {
 	ID  string
 	Err error
@@ -92,7 +97,12 @@ func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 		for _, ii := range t {
 			c.write(bb, ii)
 		}
+	case returnValue:
+		for _, ii := range t.Value {
+			c.write(bb, ii)
+		}
 	}
+
 }
 
 func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
@@ -733,7 +743,15 @@ func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, er
 			return nil, err
 		}
 		if i != nil {
+
 			res = append(res, i)
+			switch retStm := c.curStmt.(type) {
+			case *ast.ReturnStatement:
+				if retStm.Type == token.RETURN {
+
+					return returnValue{Value: res}, nil
+				}
+			}
 		}
 	}
 	return res, nil
@@ -741,13 +759,14 @@ func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, er
 
 func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 	c.curStmt = node
-	// fmt.Println("evalStatement")
+	//fmt.Println("evalStatement")
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:
 		s, err := c.evalExpression(t.Expression)
 		switch s.(type) {
-		case ast.Printable, template.HTML:
+		case returnValue, ast.Printable, template.HTML:
 			return s, err
+
 		}
 		return nil, err
 	case *ast.ReturnStatement:

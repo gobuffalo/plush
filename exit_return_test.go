@@ -59,6 +59,32 @@ func Test_Simple_Return_Exit(t *testing.T) {
 	r.Equal("445", strings.TrimSpace(s))
 }
 
+func Test_Simple_Return_Default(t *testing.T) {
+	r := require.New(t)
+	input := `
+	<%
+		let numberify = fn(arg) {
+			if (arg == "one") {
+				return 1;
+			}
+			if (arg == "two") {
+				return 445;
+			}
+			if (arg == "three") {
+				return 3;
+			}
+			return "unsupported"
+		}
+	%>
+	<%= numberify("six") %>
+	`
+	s, err := Render(input, NewContext())
+	///fmt.Printf("Stack Trace  => %+v \n\n", errors.Cause(err))
+	r.NoError(err)
+	r.Equal("unsupported", strings.TrimSpace(s))
+}
+
+
 func Test_User_Function_Return(t *testing.T) {
 	r := require.New(t)
 	ctx := NewContext()

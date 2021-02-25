@@ -58,3 +58,21 @@ func Test_LineNumberErrors_InsideForLoop(t *testing.T) {
 	r.Error(err)
 	r.Contains(err.Error(), "line 3:")
 }
+
+func Test_LineNumber_MissingkeyWord(t *testing.T) {
+	r := require.New(t)
+	input := `
+	
+	
+	
+	
+	<%=  (n) in numbers { %>
+		<%= n %>
+	<% } %>
+	`
+	ctx := NewContext()
+	ctx.Set("numbers", []int{1, 2})
+	_, err := Render(input, ctx)
+	r.Error(err)
+	r.Contains(err.Error(), "line 6:")
+}

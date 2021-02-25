@@ -59,7 +59,7 @@ func Test_LineNumberErrors_InsideForLoop(t *testing.T) {
 	r.Contains(err.Error(), "line 3:")
 }
 
-func Test_LineNumber_MissingkeyWord(t *testing.T) {
+func Test_LineNumberErrors_MissingKeyword(t *testing.T) {
 	r := require.New(t)
 	input := `
 	

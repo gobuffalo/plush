@@ -1,7 +1,5 @@
 package plush
 
-//Test issue  https://github.com/gobuffalo/plush/issues/53
-
 import (
 	"strings"
 	"testing"

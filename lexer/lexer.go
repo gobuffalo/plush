@@ -184,6 +184,7 @@ func (l *Lexer) nextInsideToken() token.Token {
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
+			tok.LineNumber = l.curLine
 			return tok
 		} else if isDigit(l.ch) {
 			tok.Literal = l.readNumber()
@@ -196,7 +197,7 @@ func (l *Lexer) nextInsideToken() token.Token {
 			default:
 				tok.Type = "INT"
 			}
-
+			tok.LineNumber = l.curLine
 			return tok
 		} else {
 			tok = l.newToken(token.ILLEGAL)

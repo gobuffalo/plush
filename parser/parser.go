@@ -720,26 +720,28 @@ func (p *parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
-func (p *parser) confrimIfCondition(v ast.Expression) bool {
+func (p *parser) confrimIfCondition(v ast.Expression) (returnData bool) {
 	_, ok := v.(ast.Comparable)
 	if !ok {
 		p.invalidIfCondition(v.String())
-		return false
+		return
 	}
+
+	returnData = true
+
 	switch val := v.(type) {
 
 	case *ast.InfixExpression:
 		if !p.confrimIfCondition(val.Left) {
-			return false
-		}
-
-		if !p.confrimIfCondition(val.Right) {
-			return false
+			returnData = false
+		} else if !p.confrimIfCondition(val.Right) {
+			returnData = false
 		}
 	case *ast.PrefixExpression:
 		if !p.confrimIfCondition(val.Right) {
-			return false
+			returnData = false
 		}
 	}
-	return true
+
+	return
 }

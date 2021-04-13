@@ -736,6 +736,10 @@ func (p *parser) confrimIfCondition(v ast.Expression) bool {
 		if !p.confrimIfCondition(val.Right) {
 			return false
 		}
+	case *ast.PrefixExpression:
+		if !p.confrimIfCondition(val.Right) {
+			return false
+		}
 	}
 	return true
 }

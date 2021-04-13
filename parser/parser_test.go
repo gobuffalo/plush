@@ -389,6 +389,14 @@ func Test_IfExpression_ComapreWithFunction(t *testing.T) {
 	r.True(testIdentifier(t, consequence.Expression, "x"))
 	r.Nil(exp.ElseBlock)
 }
+func Test_IfExpression_PrefixExpressions_InvalidCompar(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (!(x = 1)) { x } %>`
+
+	_, err := Parse(input)
+
+	r.Error(err, "syntax error: invalid if condition, got x = 1")
+}
 func Test_IfExpression_InfixExpressions_InvalidCompare(t *testing.T) {
 	r := require.New(t)
 	input := `<% if ( y == 1 && x = 1) { x } %>`

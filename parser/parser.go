@@ -131,6 +131,11 @@ func (p *parser) expectPeek(t token.Type) bool {
 	return false
 }
 
+func (p *parser) invalidIfCondition(t string) {
+	msg := fmt.Sprintf("line %d: syntax error: invalid if condition, got %s", p.curToken.LineNumber, t)
+	p.errors = append(p.errors, msg)
+}
+
 func (p *parser) peekError(t token.Type) {
 	msg := fmt.Sprintf("line %d: expected next token to be %s, got %s instead", p.curToken.LineNumber, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
@@ -458,6 +463,11 @@ func (p *parser) parseIfExpression() ast.Expression {
 	p.nextToken()
 	expression.Condition = p.parseExpression(LOWEST)
 
+	//Confrim that expression is comparable
+	if !p.confrimIfCondition(expression.Condition) {
+		return nil
+	}
+
 	if !p.expectPeek(token.RPAREN) {
 		return nil
 	}
@@ -708,4 +718,24 @@ func (p *parser) registerPrefix(tokenType token.Type, fn prefixParseFn) {
 
 func (p *parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
+}
+
+func (p *parser) confrimIfCondition(v ast.Expression) bool {
+	_, ok := v.(ast.Comparable)
+	if !ok {
+		p.invalidIfCondition(v.String())
+		return false
+	}
+	switch val := v.(type) {
+
+	case *ast.InfixExpression:
+		if !p.confrimIfCondition(val.Left) {
+			return false
+		}
+
+		if !p.confrimIfCondition(val.Right) {
+			return false
+		}
+	}
+	return true
 }

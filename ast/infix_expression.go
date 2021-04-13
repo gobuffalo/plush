@@ -11,6 +11,8 @@ type InfixExpression struct {
 	Right    Expression
 }
 
+func (oe *InfixExpression) validIfCondition() bool { return true }
+
 func (oe *InfixExpression) expressionNode() {}
 
 func (oe *InfixExpression) String() string {

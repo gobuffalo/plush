@@ -5,6 +5,8 @@ type Boolean struct {
 	Value bool
 }
 
+func (b *Boolean) validIfCondition() bool { return true }
+
 func (b *Boolean) expressionNode() {}
 
 func (b *Boolean) String() string {

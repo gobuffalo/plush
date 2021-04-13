@@ -36,3 +36,7 @@ type Expression interface {
 	Node
 	expressionNode()
 }
+
+type Comparable interface {
+	validIfCondition() bool
+}

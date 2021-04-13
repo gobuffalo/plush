@@ -1,5 +1,5 @@
 name: Tests
-on: [push]
+on: [push, pull_request]
 jobs:
 
   tests-on:
@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        go-version: [1.14.x, 1.15.x]
+        go-version: [1.15.x, 1.16.x]
         os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
     - name: Checkout Code

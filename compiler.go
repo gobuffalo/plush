@@ -10,10 +10,12 @@ import (
 
 	"github.com/gobuffalo/helpers/hctx"
 	"github.com/gobuffalo/plush/v4/ast"
+	"github.com/gobuffalo/plush/v4/token"
 )
 
-// var ErrUnknownIdentifier = fmt.Errorf("unknown identifier")
-
+type returnValue struct {
+	Value []interface{}
+}
 type ErrUnknownIdentifier struct {
 	ID  string
 	Err error
@@ -90,6 +92,10 @@ func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 		}
 	case []interface{}:
 		for _, ii := range t {
+			c.write(bb, ii)
+		}
+	case returnValue:
+		for _, ii := range t.Value {
 			c.write(bb, ii)
 		}
 	}
@@ -187,7 +193,6 @@ func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}
 }
 
 func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
-	// fmt.Println("evalIfExpression")
 	con, err := c.evalExpression(node.Condition)
 	if err != nil {
 		if _, ok := err.(*ErrUnknownIdentifier); !ok {
@@ -203,7 +208,6 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 }
 
 func (c *compiler) evalElseAndElseIfExpressions(node *ast.IfExpression) (interface{}, error) {
-	// fmt.Println("evalElseIfExpression")
 	var r interface{}
 	for _, eiNode := range node.ElseIf {
 		eiCon, err := c.evalExpression(eiNode.Condition)
@@ -279,7 +283,6 @@ func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 }
 
 func (c *compiler) evalLetStatement(node *ast.LetStatement) (interface{}, error) {
-	// fmt.Println("evalLetStatement")
 	v, err := c.evalExpression(node.Value)
 	if err != nil {
 		return nil, err
@@ -326,7 +329,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 }
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
-	// fmt.Println("evalInfixExpression")
+
 	lres, err := c.evalExpression(node.Left)
 	if err != nil {
 		return nil, err
@@ -464,7 +467,6 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 }
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
-	// fmt.Println("evalCallExpression")
 	var rv reflect.Value
 	if node.Callee != nil {
 		c, err := c.evalExpression(node.Callee)
@@ -725,28 +727,35 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 }
 
 func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
-	// fmt.Println("evalBlockStatement")
 	res := []interface{}{}
+
 	for _, s := range node.Statements {
 		i, err := c.evalStatement(s)
 		if err != nil {
 			return nil, err
 		}
+
 		if i != nil {
 			res = append(res, i)
+			switch retStm := c.curStmt.(type) {
+			case *ast.ReturnStatement:
+				if retStm.Type == token.RETURN {
+					return returnValue{Value: res}, nil
+				}
+			}
 		}
 	}
+
 	return res, nil
 }
 
 func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 	c.curStmt = node
-	// fmt.Println("evalStatement")
 	switch t := node.(type) {
 	case *ast.ExpressionStatement:
 		s, err := c.evalExpression(t.Expression)
 		switch s.(type) {
-		case ast.Printable, template.HTML:
+		case returnValue, ast.Printable, template.HTML:
 			return s, err
 		}
 		return nil, err
@@ -759,7 +768,6 @@ func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 }
 
 func (c *compiler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, error) {
-	// fmt.Println("evalReturnStatement")
 	res, err := c.evalExpression(node.ReturnValue)
 	if err != nil {
 		return nil, err

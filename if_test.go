@@ -6,6 +6,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_Render_If_Condition_Not_Valid(t *testing.T) {
+	r := require.New(t)
+	input := `<% 
+	
+		if (x - 4) { 
+			return "hi"
+		} %>`
+	ctx := NewContext()
+	ctx.Set("x", 4)
+
+	s, err := Render(input, ctx)
+	r.Error(err)
+	r.Equal("", s)
+}
 func Test_Render_If(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (true) { return "hi"} %>`

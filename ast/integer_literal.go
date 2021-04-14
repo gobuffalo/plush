@@ -5,6 +5,8 @@ type IntegerLiteral struct {
 	Value int
 }
 
+func (il *IntegerLiteral) validIfCondition() bool { return true }
+
 func (il *IntegerLiteral) expressionNode() {}
 
 func (il *IntegerLiteral) String() string {

@@ -14,6 +14,8 @@ type CallExpression struct {
 	ElseBlock *BlockStatement
 }
 
+func (ce *CallExpression) validIfCondition() bool { return true }
+
 func (ce *CallExpression) expressionNode() {}
 
 func (ce *CallExpression) String() string {

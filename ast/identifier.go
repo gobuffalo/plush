@@ -10,6 +10,8 @@ type Identifier struct {
 	Value  string
 }
 
+func (il *Identifier) validIfCondition() bool { return true }
+
 func (i *Identifier) expressionNode() {}
 
 func (i *Identifier) String() string {

@@ -357,6 +357,92 @@ func Test_IfExpression(t *testing.T) {
 	r.Nil(exp.ElseBlock)
 }
 
+func Test_IfExpression_ComapreWithFunction(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (f() != "yes") { x } %>`
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+
+	exp := stmt.Expression.(*ast.IfExpression)
+
+	cond := exp.Condition.(*ast.InfixExpression)
+
+	isCall := cond.Left.(*ast.CallExpression)
+
+	r.True(testIdentifier(t, isCall.Function, "f"))
+
+	r.Equal("!=", cond.Operator)
+
+	right := cond.Right.(*ast.StringLiteral)
+
+	r.Equal("yes", right.Value)
+
+	r.Len(exp.Block.Statements, 1)
+
+	consequence := exp.Block.Statements[0].(*ast.ExpressionStatement)
+
+	r.True(testIdentifier(t, consequence.Expression, "x"))
+	r.Nil(exp.ElseBlock)
+}
+func Test_IfExpression_PrefixExpressions_InvalidCompar(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (!(x = 1)) { x } %>`
+
+	_, err := Parse(input)
+
+	r.Error(err, "syntax error: invalid if condition, got x = 1")
+}
+func Test_IfExpression_InfixExpressions_InvalidCompare(t *testing.T) {
+	r := require.New(t)
+	input := `<% if ( y == 1 && x = 1) { x } %>`
+
+	_, err := Parse(input)
+
+	r.Error(err, "syntax error: invalid if condition, got x = 1")
+}
+
+func Test_IfExpression_Boolean(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (true) { x } %>`
+
+	_, err := Parse(input)
+
+	r.NoError(err)
+
+}
+
+func Test_IfExpression_Condition_CompareToString(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (x == "yes") { x } %>`
+
+	_, err := Parse(input)
+
+	r.NoError(err, "syntax error: invalid if condition, got x = y")
+
+}
+func Test_IfExpression_Condition_Assign(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (x = y) { x } %>`
+
+	_, err := Parse(input)
+
+	r.Error(err, "syntax error: invalid if condition, got x = y")
+
+}
+
+func Test_IfExpression_Condition_EmptyHash(t *testing.T) {
+	r := require.New(t)
+	input := `<% if ({}}) { x } %>`
+
+	_, err := Parse(input)
+	r.Error(err, "syntax error: invalid if statment, got {}")
+}
+
 func Test_IfExpression_HTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p><% if (x < y) { %><%= x %><% } %></p>`

@@ -10,6 +10,8 @@ type PrefixExpression struct {
 	Right    Expression
 }
 
+func (ce *PrefixExpression) validIfCondition() bool { return true }
+
 func (pe *PrefixExpression) expressionNode() {}
 
 func (pe *PrefixExpression) String() string {

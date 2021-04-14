@@ -5,6 +5,8 @@ type StringLiteral struct {
 	Value string
 }
 
+func (sl *StringLiteral) validIfCondition() bool { return true }
+
 func (sl *StringLiteral) expressionNode() {}
 
 func (sl *StringLiteral) String() string {

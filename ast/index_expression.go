@@ -8,6 +8,7 @@ type IndexExpression struct {
 	TokenAble
 	Left  Expression
 	Index Expression
+	Value Expression
 }
 
 func (ie *IndexExpression) expressionNode() {}
@@ -20,6 +21,10 @@ func (ie *IndexExpression) String() string {
 	out.WriteString("[")
 	out.WriteString(ie.Index.String())
 	out.WriteString("])")
+	if ie.Value != nil {
+		out.WriteString("=")
+		out.WriteString(ie.Value.String())
+	}
 
 	return out.String()
 }

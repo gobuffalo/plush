@@ -694,6 +694,22 @@ func Test_ArrayLiterals(t *testing.T) {
 	r.True(testInfixExpression(t, array.Elements[2], 3, "+", 3))
 }
 
+func Test_IndexExpressionsAssign(t *testing.T) {
+	r := require.New(t)
+	input := "<% myArray[2] = 1 %>"
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	indexExp := stmt.Expression.(*ast.IndexExpression)
+
+	r.True(testIdentifier(t, indexExp.Left, "myArray"))
+	r.True(testIntegerLiteral(t, indexExp.Index, 2))
+	r.True(testIntegerLiteral(t, indexExp.Value, 1))
+	//r.True(testInfixExpression(t, indexExp.Index, 2, "=", 1))
+}
+
 func Test_IndexExpressions(t *testing.T) {
 	r := require.New(t)
 	input := "<% myArray[1 + 1] %>"

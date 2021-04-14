@@ -78,3 +78,78 @@ func Test_Render_Let_Hash(t *testing.T) {
 	r.NoError(err)
 	r.Equal("<p>A</p>", s)
 }
+
+func Test_Render_Let_HashAssign(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let h = {"a": "A"} %><% h["a"] = "C"%><%= h["a"] %></p>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("<p>C</p>", s)
+}
+
+func Test_Render_Let_HashAssign_NewKey(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let h = {"a": "A"} %><% h["b"] = "d" %><%= h["b"] %></p>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("<p>d</p>", s)
+}
+
+func Test_Render_Let_HashAssign_Int(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let h = {"a": "A"} %><% h["b"] = 3 %><%= h["b"] %></p>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("<p>3</p>", s)
+}
+
+func Test_Render_Let_HashAssign_InvalidKey(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let h = {"a": "A"} %><% h["b"] = 3 %><%= h["c"] %></p>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("<p></p>", s)
+}
+
+func Test_Render_Let_ArrayAssign_InvalidKey(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a["b"] = 3 %><%= a["c"] %></p>`
+	_, err := Render(input, NewContext())
+	r.Error(err)
+	//r.NoError(err)
+	//r.Equal("<p></p>", s)
+}
+
+func Test_Render_Let_ArrayAssign_ValidIndex(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[0] = 3 %><%= a[0] %></p>`
+	s, err := Render(input, NewContext())
+	//r.Error(err)
+	r.NoError(err)
+	r.Equal("<p>3</p>", s)
+}
+
+func Test_Render_Let_ArrayAssign_Resultaddition(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[4] = 3 %><%= a[4] + 2 %></p>`
+	s, err := Render(input, NewContext())
+	//r.Error(err)
+	r.NoError(err)
+	r.Equal("<p>5</p>", s)
+}
+
+func Test_Render_Let_ArrayAssign_OutofBoundsIndex(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[5] = 3 %><%= a[4] + 2 %></p>`
+	_, err := Render(input, NewContext())
+	r.Error(err)
+
+}

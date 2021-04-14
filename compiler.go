@@ -266,16 +266,42 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
+	var value interface{}
+
+	if node.Value != nil {
+
+		value, err = c.evalExpression(node.Value)
+		if err != nil {
+			return nil, err
+		}
+
+	}
 	rv := reflect.ValueOf(left)
 	switch rv.Kind() {
 	case reflect.Map:
 		val := rv.MapIndex(reflect.ValueOf(index))
-		if !val.IsValid() {
+		if !val.IsValid() && node.Value == nil {
 			return nil, nil
 		}
+		if node.Value != nil {
+			rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
+			return nil, nil
+		}
+
 		return val.Interface(), nil
 	case reflect.Array, reflect.Slice:
 		if i, ok := index.(int); ok {
+
+			if node.Value != nil {
+
+				if rv.Len()-1 < i {
+
+					return nil, fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
+
+				}
+				rv.Index(i).Set(reflect.ValueOf(value))
+				return nil, nil
+			}
 			return rv.Index(i).Interface(), nil
 		}
 	}

@@ -28,6 +28,63 @@ func Test_Render_If(t *testing.T) {
 	r.Equal("", s)
 }
 
+func Test_Render_If_ReturnTrue(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (true == true) { return "hi"} %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
+func Test_Render_If_ReturnFalse_No_Output(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (true != true) { return "hi"} %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("", s)
+}
+
+func Test_Render_If_True_EqualFalse(t *testing.T) {
+	r := require.New(t)
+	input := `<% let test  = true %><%= if (test == false) { return "hi"} %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("", s)
+}
+
+func Test_Render_If_Is_Test_True(t *testing.T) {
+	r := require.New(t)
+	input := `<% let test  = true %><%= if (test == true) { return "hi"} %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
+func Test_Render_If_Test_Is_Not_True(t *testing.T) {
+	r := require.New(t)
+	input := `<% let test  = true %><%= if (test != true) { return "hi"} %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("", s)
+}
+
+func Test_Render_If_Test_Is_Not_Equal_One(t *testing.T) {
+	r := require.New(t)
+	input := `<% let test  = 1 %><%= if (test != true) { return "hi"} %>`
+	_, err := Render(input, NewContext())
+	r.Error(err, "line 1: unable to operate (!=) on int and bool")
+
+}
+
+func Test_Render_If_Test_Is_Equal_One(t *testing.T) {
+	r := require.New(t)
+	input := `<% let test  = 1 %><%= if (test == 1) { return "hi"} %>`
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("hi", s)
+
+}
+
 func Test_Render_If_Return(t *testing.T) {
 	r := require.New(t)
 	input := `<%= if (true) { return "hi"} %>`

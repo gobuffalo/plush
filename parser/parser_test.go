@@ -397,6 +397,15 @@ func Test_IfExpression_PrefixExpressions_InvalidCompar(t *testing.T) {
 
 	r.Error(err, "syntax error: invalid if condition, got x = 1")
 }
+func Test_IfExpression_With_Map_Array_Index(t *testing.T) {
+	r := require.New(t)
+	input := `<% if (flash["error"] ) { x } %>`
+
+	_, err := Parse(input)
+
+	r.NoError(err)
+}
+
 func Test_IfExpression_InfixExpressions_InvalidCompare(t *testing.T) {
 	r := require.New(t)
 	input := `<% if ( y == 1 && x = 1) { x } %>`

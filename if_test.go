@@ -6,20 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Render_If_Condition_Not_Valid(t *testing.T) {
-	r := require.New(t)
-	input := `<% 
-	
-		if (x - 4) { 
-			return "hi"
-		} %>`
-	ctx := NewContext()
-	ctx.Set("x", 4)
-
-	s, err := Render(input, ctx)
-	r.Error(err)
-	r.Equal("", s)
-}
 func Test_Render_If(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (true) { return "hi"} %>`
@@ -197,4 +183,23 @@ func Test_If_String_Truthy(t *testing.T) {
 	s, err = Render(input, ctx)
 	r.NoError(err)
 	r.Equal("<p>hi</p>", s)
+}
+
+func Test_Render_If_Variable_Is_Set(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (names) { %>hi<%} %>`
+	ctx := NewContext()
+	ctx.Set("names", "123")
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
+func Test_Render_If_Variable_Not_Set(t *testing.T) {
+	r := require.New(t)
+	input := `<%= if (names) { %>hi<%} %>`
+
+	s, err := Render(input, NewContext())
+	r.NoError(err)
+	r.Equal("", s)
 }

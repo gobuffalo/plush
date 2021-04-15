@@ -200,9 +200,6 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 		}
 	}
 
-	if !c.isValidIfCondtionValue(con) {
-		return nil, fmt.Errorf("non-bool %s (type %T) used as if condition", node.Condition.String(), con)
-	}
 	if c.isTruthy(con) {
 		return c.evalBlockStatement(node.Block)
 	}
@@ -231,16 +228,7 @@ func (c *compiler) evalElseAndElseIfExpressions(node *ast.IfExpression) (interfa
 
 	return r, nil
 }
-func (c *compiler) isValidIfCondtionValue(i interface{}) bool {
 
-	switch i.(type) {
-	case bool, nil:
-		return true
-
-	default:
-		return false
-	}
-}
 func (c *compiler) isTruthy(i interface{}) bool {
 	if i == nil {
 		return false

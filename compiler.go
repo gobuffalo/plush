@@ -225,7 +225,6 @@ func (c *compiler) evalElseAndElseIfExpressions(node *ast.IfExpression) (interfa
 	if node.ElseBlock != nil {
 		return c.evalBlockStatement(node.ElseBlock)
 	}
-
 	return r, nil
 }
 
@@ -391,6 +390,7 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 			return c.floatsOperator(t, r, node.Operator)
 		}
 	case bool:
+
 		return c.boolsOperator(lres, rres, node.Operator)
 	case nil:
 		return nil, nil
@@ -399,12 +399,22 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 }
 
 func (c *compiler) boolsOperator(l interface{}, r interface{}, op string) (interface{}, error) {
+
 	lt := c.isTruthy(l)
 	rt := c.isTruthy(r)
-	if op == "||" {
+	switch op {
+	case "&&", "+":
+		return lt && rt, nil
+	case "||":
 		return lt || rt, nil
+	case "!=":
+		return lt != rt, nil
+	case "==":
+		return lt == rt, nil
+	default:
+		return nil, fmt.Errorf("unkown operator (%s) on %T and %T ", op, lt, rt)
 	}
-	return lt && rt, nil
+
 }
 
 func (c *compiler) intsOperator(l int, r int, op string) (interface{}, error) {

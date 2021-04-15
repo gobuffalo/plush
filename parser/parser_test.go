@@ -991,6 +991,47 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	return true
 }
 
+func Test_ForExpression_WithContinue(t *testing.T) {
+	r := require.New(t)
+	input := `<% for (k,v) in myArray {  continue } %>`
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+
+	exp := stmt.Expression.(*ast.ForExpression)
+
+	r.Equal("k", exp.KeyName)
+	r.Equal("v", exp.ValueName)
+	r.Equal("myArray", exp.Iterable.String())
+
+	r.Len(exp.Block.Statements, 1)
+
+	consequence := exp.Block.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.ContinueExpression)
+
+	r.Equal(consequence.String(), "continue")
+	//r.True(testIdentifier(t, consequence.Expression, "v"))
+}
+
+func Test_Continue_IfCondtion(t *testing.T) {
+	r := require.New(t)
+	input := `<% if(x == 2) { continue } %>`
+
+	_, err := Parse(input)
+	r.Error(err)
+}
+
+func Test_Continue_Function(t *testing.T) {
+	r := require.New(t)
+	input := `<% fn(x, y) { continue } %>`
+
+	_, err := Parse(input)
+	r.Error(err)
+}
+
 func Test_ForExpression(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in myArray { v } %>`

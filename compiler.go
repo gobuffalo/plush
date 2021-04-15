@@ -16,6 +16,9 @@ import (
 type returnValue struct {
 	Value []interface{}
 }
+type continueV struct {
+	Value []interface{}
+}
 type ErrUnknownIdentifier struct {
 	ID  string
 	Err error
@@ -135,6 +138,8 @@ func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
 		return c.evalFunctionLiteral(s)
 	case *ast.AssignExpression:
 		return c.evalAssignExpression(s)
+	case *ast.ContinueExpression:
+		return continueV{}, nil
 	case nil:
 		return nil, nil
 	}
@@ -539,6 +544,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		}
 		rv = reflect.ValueOf(f)
 	}
+
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
@@ -720,22 +726,36 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 			if err != nil {
 				return nil, err
 			}
+
+			if val, ok := res.(continueV); ok {
+				res = val.Value
+			}
+
 			ret = append(ret, res)
 		}
 	case reflect.Slice, reflect.Array:
+
 		for i := 0; i < riter.Len(); i++ {
 			v := riter.Index(i)
 			c.ctx.Set(node.KeyName, i)
 			c.ctx.Set(node.ValueName, v.Interface())
+
 			res, err := c.evalBlockStatement(node.Block)
 			if err != nil {
 				return nil, err
 			}
+
+			if val, ok := res.(continueV); ok {
+				res = val.Value
+			}
 			if res != nil {
+
 				ret = append(ret, res)
 			}
 		}
+
 	default:
+
 		if iter == nil {
 			return nil, nil
 		}
@@ -748,6 +768,9 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 				res, err := c.evalBlockStatement(node.Block)
 				if err != nil {
 					return nil, err
+				}
+				if val, ok := res.(continueV); ok {
+					res = val.Value
 				}
 				if res != nil {
 					ret = append(ret, res)
@@ -764,16 +787,22 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 
 func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, error) {
 	res := []interface{}{}
-
 	for _, s := range node.Statements {
+
 		i, err := c.evalStatement(s)
 		if err != nil {
 			return nil, err
+		}
+		val, ok := i.(continueV)
+		if ok {
+
+			return continueV{Value: append(res, val.Value...)}, nil
 		}
 
 		if i != nil {
 			res = append(res, i)
 			switch retStm := c.curStmt.(type) {
+
 			case *ast.ReturnStatement:
 				if retStm.Type == token.RETURN {
 					return returnValue{Value: res}, nil
@@ -791,7 +820,7 @@ func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 	case *ast.ExpressionStatement:
 		s, err := c.evalExpression(t.Expression)
 		switch s.(type) {
-		case returnValue, ast.Printable, template.HTML:
+		case returnValue, ast.Printable, template.HTML, continueV:
 			return s, err
 		}
 		return nil, err

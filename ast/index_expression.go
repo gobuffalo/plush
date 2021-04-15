@@ -11,6 +11,8 @@ type IndexExpression struct {
 	Value Expression
 }
 
+func (ie *IndexExpression) validIfCondition() bool { return true }
+
 func (ie *IndexExpression) expressionNode() {}
 
 func (ie *IndexExpression) String() string {

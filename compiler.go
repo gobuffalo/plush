@@ -234,9 +234,12 @@ func (c *compiler) evalElseAndElseIfExpressions(node *ast.IfExpression) (interfa
 }
 
 func (c *compiler) isTruthy(i interface{}) bool {
+
 	if i == nil {
+
 		return false
 	}
+
 	switch t := i.(type) {
 	case bool:
 		return t
@@ -244,9 +247,17 @@ func (c *compiler) isTruthy(i interface{}) bool {
 		return t != ""
 	case template.HTML:
 		return t != ""
-	}
 
-	return true
+	default:
+
+		if reflect.ValueOf(i).Kind() == reflect.Ptr && reflect.ValueOf(i).IsNil() {
+
+			return false
+		}
+
+		return true
+
+	}
 }
 
 func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, error) {
@@ -334,9 +345,11 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		if rv.Kind() == reflect.Ptr {
 			rv = rv.Elem()
 		}
+
 		if rv.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
 		}
+
 		f := rv.FieldByName(node.Value)
 		if !f.IsValid() {
 			m := rv.MethodByName(node.Value)

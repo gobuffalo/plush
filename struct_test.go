@@ -78,3 +78,39 @@ func Test_Render_Struct_PointerMethod(t *testing.T) {
 		r.Equal("robot", s)
 	})
 }
+
+func Test_Render_Struct_PointerMethod_IsNil(t *testing.T) {
+	r := require.New(t)
+
+	type mylist struct {
+		N    int
+		Next *mylist
+	}
+
+	input := `Current number is <%= p.N %>.<%= if (p.Next) { %>  Next up is <%= p.Next.N %>.<% } %>`
+	first := &mylist{N: 0}
+	last := first
+
+	for i := 0; i < 5; i++ {
+		last.Next = &mylist{N: i + 1}
+		last = last.Next
+	}
+
+	resE := []string{
+		"Current number is 0.  Next up is 1.",
+		"Current number is 1.  Next up is 2.",
+		"Current number is 2.  Next up is 3.",
+		"Current number is 3.  Next up is 4.",
+		"Current number is 4.  Next up is 5.",
+		"Current number is 5.",
+	}
+
+	for p := first; p != nil; p = p.Next {
+
+		ctx := NewContextWith(map[string]interface{}{"p": p})
+		res, err := Render(input, ctx)
+		r.NoError(err)
+		r.Equal(resE[p.N], res)
+
+	}
+}

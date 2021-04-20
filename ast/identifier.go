@@ -6,8 +6,9 @@ import (
 
 type Identifier struct {
 	TokenAble
-	Callee *Identifier
-	Value  string
+	Callee         *Identifier
+	Value          string
+	OriginalCallee *Identifier // So robot.Avatar.Name the OriginalCallee will be robot
 }
 
 func (il *Identifier) validIfCondition() bool { return true }

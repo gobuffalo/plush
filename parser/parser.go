@@ -260,12 +260,17 @@ func (p *parser) curPrecedence() int {
 func (p *parser) parseIdentifier() ast.Expression {
 
 	id := &ast.Identifier{TokenAble: ast.TokenAble{p.curToken}}
+	orignalCalleAddress := id
 	ss := strings.Split(p.curToken.Literal, ".")
 	id.Value = ss[0]
 
 	for i := 1; i < len(ss); i++ {
 		s := ss[i]
 		id = &ast.Identifier{TokenAble: ast.TokenAble{p.curToken}, Value: s, Callee: id}
+	}
+	//To avoid a recursive loop to reach the original calle address
+	if len(ss) > 1 {
+		id.OriginalCallee = orignalCalleAddress
 	}
 
 	if p.peekTokenIs(token.ASSIGN) {
@@ -691,13 +696,10 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 			if ok {
 				if ff.Callee != nil {
 
-					for ff.Callee != nil {
+					if ff.OriginalCallee != nil {
+						if ff.OriginalCallee.Callee == nil {
 
-						ff = ff.Callee
-						if ff.Callee == nil {
-
-							ff.Callee = calleeIdent
-							break
+							ff.OriginalCallee.Callee = calleeIdent
 						}
 					}
 				} else {
@@ -717,15 +719,13 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 			ff := ss
 			if ff.Callee != nil {
 
-				for ff.Callee != nil {
+				if ff.OriginalCallee != nil {
+					if ff.OriginalCallee.Callee == nil {
 
-					ff = ff.Callee
-					if ff.Callee == nil {
-
-						ff.Callee = calleeIdent
-						break
+						ff.OriginalCallee.Callee = calleeIdent
 					}
 				}
+
 			} else {
 
 				ff.Callee = calleeIdent

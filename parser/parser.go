@@ -268,10 +268,10 @@ func (p *parser) parseIdentifier() ast.Expression {
 		s := ss[i]
 		id = &ast.Identifier{TokenAble: ast.TokenAble{p.curToken}, Value: s, Callee: id}
 	}
+
 	//To avoid a recursive loop to reach the original calle address
-	if len(ss) > 1 {
-		id.OriginalCallee = orignalCalleAddress
-	}
+	id.OriginalCallee = orignalCalleAddress
+	//}
 
 	if p.peekTokenIs(token.ASSIGN) {
 		return p.parseAssignExpression(id)
@@ -694,18 +694,8 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 
 			ff, ok := ss.Left.(*ast.Identifier)
 			if ok {
-				if ff.Callee != nil {
 
-					if ff.OriginalCallee != nil {
-						if ff.OriginalCallee.Callee == nil {
-
-							ff.OriginalCallee.Callee = calleeIdent
-						}
-					}
-				} else {
-
-					ff.Callee = calleeIdent
-				}
+				ff.OriginalCallee.Callee = calleeIdent
 
 				exp.Callee = ss
 			} else {
@@ -716,20 +706,8 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 			}
 		case *ast.Identifier:
 
-			ff := ss
-			if ff.Callee != nil {
+			ss.OriginalCallee.Callee = calleeIdent
 
-				if ff.OriginalCallee != nil {
-					if ff.OriginalCallee.Callee == nil {
-
-						ff.OriginalCallee.Callee = calleeIdent
-					}
-				}
-
-			} else {
-
-				ff.Callee = calleeIdent
-			}
 			exp.Callee = ss
 
 		default:

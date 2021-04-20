@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"reflect"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gobuffalo/helpers/hctx"
@@ -32,6 +33,7 @@ type compiler struct {
 	ctx     hctx.Context
 	program *ast.Program
 	curStmt ast.Statement
+	inCheck bool
 }
 
 func (c *compiler) compile() (string, error) {
@@ -281,6 +283,13 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 		if !val.IsValid() && node.Value == nil {
 			return nil, nil
 		}
+
+		if node.Callee != nil {
+
+			return c.evalIndexCallee(val, node)
+
+		}
+
 		if node.Value != nil {
 			rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
 			return nil, nil
@@ -289,6 +298,12 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 		return val.Interface(), nil
 	case reflect.Array, reflect.Slice:
 		if i, ok := index.(int); ok {
+
+			if node.Callee != nil {
+
+				return c.evalIndexCallee(rv.Index(i), node)
+
+			}
 
 			if node.Value != nil {
 
@@ -305,7 +320,6 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 	}
 	return nil, fmt.Errorf("could not index %T with %T", left, index)
 }
-
 func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 	m := map[string]interface{}{}
 	for ke, ve := range node.Pairs {
@@ -352,6 +366,11 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 				return nil, fmt.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
 			}
 			return m.Interface(), nil
+		}
+
+		if !f.CanInterface() {
+
+			return nil, fmt.Errorf("'%s'cannot return value obtained from unexported field or method '%s' (%s)", node.Callee.String(), node.Value, node)
 		}
 		return f.Interface(), nil
 	}
@@ -834,4 +853,58 @@ func (c *compiler) evalArrayLiteral(node *ast.ArrayLiteral) (interface{}, error)
 		res = append(res, i)
 	}
 	return res, nil
+}
+
+func (c *compiler) evalIndexCallee(rv reflect.Value, node *ast.IndexExpression) (interface{}, error) {
+
+	octx := c.ctx.(*Context)
+	defer func() {
+		c.ctx = octx
+	}()
+
+	c.ctx = octx.New()
+	// must copy all data from original (it includes application defined helpers)
+	for k, v := range octx.data {
+		c.ctx.Set(k, v)
+	}
+
+	//The key here is needed to set the object in ctx for later evaluation
+	//For example, if this is a nested object person.Name[0]
+	//then we can set the value of Name[0] to person.Name
+	//As the evalIdent will look for that object by person.Name
+	//If key doesn't contain "." this means we got person[0].Name[0]
+	//If key does contain "." then indexed field that needs to be accessed will be set in Node.left and Node.Callee
+	key := node.Left.String()
+	if strings.Contains(key, ".") {
+
+		ggg := strings.Split(key, ".")
+		callee := node.Callee.String()
+		if !strings.Contains(callee, key) {
+
+			for {
+				if len(ggg) >= 2 {
+
+					ggg = ggg[1:]
+				} else {
+					key = ggg[0]
+					break
+				}
+				if strings.Contains(callee, strings.Join(ggg, ".")) {
+					key = strings.Join(ggg, ".")
+					break
+				}
+
+			}
+		}
+
+	}
+
+	c.ctx.Set(key, rv.Interface())
+
+	vvs, err := c.evalExpression(node.Callee)
+	if err != nil {
+		return nil, err
+	}
+
+	return vvs, nil
 }

@@ -677,6 +677,70 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 		return nil
 	}
 
+	if p.peekTokenIs(token.DOT) {
+		calleeIdent := &ast.Identifier{Value: left.String()}
+		p.nextToken()
+		p.nextToken()
+		parseExp := p.parseExpression(LOWEST)
+
+		switch ss := parseExp.(type) {
+
+		case *ast.IndexExpression:
+
+			ff, ok := ss.Left.(*ast.Identifier)
+			if ok {
+				if ff.Callee != nil {
+
+					for ff.Callee != nil {
+
+						ff = ff.Callee
+						if ff.Callee == nil {
+
+							ff.Callee = calleeIdent
+							break
+						}
+					}
+				} else {
+
+					ff.Callee = calleeIdent
+				}
+
+				exp.Callee = ss
+			} else {
+
+				msg := fmt.Sprintf("line %d: syntax error: invalid nested index access, expected an identifier %v", p.curToken.LineNumber, ss)
+				p.errors = append(p.errors, msg)
+				return nil
+			}
+		case *ast.Identifier:
+
+			ff := ss
+			if ff.Callee != nil {
+
+				for ff.Callee != nil {
+
+					ff = ff.Callee
+					if ff.Callee == nil {
+
+						ff.Callee = calleeIdent
+						break
+					}
+				}
+			} else {
+
+				ff.Callee = calleeIdent
+			}
+			exp.Callee = ss
+
+		default:
+
+			msg := fmt.Sprintf("line %d: syntax error: invalid nested index access, got %v", p.curToken.LineNumber, ss)
+			p.errors = append(p.errors, msg)
+			return nil
+
+		}
+	}
+
 	if p.peekTokenIs(token.ASSIGN) {
 		p.nextToken()
 		p.nextToken()

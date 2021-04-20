@@ -6,9 +6,10 @@ import (
 
 type IndexExpression struct {
 	TokenAble
-	Left  Expression
-	Index Expression
-	Value Expression
+	Left   Expression
+	Index  Expression
+	Value  Expression
+	Callee Expression
 }
 
 func (ie *IndexExpression) validIfCondition() bool { return true }
@@ -22,7 +23,14 @@ func (ie *IndexExpression) String() string {
 	out.WriteString(ie.Left.String())
 	out.WriteString("[")
 	out.WriteString(ie.Index.String())
-	out.WriteString("])")
+	if ie.Callee != nil {
+		out.WriteString("]")
+		out.WriteString("." + ie.Callee.String())
+		out.WriteString(")")
+	} else {
+
+		out.WriteString("])")
+	}
 	if ie.Value != nil {
 		out.WriteString("=")
 		out.WriteString(ie.Value.String())

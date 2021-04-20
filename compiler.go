@@ -267,6 +267,7 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 		return nil, err
 	}
 	var value interface{}
+
 	if node.Value != nil {
 
 		value, err = c.evalExpression(node.Value)
@@ -276,55 +277,73 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 
 	}
 
-	return c.accessIndex(left, index, value, node)
+	return c.evalAccessIndex(left, index, value, node)
 }
 
-func (c *compiler) accessIndex(left, index, value interface{}, node *ast.IndexExpression) (interface{}, error) {
+func (c *compiler) evalAccessIndex(left, index, value interface{}, node *ast.IndexExpression) (interface{}, error) {
 
+	var returnValue interface{}
+	var err error
 	rv := reflect.ValueOf(left)
 	switch rv.Kind() {
 	case reflect.Map:
 		val := rv.MapIndex(reflect.ValueOf(index))
+
 		if !val.IsValid() && node.Value == nil {
 			return nil, nil
 		}
 
-		if node.Callee != nil {
-
-			return c.evalIndexCallee(val, node)
-
-		}
-
-		if value != nil {
-			rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
-			return nil, nil
-		}
-
-		return val.Interface(), nil
-	case reflect.Array, reflect.Slice:
-		if i, ok := index.(int); ok {
+		if value == nil {
 
 			if node.Callee != nil {
 
-				return c.evalIndexCallee(rv.Index(i), node)
+				returnValue, err = c.evalIndexCallee(val, node)
 
+			} else {
+
+				returnValue = val.Interface()
 			}
 
-			if value != nil {
+		} else {
+
+			rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
+		}
+
+	case reflect.Array, reflect.Slice:
+		if i, ok := index.(int); ok {
+
+			if value == nil {
+
+				if node.Callee != nil {
+
+					returnValue, err = c.evalIndexCallee(rv.Index(i), node)
+
+				} else {
+					returnValue = rv.Index(i).Interface()
+				}
+			} else {
 
 				if rv.Len()-1 < i {
 
-					return nil, fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
+					err = fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
+
+				} else {
+
+					rv.Index(i).Set(reflect.ValueOf(value))
 
 				}
-				rv.Index(i).Set(reflect.ValueOf(value))
-				return nil, nil
 			}
-			return rv.Index(i).Interface(), nil
+		} else {
+
+			err = fmt.Errorf("can't access Slice/Array with a non int Index (%v)", index)
 		}
+
+	default:
+		err = fmt.Errorf("could not index %T with %T", left, index)
+
 	}
 
-	return nil, fmt.Errorf("could not index %T with %T", left, index)
+	return returnValue, err
 }
 
 func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {

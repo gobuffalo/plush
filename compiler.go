@@ -258,10 +258,12 @@ func (c *compiler) isTruthy(i interface{}) bool {
 }
 
 func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, error) {
+
 	index, err := c.evalExpression(node.Index)
 	if err != nil {
 		return nil, err
 	}
+
 	left, err := c.evalExpression(node.Left)
 	if err != nil {
 		return nil, err
@@ -272,15 +274,52 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 
 		value, err = c.evalExpression(node.Value)
 		if err != nil {
+
 			return nil, err
 		}
 
+		return nil, c.evalUpdateIndex(left, index, value)
 	}
 
-	return c.evalAccessIndex(left, index, value, node)
+	return c.evalAccessIndex(left, index, node)
 }
 
-func (c *compiler) evalAccessIndex(left, index, value interface{}, node *ast.IndexExpression) (interface{}, error) {
+func (c *compiler) evalUpdateIndex(left, index, value interface{}) error {
+
+	var err error
+	rv := reflect.ValueOf(left)
+	switch rv.Kind() {
+	case reflect.Map:
+
+		rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
+
+	case reflect.Array, reflect.Slice:
+		if i, ok := index.(int); ok {
+
+			if rv.Len()-1 < i {
+
+				err = fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
+
+			} else {
+
+				rv.Index(i).Set(reflect.ValueOf(value))
+
+			}
+
+		} else {
+
+			err = fmt.Errorf("can't access Slice/Array with a non int Index (%v)", index)
+		}
+
+	default:
+		err = fmt.Errorf("could not index %T with %T", left, index)
+
+	}
+
+	return err
+}
+
+func (c *compiler) evalAccessIndex(left, index interface{}, node *ast.IndexExpression) (interface{}, error) {
 
 	var returnValue interface{}
 	var err error
@@ -293,46 +332,26 @@ func (c *compiler) evalAccessIndex(left, index, value interface{}, node *ast.Ind
 			return nil, nil
 		}
 
-		if value == nil {
+		if node.Callee != nil {
 
-			if node.Callee != nil {
-
-				returnValue, err = c.evalIndexCallee(val, node)
-
-			} else {
-
-				returnValue = val.Interface()
-			}
+			returnValue, err = c.evalIndexCallee(val, node)
 
 		} else {
 
-			rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
+			returnValue = val.Interface()
 		}
 
 	case reflect.Array, reflect.Slice:
 		if i, ok := index.(int); ok {
 
-			if value == nil {
+			if node.Callee != nil {
 
-				if node.Callee != nil {
+				returnValue, err = c.evalIndexCallee(rv.Index(i), node)
 
-					returnValue, err = c.evalIndexCallee(rv.Index(i), node)
-
-				} else {
-					returnValue = rv.Index(i).Interface()
-				}
 			} else {
-
-				if rv.Len()-1 < i {
-
-					err = fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
-
-				} else {
-
-					rv.Index(i).Set(reflect.ValueOf(value))
-
-				}
+				returnValue = rv.Index(i).Interface()
 			}
+
 		} else {
 
 			err = fmt.Errorf("can't access Slice/Array with a non int Index (%v)", index)

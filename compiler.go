@@ -268,6 +268,7 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
+
 	var value interface{}
 
 	if node.Value != nil {
@@ -328,7 +329,7 @@ func (c *compiler) evalAccessIndex(left, index interface{}, node *ast.IndexExpre
 	case reflect.Map:
 		val := rv.MapIndex(reflect.ValueOf(index))
 
-		if !val.IsValid() && node.Value == nil {
+		if !val.IsValid() {
 			return nil, nil
 		}
 

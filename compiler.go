@@ -267,7 +267,6 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 		return nil, err
 	}
 	var value interface{}
-
 	if node.Value != nil {
 
 		value, err = c.evalExpression(node.Value)
@@ -276,6 +275,12 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 		}
 
 	}
+
+	return c.accessIndex(left, index, value, node)
+}
+
+func (c *compiler) accessIndex(left, index, value interface{}, node *ast.IndexExpression) (interface{}, error) {
+
 	rv := reflect.ValueOf(left)
 	switch rv.Kind() {
 	case reflect.Map:
@@ -290,7 +295,7 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 
 		}
 
-		if node.Value != nil {
+		if value != nil {
 			rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
 			return nil, nil
 		}
@@ -305,7 +310,7 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 
 			}
 
-			if node.Value != nil {
+			if value != nil {
 
 				if rv.Len()-1 < i {
 
@@ -318,8 +323,10 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 			return rv.Index(i).Interface(), nil
 		}
 	}
+
 	return nil, fmt.Errorf("could not index %T with %T", left, index)
 }
+
 func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 	m := map[string]interface{}{}
 	for ke, ve := range node.Pairs {

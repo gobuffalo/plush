@@ -280,45 +280,55 @@ func (c *compiler) evalIndexExpression(node *ast.IndexExpression) (interface{}, 
 	switch rv.Kind() {
 	case reflect.Map:
 		val := rv.MapIndex(reflect.ValueOf(index))
-		if !val.IsValid() && node.Value == nil {
-			return nil, nil
-		}
 
 		if node.Callee != nil {
 
-			return c.evalIndexCallee(val, node)
+			rv = val
 
+		} else {
+
+			if !val.IsValid() && node.Value == nil {
+				return nil, nil
+			}
+
+			if node.Value != nil {
+				rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
+				return nil, nil
+			}
+
+			return val.Interface(), nil
 		}
-
-		if node.Value != nil {
-			rv.SetMapIndex(reflect.ValueOf(index), reflect.ValueOf(value))
-			return nil, nil
-		}
-
-		return val.Interface(), nil
 	case reflect.Array, reflect.Slice:
 		if i, ok := index.(int); ok {
 
 			if node.Callee != nil {
 
-				return c.evalIndexCallee(rv.Index(i), node)
+				rv = rv.Index(i)
 
-			}
+			} else {
 
-			if node.Value != nil {
+				if node.Value != nil {
 
-				if rv.Len()-1 < i {
+					if rv.Len()-1 < i {
 
-					return nil, fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
+						return nil, fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
 
+					}
+					rv.Index(i).Set(reflect.ValueOf(value))
+					return nil, nil
 				}
-				rv.Index(i).Set(reflect.ValueOf(value))
-				return nil, nil
+				return rv.Index(i).Interface(), nil
 			}
-			return rv.Index(i).Interface(), nil
 		}
 	}
-	return nil, fmt.Errorf("could not index %T with %T", left, index)
+	var returnData interface{}
+	err = fmt.Errorf("could not index %T with %T", left, index)
+	if node.Callee != nil {
+
+		returnData, err = c.evalIndexCallee(rv, node)
+	}
+
+	return returnData, err
 }
 func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 	m := map[string]interface{}{}

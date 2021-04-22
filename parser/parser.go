@@ -262,6 +262,7 @@ func (p *parser) curPrecedence() int {
 func (p *parser) parseIdentifier() ast.Expression {
 
 	id := &ast.Identifier{TokenAble: ast.TokenAble{p.curToken}}
+	orignalCalleAddress := id
 	ss := strings.Split(p.curToken.Literal, ".")
 	id.Value = ss[0]
 
@@ -269,6 +270,10 @@ func (p *parser) parseIdentifier() ast.Expression {
 		s := ss[i]
 		id = &ast.Identifier{TokenAble: ast.TokenAble{p.curToken}, Value: s, Callee: id}
 	}
+
+	//To avoid a recursive loop to reach the original calle address
+	id.OriginalCallee = orignalCalleAddress
+	//}
 
 	if p.peekTokenIs(token.ASSIGN) {
 		return p.parseAssignExpression(id)
@@ -692,6 +697,19 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 		return nil
 	}
 
+	if p.peekTokenIs(token.DOT) {
+		calleeIdent := &ast.Identifier{Value: left.String()}
+		p.nextToken()
+		p.nextToken()
+		parseExp := p.parseExpression(LOWEST)
+
+		exp.Callee = p.assignCallee(parseExp, calleeIdent)
+		if exp.Callee == nil {
+
+			return nil
+		}
+	}
+
 	if p.peekTokenIs(token.ASSIGN) {
 		p.nextToken()
 		p.nextToken()
@@ -700,6 +718,42 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	}
 
 	return exp
+}
+
+func (p *parser) assignCallee(exp ast.Expression, calleeIdent *ast.Identifier) (assignedCallee ast.Expression) {
+
+	assignedCallee = nil
+
+	switch ss := exp.(type) {
+
+	case *ast.IndexExpression:
+
+		ff, ok := ss.Left.(*ast.Identifier)
+		if ok {
+
+			ff.OriginalCallee.Callee = calleeIdent
+
+			assignedCallee = ss
+		} else {
+
+			msg := fmt.Sprintf("line %d: syntax error: invalid nested index access, expected an identifier %v", p.curToken.LineNumber, ss)
+			p.errors = append(p.errors, msg)
+
+		}
+	case *ast.Identifier:
+
+		ss.OriginalCallee.Callee = calleeIdent
+
+		assignedCallee = ss
+
+	default:
+
+		msg := fmt.Sprintf("line %d: syntax error: invalid nested index access, got %v", p.curToken.LineNumber, ss)
+		p.errors = append(p.errors, msg)
+
+	}
+
+	return
 }
 
 func (p *parser) parseHashLiteral() ast.Expression {

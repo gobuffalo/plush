@@ -22,6 +22,7 @@ var keywords = map[string]Type{
 	"for":      FOR,
 	"in":       IN,
 	"continue": CONTINUE,
+	"break":    BREAK,
 }
 
 // LookupIdent an ident and return a keyword type, or a plain ident

@@ -111,7 +111,8 @@ func Test_NextToken_WithHTML(t *testing.T) {
 }
 func Test_NextToken_Complete(t *testing.T) {
 	r := require.New(t)
-	input := `<% continue
+	input := `<% break
+	continue
 let five = 5;
 let ten = 10;
 
@@ -157,6 +158,7 @@ my-helper()
 		expectedLiteral string
 	}{
 		{token.S_START, "<%"},
+		{token.BREAK, "break"},
 		{token.CONTINUE, "continue"},
 		{token.LET, "let"},
 		{token.IDENT, "five"},

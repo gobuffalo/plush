@@ -631,6 +631,9 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	}
 
 	rt := rv.Type()
+	if rt.Kind() != reflect.Func {
+		return nil, fmt.Errorf("%+v (%T) is an invalid function", node.String(), rt)
+	}
 	rtNumIn := rt.NumIn()
 	isVariadic := rt.IsVariadic()
 	args := []reflect.Value{}

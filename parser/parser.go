@@ -33,8 +33,8 @@ func newParser(l *lexer.Lexer) *parser {
 
 	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
-	p.registerPrefix(token.CONTINUE, p.parseContinue)
-	p.registerPrefix(token.BREAK, p.parseBreak)
+	p.registerPrefix(token.CONTINUE, p.parseForLoopControlFlow)
+	p.registerPrefix(token.BREAK, p.parseForLoopControlFlow)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
@@ -303,16 +303,19 @@ func (p *parser) parseAssignExpression(id *ast.Identifier) ast.Expression {
 	return ae
 }
 
-func (p *parser) parseBreak() ast.Expression {
-
+func (p *parser) parseForLoopControlFlow() ast.Expression {
+	var stmt ast.Expression
 	if !p.inForBlock {
 
-		p.errors = append(p.errors, fmt.Sprintf("line %d: break is not in a loop", p.curToken.LineNumber))
+		p.errors = append(p.errors, fmt.Sprintf("line %d: %s is not in a loop", p.curToken.LineNumber, p.curToken.Literal))
 		return nil
 	}
+	if p.curTokenIs(token.BREAK) {
 
-	stmt := &ast.BreakExpression{TokenAble: ast.TokenAble{p.curToken}}
-
+		stmt = &ast.BreakExpression{TokenAble: ast.TokenAble{p.curToken}}
+	} else {
+		stmt = &ast.ContinueExpression{TokenAble: ast.TokenAble{p.curToken}}
+	}
 	return stmt
 }
 

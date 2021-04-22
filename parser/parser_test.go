@@ -708,6 +708,54 @@ func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
 	r.Equal(exp.Arguments[0].String(), "\"mark\"")
 }
 
+func Test_IndexExpression_Nested_Structs_Start_WithCallee(t *testing.T) {
+	r := require.New(t)
+	input := `<% myarray[0].Name.Final %>`
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+
+	exp := stmt.Expression.(*ast.IndexExpression)
+
+	r.Equal("myarray", exp.Left.String())
+	r.Equal("0", exp.Index.String())
+	gg := exp.Callee.(*ast.Identifier)
+	r.Equal("myarray.Name.Final", gg.String())
+
+	r.Equal("Final", gg.Value)
+	r.Equal("Name", gg.Callee.Value)
+}
+
+func Test_IndexExpression_Nested_Structs_Start_WithNested_Array(t *testing.T) {
+	r := require.New(t)
+	input := `<% myarray[0].Name[1].Final %>`
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+
+	exp := stmt.Expression.(*ast.IndexExpression)
+
+	r.Equal("myarray", exp.Left.String())
+	r.Equal("0", exp.Index.String())
+	gg := exp.Callee.(*ast.IndexExpression)
+
+	r.Equal("myarray.Name", gg.Left.String())
+	r.Equal("1", gg.Index.String())
+
+	r.Equal("Name.Final", gg.Callee.String())
+	cc := gg.Callee.(*ast.Identifier)
+
+	r.Equal("Final", cc.Value)
+}
+
 func Test_CallExpressionParsing_WithBlock(t *testing.T) {
 	r := require.New(t)
 	input := `<p><%= foo() { %>hi<% } %></p>`
@@ -998,6 +1046,47 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	r.Equal(fmt.Sprint(value), bo.TokenLiteral())
 
 	return true
+}
+
+func Test_ForExpression_WithContinue(t *testing.T) {
+	r := require.New(t)
+	input := `<% for (k,v) in myArray {  continue } %>`
+
+	program, err := Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+
+	exp := stmt.Expression.(*ast.ForExpression)
+
+	r.Equal("k", exp.KeyName)
+	r.Equal("v", exp.ValueName)
+	r.Equal("myArray", exp.Iterable.String())
+
+	r.Len(exp.Block.Statements, 1)
+
+	consequence := exp.Block.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.ContinueExpression)
+
+	r.Equal(consequence.String(), "continue")
+	//r.True(testIdentifier(t, consequence.Expression, "v"))
+}
+
+func Test_Continue_IfCondtion(t *testing.T) {
+	r := require.New(t)
+	input := `<% if(x == 2) { continue } %>`
+
+	_, err := Parse(input)
+	r.Error(err)
+}
+
+func Test_Continue_Function(t *testing.T) {
+	r := require.New(t)
+	input := `<% fn(x, y) { continue } %>`
+
+	_, err := Parse(input)
+	r.Error(err)
 }
 
 func Test_ForExpression(t *testing.T) {

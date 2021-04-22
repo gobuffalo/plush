@@ -62,4 +62,5 @@ const (
 	FOR      = "FOR"
 	IN       = "IN"
 	CONTINUE = "CONTINUE"
+	BREAK    = "BREAK"
 )

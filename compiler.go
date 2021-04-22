@@ -3,6 +3,9 @@ package plush
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/gobuffalo/plush/v4/token"
+
 	"html/template"
 	"reflect"
 	"regexp"
@@ -11,15 +14,8 @@ import (
 
 	"github.com/gobuffalo/helpers/hctx"
 	"github.com/gobuffalo/plush/v4/ast"
-	"github.com/gobuffalo/plush/v4/token"
 )
 
-type returnValue struct {
-	Value []interface{}
-}
-type continueV struct {
-	Value []interface{}
-}
 type ErrUnknownIdentifier struct {
 	ID  string
 	Err error
@@ -41,12 +37,14 @@ type compiler struct {
 
 func (c *compiler) compile() (string, error) {
 	bb := &bytes.Buffer{}
+
 	for _, stmt := range c.program.Statements {
 		var res interface{}
 		var err error
 		switch node := stmt.(type) {
 		case *ast.ReturnStatement:
 			res, err = c.evalReturnStatement(node)
+
 		case *ast.ExpressionStatement:
 			if h, ok := node.Expression.(*ast.HTMLLiteral); ok {
 				res = template.HTML(h.Value)
@@ -99,7 +97,7 @@ func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
 		for _, ii := range t {
 			c.write(bb, ii)
 		}
-	case returnValue:
+	case returnObject:
 		for _, ii := range t.Value {
 			c.write(bb, ii)
 		}
@@ -141,7 +139,9 @@ func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
 	case *ast.AssignExpression:
 		return c.evalAssignExpression(s)
 	case *ast.ContinueExpression:
-		return continueV{}, nil
+		return continueObject{}, nil
+	case *ast.BreakExpression:
+		return breakObject{}, nil
 	case nil:
 		return nil, nil
 	}
@@ -808,11 +808,23 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 				return nil, err
 			}
 
-			if val, ok := res.(continueV); ok {
+			breakLoop := false
+			switch val := res.(type) {
+			case continueObject:
+				res = val.Value
+			case breakObject:
+				breakLoop = true
 				res = val.Value
 			}
 
-			ret = append(ret, res)
+			if res != nil {
+
+				ret = append(ret, res)
+			}
+
+			if breakLoop {
+				break
+			}
 		}
 	case reflect.Slice, reflect.Array:
 
@@ -825,13 +837,22 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 			if err != nil {
 				return nil, err
 			}
-
-			if val, ok := res.(continueV); ok {
+			breakLoop := false
+			switch val := res.(type) {
+			case continueObject:
+				res = val.Value
+			case breakObject:
+				breakLoop = true
 				res = val.Value
 			}
+
 			if res != nil {
 
 				ret = append(ret, res)
+			}
+
+			if breakLoop {
+				break
 			}
 		}
 
@@ -850,11 +871,22 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 				if err != nil {
 					return nil, err
 				}
-				if val, ok := res.(continueV); ok {
+				breakLoop := false
+				switch val := res.(type) {
+				case continueObject:
+					res = val.Value
+				case breakObject:
+					breakLoop = true
 					res = val.Value
 				}
+
 				if res != nil {
+
 					ret = append(ret, res)
+				}
+
+				if breakLoop {
+					break
 				}
 				ii = it.Next()
 				i++
@@ -871,24 +903,33 @@ func (c *compiler) evalBlockStatement(node *ast.BlockStatement) (interface{}, er
 	for _, s := range node.Statements {
 
 		i, err := c.evalStatement(s)
+
 		if err != nil {
 			return nil, err
 		}
-		val, ok := i.(continueV)
-		if ok {
 
-			return continueV{Value: append(res, val.Value...)}, nil
-		}
-
-		if i != nil {
-			res = append(res, i)
-			switch retStm := c.curStmt.(type) {
-
-			case *ast.ReturnStatement:
-				if retStm.Type == token.RETURN {
-					return returnValue{Value: res}, nil
-				}
+		val, exitBlock := i.(exitBlockStatment)
+		if !exitBlock {
+			if i != nil {
+				res = append(res, i)
 			}
+		} else {
+
+			var resValue interface{}
+			switch obj := val.(type) {
+			case continueObject:
+				obj = continueObject{Value: append(res, obj.Value...)}
+				resValue = obj
+			case breakObject:
+				obj = breakObject{Value: append(res, obj.Value...)}
+				resValue = obj
+			case returnObject:
+				res = append(res, i)
+				obj.Value = res
+				resValue = obj
+			}
+
+			return resValue, nil
 		}
 	}
 
@@ -901,7 +942,7 @@ func (c *compiler) evalStatement(node ast.Statement) (interface{}, error) {
 	case *ast.ExpressionStatement:
 		s, err := c.evalExpression(t.Expression)
 		switch s.(type) {
-		case returnValue, ast.Printable, template.HTML, continueV:
+		case exitBlockStatment, ast.Printable, template.HTML:
 			return s, err
 		}
 		return nil, err
@@ -918,6 +959,12 @@ func (c *compiler) evalReturnStatement(node *ast.ReturnStatement) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
+	if node.Type == token.RETURN {
+		v := returnObject{}
+		v.Value = append(v.Value, res)
+		res = v
+	}
+
 	return res, nil
 }
 

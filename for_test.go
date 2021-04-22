@@ -37,6 +37,67 @@ func Test_Render_For_Array_Return(t *testing.T) {
 	r.Equal("abc", s)
 }
 
+func Test_Render_For_Array_Continue(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
+		%>Start<%
+		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
+			
+			
+			%>Odd<%
+			continue
+		}
+
+		return v   
+		} %>`
+	s, err := Render(input, NewContext())
+
+	r.NoError(err)
+	r.Equal("StartOddStart2StartOddStart4StartOddStart6StartOddStart8StartOddStart10", s)
+}
+
+func Test_Render_For_Array_WithNoOutput(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
+	
+		if (v == 1 || v == 2 || v ==3 || v == 4|| v == 5 || v == 6 || v == 7 || v == 8 || v == 9 || v == 10) {
+
+			continue
+		}
+
+		return v   
+		} %>`
+	s, err := Render(input, NewContext())
+
+	r.NoError(err)
+	r.Equal("", s)
+}
+
+func Test_Render_For_Array_WithoutContinue(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
+		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
+		}
+		return v   
+		} %>`
+	s, err := Render(input, NewContext())
+
+	r.NoError(err)
+	r.Equal("12345678910", s)
+}
+
+func Test_Render_For_Array_ContinueNoControl(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
+		continue
+		return v   
+		} %>`
+	s, err := Render(input, NewContext())
+
+	r.NoError(err)
+	r.Equal("", s)
+}
+
 func Test_Render_For_Array_Key_Only(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (v) in ["a", "b", "c"] {%><%=v%><%} %>`

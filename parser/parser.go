@@ -33,6 +33,7 @@ func newParser(l *lexer.Lexer) *parser {
 
 	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.CONTINUE, p.parseContinue)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
@@ -85,6 +86,7 @@ type parser struct {
 
 	prefixParseFns map[token.Type]prefixParseFn
 	infixParseFns  map[token.Type]infixParseFn
+	inForBlock     bool
 }
 
 func (p *parser) parseProgram() *ast.Program {
@@ -300,6 +302,19 @@ func (p *parser) parseAssignExpression(id *ast.Identifier) ast.Expression {
 	return ae
 }
 
+func (p *parser) parseContinue() ast.Expression {
+
+	if !p.inForBlock {
+
+		p.errors = append(p.errors, fmt.Sprintf("line %d: continue is not in a loop", p.curToken.LineNumber))
+		return nil
+	}
+
+	stmt := &ast.ContinueExpression{TokenAble: ast.TokenAble{p.curToken}}
+
+	return stmt
+}
+
 func (p *parser) parseIntegerLiteral() ast.Expression {
 
 	lit := &ast.IntegerLiteral{TokenAble: ast.TokenAble{p.curToken}}
@@ -409,7 +424,7 @@ func (p *parser) parseForExpression() ast.Expression {
 		return nil
 	}
 	ln := p.curToken.LineNumber
-
+	p.inForBlock = true
 	s := []string{}
 	for !p.curTokenIs(token.RPAREN) {
 		if p.curTokenIs(token.IDENT) {
@@ -453,7 +468,7 @@ func (p *parser) parseForExpression() ast.Expression {
 	if p.curTokenIs(token.RBRACE) {
 		p.nextToken()
 	}
-
+	p.inForBlock = false
 	return expression
 }
 
@@ -563,7 +578,7 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	}
 
 	lit.Parameters = p.parseFunctionParameters()
-
+	p.inForBlock = false
 	if !p.expectPeek(token.LBRACE) {
 		return nil
 	}

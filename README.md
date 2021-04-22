@@ -199,6 +199,15 @@ You can also  `continue` to the next iteration of the loop:
  } 
 ```
 
+You can terminate the for loop with `break`:
+```erb
+for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
+  if (i > 5) {
+    break
+  }
+ 	return v   
+} 
+```
 The values inside the `()` part of the statement are the names you wish to give to the key (or index) and the value of the expression. The `expression` can be an array, map, or iterator type.
 
 ### Arrays

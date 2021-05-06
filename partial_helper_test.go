@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gobuffalo/helpers/hctx"
 	"github.com/stretchr/testify/require"
 )
 
@@ -319,4 +320,37 @@ func Test_PartialHelpers_With_Indentation(t *testing.T) {
     </div>
 </div>`,
 		string(html))
+}
+
+func Test_PartialHelper_NoDefaultHelperOverride(t *testing.T) {
+	r := require.New(t)
+
+	t.Run("Existing key", func(t *testing.T) {
+		help := HelperContext{Context: NewContextWith(map[string]interface{}{
+			"truncate": func(s string, opts hctx.Map) string {
+				return s
+			},
+		})}
+
+		help.Set("partialFeeder", func(string) (string, error) {
+			return `<%= truncate("xxxxxxxxxxxaaaaaaaaaa", {size: 10}) %>`, nil
+		})
+
+		html, err := partialHelper("index", map[string]interface{}{}, help)
+		r.NoError(err)
+		r.Equal(`xxxxxxxxxxxaaaaaaaaaa`, string(html))
+	})
+
+	t.Run("Unexisting", func(t *testing.T) {
+		help := HelperContext{Context: NewContextWith(map[string]interface{}{})}
+
+		help.Set("partialFeeder", func(string) (string, error) {
+			return `<%= truncate("xxxxxxxxxxxaaaaaaaaaa", {size: 10}) %>`, nil
+		})
+
+		html, err := partialHelper("index", map[string]interface{}{}, help)
+		r.NoError(err)
+		r.Equal(`xxxxxxx...`, string(html))
+	})
+
 }

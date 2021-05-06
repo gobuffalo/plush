@@ -21,8 +21,8 @@ type Context struct {
 // will not be set onto the original context, however, the original context's
 // values will be available to the new context.
 func (c *Context) New() hctx.Context {
-	cc := NewContext()
-	cc.outer = c
+	cc := NewContextWithOuter(map[string]interface{}{}, c)
+
 	return cc
 }
 
@@ -43,6 +43,7 @@ func (c *Context) Value(key interface{}) interface{} {
 			return c.outer.Value(s)
 		}
 	}
+
 	return c.Context.Value(key)
 }
 
@@ -82,8 +83,29 @@ func NewContextWith(data map[string]interface{}) *Context {
 		outer:   nil,
 		moot:    &sync.Mutex{},
 	}
+
 	for k, v := range Helpers.helpers {
 		if !c.Has(k) {
+			c.Set(k, v)
+		}
+	}
+
+	return c
+}
+
+// NewContextWith returns a fully formed context using the data
+// provided and setting the outer context with the passed
+// seccond argument.
+func NewContextWithOuter(data map[string]interface{}, out *Context) *Context {
+	c := &Context{
+		Context: context.Background(),
+		data:    data,
+		outer:   out,
+		moot:    &sync.Mutex{},
+	}
+
+	for k, v := range Helpers.helpers {
+		if !c.Has(k) && !c.outer.Has(k) {
 			c.Set(k, v)
 		}
 	}

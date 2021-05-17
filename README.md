@@ -91,6 +91,15 @@ You can add comments like this:
 <%# This is a comment %>
 ```
 
+You can also add line comments within a code section
+
+```erb
+<%
+# this is a comment
+not_a_comment()
+%>
+```
+
 ## If/Else Statements
 
 The basic syntax of `if/else if/else` statements is as follows:

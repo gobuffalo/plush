@@ -71,7 +71,7 @@ func Test_Render_Function_Call_With_Hash(t *testing.T) {
 	r.Equal("<p>hi mark!</p>", s)
 }
 
-func Test_Render_Function_Call_With_SyntaxErrorHash(t *testing.T) {
+func Test_Render_Function_Call_With_Syntax_Error_Hash(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f({name: name) %></p>`

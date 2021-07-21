@@ -355,7 +355,16 @@ func (c *compiler) evalAccessIndex(left, index interface{}, node *ast.IndexExpre
 				returnValue, err = c.evalIndexCallee(rv.Index(i), node)
 
 			} else {
-				returnValue = rv.Index(i).Interface()
+
+				if i >= 0 && i < rv.Len() {
+
+					returnValue = rv.Index(i).Interface()
+
+				} else {
+
+					err = fmt.Errorf("index out of range [%d] with length %d", index, rv.Len())
+
+				}
 			}
 
 		} else {

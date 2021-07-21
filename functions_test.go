@@ -71,6 +71,20 @@ func Test_Render_Function_Call_With_Hash(t *testing.T) {
 	r.Equal("<p>hi mark!</p>", s)
 }
 
+func Test_Render_Function_Call_With_Syntax_Error_Hash(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><%= f({name: name) %></p>`
+	_, err := Render(input, NewContextWith(map[string]interface{}{
+		"f": func(m map[string]interface{}) string {
+			return fmt.Sprintf("hi %s!", m["name"])
+		},
+		"name": "mark",
+	}))
+	r.Error(err)
+
+}
+
 func Test_Render_Function_Call_With_Error(t *testing.T) {
 	r := require.New(t)
 

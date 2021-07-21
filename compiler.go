@@ -362,7 +362,7 @@ func (c *compiler) evalAccessIndex(left, index interface{}, node *ast.IndexExpre
 
 				} else {
 
-					err = fmt.Errorf("index out of range [%d] with length %d", index, rv.Len())
+					err = fmt.Errorf("array index out of bounds, got index %d, while array size is %d", index, rv.Len())
 
 				}
 			}

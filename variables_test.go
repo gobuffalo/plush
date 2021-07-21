@@ -153,3 +153,13 @@ func Test_Render_Let_ArrayAssign_OutofBoundsIndex(t *testing.T) {
 	r.Error(err)
 
 }
+
+func Test_Render_Access_Array_OutofBoundsIndex(t *testing.T) {
+	r := require.New(t)
+
+	input := `<% let a = [1, 2, "three", "four", 3.75] %><%= a[5]  %>`
+	_, err := Render(input, NewContext())
+	//r.Error(err)
+	r.Error(err)
+
+}

@@ -1,6 +1,6 @@
 module github.com/gobuffalo/plush/v4
 
-go 1.16
+go 1.13
 
 require (
 	github.com/gobuffalo/github_flavored_markdown v1.1.0

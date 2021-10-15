@@ -1,7 +1,11 @@
 name: Tests
-on: [push, pull_request]
-jobs:
+on: 
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
+jobs:
   tests-on:
     name: ${{matrix.go-version}} ${{matrix.os}}
     runs-on: ${{ matrix.os }}

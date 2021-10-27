@@ -173,6 +173,14 @@ func (l *Lexer) nextInsideToken() token.Token {
 	case '`':
 		tok.Type = token.B_STRING
 		tok.Literal = l.readBString()
+	case '#':
+		for l.ch != 0 {
+			l.readChar()
+			if l.ch == '\n' || l.ch == '\r' {
+				break
+			}
+		}
+		tok = l.nextInsideToken()
 	case '[':
 		tok = l.newToken(token.LBRACKET)
 	case ']':

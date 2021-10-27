@@ -121,8 +121,6 @@ func Test_Render_Let_ArrayAssign_InvalidKey(t *testing.T) {
 	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a["b"] = 3 %><%= a["c"] %></p>`
 	_, err := Render(input, NewContext())
 	r.Error(err)
-	//r.NoError(err)
-	//r.Equal("<p></p>", s)
 }
 
 func Test_Render_Let_ArrayAssign_ValidIndex(t *testing.T) {
@@ -130,7 +128,6 @@ func Test_Render_Let_ArrayAssign_ValidIndex(t *testing.T) {
 
 	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[0] = 3 %><%= a[0] %></p>`
 	s, err := Render(input, NewContext())
-	//r.Error(err)
 	r.NoError(err)
 	r.Equal("<p>3</p>", s)
 }
@@ -140,7 +137,6 @@ func Test_Render_Let_ArrayAssign_Resultaddition(t *testing.T) {
 
 	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[4] = 3 %><%= a[4] + 2 %></p>`
 	s, err := Render(input, NewContext())
-	//r.Error(err)
 	r.NoError(err)
 	r.Equal("<p>5</p>", s)
 }
@@ -151,5 +147,12 @@ func Test_Render_Let_ArrayAssign_OutofBoundsIndex(t *testing.T) {
 	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[5] = 3 %><%= a[4] + 2 %></p>`
 	_, err := Render(input, NewContext())
 	r.Error(err)
+}
 
+func Test_Render_Access_Array_OutofBoundsIndex(t *testing.T) {
+	r := require.New(t)
+
+	input := `<% let a = [1, 2, "three", "four", 3.75] %><%= a[5]  %>`
+	_, err := Render(input, NewContext())
+	r.Error(err)
 }

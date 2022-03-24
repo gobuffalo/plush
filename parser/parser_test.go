@@ -1114,6 +1114,14 @@ func Test_Break_IfCondtion(t *testing.T) {
 	r.Error(err)
 }
 
+func Test_Empty_IfCondtion(t *testing.T) {
+	r := require.New(t)
+	input := `<% if() { v } %>`
+
+	_, err := Parse(input)
+	r.Error(err)
+}
+
 func Test_Continue_Function(t *testing.T) {
 	r := require.New(t)
 	input := `<% fn(x, y) { continue } %>`

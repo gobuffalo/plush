@@ -814,6 +814,10 @@ func (p *parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 }
 
 func (p *parser) confrimIfCondition(v ast.Expression) (returnData bool) {
+	if v == nil {
+		p.invalidIfCondition("missing condition in if statement")
+		return
+	}
 	_, ok := v.(ast.Comparable)
 	if !ok {
 		p.invalidIfCondition(v.String())

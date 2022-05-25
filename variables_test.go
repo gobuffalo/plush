@@ -156,3 +156,20 @@ func Test_Render_Access_Array_OutofBoundsIndex(t *testing.T) {
 	_, err := Render(input, NewContext())
 	r.Error(err)
 }
+
+type Category1 struct {
+	Products []Product1
+}
+type Product1 struct {
+	Name []string
+}
+
+func Test_Render_Access_CalleeArray_OutofBoundIndex(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	product_listing := Category1{}
+	ctx.Set("product_listing", product_listing)
+	input := `<% let a = product_listing.Products[0].Name[0] %><%= a  %>`
+	_, err := Render(input, ctx)
+	r.Error(err)
+}

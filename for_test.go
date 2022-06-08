@@ -221,3 +221,22 @@ func Test_Render_For_Map_Nil_Value(t *testing.T) {
 	r.NoError(err)
 	r.Equal("", strings.TrimSpace(s))
 }
+
+type Category struct {
+	Products []Product
+}
+type Product struct {
+	Name []string
+}
+
+func Test_Render_For_Array_OutofBoundIndex(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	product_listing := Category{}
+	ctx.Set("product_listing", product_listing)
+	input := `<%= for (i, names) in product_listing.Products[0].Name { %>
+				<%= splt %>
+			<% } %>`
+	_, err := Render(input, ctx)
+	r.Error(err)
+}

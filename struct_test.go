@@ -106,13 +106,57 @@ func Test_Render_Struct_PointerMethod_IsNil(t *testing.T) {
 	}
 
 	for p := first; p != nil; p = p.Next {
-
 		ctx := NewContextWith(map[string]interface{}{"p": p})
 		res, err := Render(input, ctx)
 		r.NoError(err)
 		r.Equal(resE[p.N], res)
 
 	}
+}
+
+func Test_Render_Struct_PointerValue_Nil(t *testing.T) {
+	r := require.New(t)
+
+	type user struct {
+		Name  string
+		Image *string
+	}
+
+	u := user{
+		Name:  "Garn Clapstick",
+		Image: nil,
+	}
+	ctx := NewContextWith(map[string]interface{}{
+		"user": u,
+	})
+	input := `<%= user.Name %>: <%= user.Image %>`
+	res, err := Render(input, ctx)
+
+	r.NoError(err)
+	r.Equal(`Garn Clapstick: `, res)
+}
+
+func Test_Render_Struct_PointerValue_NonNil(t *testing.T) {
+	r := require.New(t)
+
+	type user struct {
+		Name  string
+		Image *string
+	}
+
+	image := "bicep.png"
+	u := user{
+		Name:  "Scrinch Archipeligo",
+		Image: &image,
+	}
+	ctx := NewContextWith(map[string]interface{}{
+		"user": u,
+	})
+	input := `<%= user.Name %>: <%= user.Image %>`
+	res, err := Render(input, ctx)
+
+	r.NoError(err)
+	r.Equal(`Scrinch Archipeligo: bicep.png`, res)
 }
 
 func Test_Render_Struct_Multiple_Access(t *testing.T) {

@@ -418,6 +418,12 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		}
 
 		f := rv.FieldByName(node.Value)
+		if f.Kind() == reflect.Ptr {
+			if f.IsNil() {
+				return nil, nil
+			}
+			f = f.Elem()
+		}
 		if !f.IsValid() {
 			m := rv.MethodByName(node.Value)
 			if !m.IsValid() {
@@ -425,11 +431,10 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 			}
 			return m.Interface(), nil
 		}
-
 		if !f.CanInterface() {
-
 			return nil, fmt.Errorf("'%s'cannot return value obtained from unexported field or method '%s' (%s)", node.Callee.String(), node.Value, node)
 		}
+
 		return f.Interface(), nil
 	}
 	if c.ctx.Has(node.Value) {

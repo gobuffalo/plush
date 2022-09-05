@@ -234,6 +234,48 @@ func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
 	r.Equal(`alert(\'\\\'Hello\\\'\');`, string(html))
 }
 
+func Test_PartialHelper_Javascript_With_HTML_Partial(t *testing.T) {
+	// https://github.com/gobuffalo/plush/issues/106
+	r := require.New(t)
+
+	data := map[string]interface{}{}
+	help := HelperContext{Context: NewContext()}
+	help.Set("partialFeeder", func(name string) (string, error) {
+		switch name {
+		case "js_having_html_partial.js":
+			return `alert('<%= partial("t1.html") %>');`, nil
+		case "js_having_js_partial.js":
+			return `alert('<%= partial("t1.js") %>');`, nil
+		case "t1.html":
+			return `<div><%= partial("p1.html") %></div>`, nil
+		case "t1.js":
+			return `<div><%= partial("p1.js") %></div>`, nil
+		case "p1.html", "p1.js":
+			return `<span>FORM</span>`, nil
+		default:
+			return "error", nil
+		}
+	})
+
+	// without content-type, js escaping is not applied
+	html, err := partialHelper("js_having_html_partial.js", data, help)
+	r.NoError(err)
+	r.Equal(`alert('<div><span>FORM</span></div>');`, string(html))
+
+	// with content-type (should be set to work properly)
+	help.Set("contentType", "application/javascript")
+
+	// and including partials with js extension
+	html, err = partialHelper("js_having_js_partial.js", data, help)
+	r.NoError(err)
+	r.Equal(`alert('<div><span>FORM</span></div>');`, string(html))
+
+	// has content-type but including html extension
+	html, err = partialHelper("js_having_html_partial.js", data, help)
+	r.NoError(err)
+	r.Equal(`alert('\u003Cdiv\u003E\\u003Cspan\\u003EFORM\\u003C/span\\u003E\u003C/div\u003E');`, string(html))
+}
+
 func Test_PartialHelper_Markdown(t *testing.T) {
 	r := require.New(t)
 
@@ -288,6 +330,38 @@ func Test_PartialHelper_Markdown_With_Layout_Reversed(t *testing.T) {
 	html, err := partialHelper(name, data, help)
 	r.NoError(err)
 	r.Equal(`<p>This <em>is</em> a <strong>test</strong></p>`, strings.TrimSpace(string(html)))
+}
+
+func Test_PartialHelpers_Markdown_With_Nested_CodeBlock(t *testing.T) {
+	// for https://github.com/gobuffalo/plush/issues/82
+	r := require.New(t)
+
+	main := `<%= partial("outer.md") %>`
+	outer := `<span>Some text</span>
+
+<%= partial("inner.md") %>
+`
+	inner := "```go\n" + `if true {
+    fmt.Println()
+}` + "\n```"
+
+	help := HelperContext{Context: NewContext()}
+	help.Set("contentType", "text/markdown")
+	help.Set("partialFeeder", func(name string) (string, error) {
+		if name == "outer.md" {
+			return outer, nil
+		}
+		return inner, nil
+	})
+
+	html, err := Render(main, help)
+	r.NoError(err)
+	r.Equal(`<p><span>Some text</span></p>
+
+<div class="highlight highlight-go"><pre>if true {
+    fmt.Println()
+}
+</pre></div>`, string(html))
 }
 
 func Test_PartialHelpers_With_Indentation(t *testing.T) {

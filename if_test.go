@@ -263,13 +263,52 @@ func Test_Render_If_Variable_Not_Set(t *testing.T) {
 
 func Test_Render_If_Variable_Not_Set_But_Or_Condition_Is_True(t *testing.T) {
 	r := require.New(t)
-	type page struct {
-		PageTitle string
-	}
 	ctx := NewContext()
 	ctx.Set("path", "cart")
 	ctx.Set("paths", "cart")
-	input := `<%= if ( path == "pagePath" || (page && page.PageTitle != "cafe") || paths == "cart") { %>hi<%} %>`
+	input := `<%= if ( paths == "cart" || (page && page.PageTitle != "cafe") || paths == "cart") { %>hi<%} %>`
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
+func Test_Render_If_Variable_Not_Set_But_Or_Condition_While_Node_Is_True_Includes_Syntax_Error_Last_Node(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	ctx.Set("paths", "cart")
+	input := `<%= if ( paths == "cart" ||  pages ^^^ ) { %>hi<%} %>`
+
+	_, err := Render(input, ctx)
+	r.Error(err)
+}
+
+func Test_Render_If_Variable_Not_Set_But_Or_Condition_While_Node_Is_True_Includes_Syntax_Error_First_Node(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	ctx.Set("paths", "cart")
+	input := `<%= if ( paths @#@# "cart" ||  pages) { %>hi<%} %>`
+
+	_, err := Render(input, ctx)
+	r.Error(err)
+}
+
+func Test_Render_If_Variable_Not_Set_But_Or_Condition_Left_Node_Is_True(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	ctx.Set("paths", "cart")
+	input := `<%= if ( paths == "cart" ||  pages ) { %>hi<%} %>`
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("hi", s)
+}
+
+func Test_Render_If_Variable_Not_Set_But_Or_Condition_Right_Node_Is_True(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+	ctx.Set("pages", "cart")
+	input := `<%= if ( paths == "cart" ||  pages ) { %>hi<%} %>`
 
 	s, err := Render(input, ctx)
 	r.NoError(err)

@@ -452,11 +452,19 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 
 	lres, err := c.evalExpression(node.Left)
 	if err != nil {
+		if _, ok := err.(*ErrUnknownIdentifier); ok {
+			return false, nil
+		}
 		return nil, err
 	}
 	if node.Operator == "&&" {
 		if !c.isTruthy(lres) {
 			return false, nil
+		}
+	}
+	if node.Operator == "||" {
+		if c.isTruthy(lres) {
+			return true, nil
 		}
 	}
 	rres, err := c.evalExpression(node.Right)

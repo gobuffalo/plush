@@ -260,3 +260,18 @@ func Test_Render_If_Variable_Not_Set(t *testing.T) {
 	r.NoError(err)
 	r.Equal("", s)
 }
+
+func Test_Render_If_Variable_Not_Set_But_Or_Condition_Is_True(t *testing.T) {
+	r := require.New(t)
+	type page struct {
+		PageTitle string
+	}
+	ctx := NewContext()
+	ctx.Set("path", "cart")
+	ctx.Set("paths", "cart")
+	input := `<%= if ( path == "pagePath" || (page && page.PageTitle != "cafe") || paths == "cart") { %>hi<%} %>`
+
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("hi", s)
+}

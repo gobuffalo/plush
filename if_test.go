@@ -314,3 +314,18 @@ func Test_Render_If_Variable_Not_Set_But_Or_Condition_Right_Node_Is_True(t *test
 	r.NoError(err)
 	r.Equal("hi", s)
 }
+
+func Test_Condition_UnsetIsNil(t *testing.T) {
+	r := require.New(t)
+	ctx := NewContext()
+
+	input := `<%= paths == nil %>`
+	s, err := Render(input, ctx)
+	r.NoError(err)
+	r.Equal("true", s)
+
+	input = `<%= nil == paths %>`
+	s, err = Render(input, ctx)
+	r.NoError(err)
+	r.Equal("true", s)
+}

@@ -451,30 +451,29 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
 
 	lres, err := c.evalExpression(node.Left)
-	if err != nil {
-		if _, ok := err.(*ErrUnknownIdentifier); ok {
-			lres = false
-		} else {
-			return nil, err
-		}
-	}
-	if node.Operator == "&&" {
-		if !c.isTruthy(lres) {
-			return false, nil
-		}
+	if err != nil && node.Operator != "==" && node.Operator != "!=" {
+		return nil, err
+	} // nil lres is acceptable only for '==' and '!='
+
+	switch { // fast return
+	case node.Operator == "&&" && !c.isTruthy(lres):
+		return false, nil
+	case node.Operator == "||" && c.isTruthy(lres):
+		return true, nil
 	}
 
 	rres, err := c.evalExpression(node.Right)
-	if err != nil {
-		if _, ok := err.(*ErrUnknownIdentifier); !ok {
-			return nil, err
-		} else {
-			rres = false
-		}
-	}
+	if err != nil && node.Operator != "==" && node.Operator != "!=" {
+		return nil, err
+	} // nil rres is acceptable only for '==' and '!='
+
 	switch node.Operator {
 	case "&&", "||":
-		return c.boolsOperator(lres, rres, node.Operator)
+		return c.isTruthy(rres), nil
+	} // fast return or this. '&&' and '||' end here
+
+	if nil == lres || nil == rres {
+		return c.simpleOperator(lres, rres, node.Operator)
 	}
 
 	switch t := lres.(type) {
@@ -493,10 +492,7 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 			return c.floatsOperator(t, r, node.Operator)
 		}
 	case bool:
-
 		return c.boolsOperator(lres, rres, node.Operator)
-	case nil:
-		return nil, nil
 	}
 	return nil, fmt.Errorf("unable to operate (%s) on %T and %T ", node.Operator, lres, rres)
 }
@@ -603,6 +599,17 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 		return x.MatchString(l), nil
 	}
 	return nil, fmt.Errorf("unknown operator for string %s", op)
+}
+
+func (c *compiler) simpleOperator(l interface{}, r interface{}, op string) (interface{}, error) {
+	switch op {
+	case "!=":
+		return l != r, nil
+	case "==":
+		return l == r, nil
+	default:
+		return nil, fmt.Errorf("unknown operator '%s' on '%T' and '%T' ", op, l, r)
+	}
 }
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {

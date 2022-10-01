@@ -93,6 +93,47 @@ func Test_Render_String_Math(t *testing.T) {
 	}
 }
 
+func Test_Render_Operator_UndefinedVar(t *testing.T) {
+	tests := []struct {
+		operator      string
+		result        interface{}
+		errorExpected bool
+	}{
+		{"+", "", true},
+		{"-", "", true},
+		{"/", "", true},
+		{"*", "", true},
+		{">", "", true},
+		{">=", "", true},
+		{"<=", "", true},
+		{"<", "", true},
+		{"==", "false", false},
+		{"!=", "true", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.operator, func(t *testing.T) {
+			r := require.New(t)
+			input := fmt.Sprintf("<%%= undefined %s 3 %%>", tc.operator)
+			s, err := Render(input, NewContext())
+			if tc.errorExpected {
+				r.Error(err, "undefined %s 3 --> '%v'", tc.operator, tc.result)
+			} else {
+				r.NoError(err, "undefined %s 3 --> '%v'", tc.operator, tc.result)
+			}
+			r.Equal(tc.result, s, "undefined %s 3", tc.operator)
+
+			input = fmt.Sprintf("<%%= 3 %s unknown %%>", tc.operator)
+			s, err = Render(input, NewContext())
+			if tc.errorExpected {
+				r.Error(err, "3 %s undefined --> '%v'", tc.operator, tc.result)
+			} else {
+				r.NoError(err, "3 %s undefined --> '%v'", tc.operator, tc.result)
+			}
+			r.Equal(tc.result, s, "undefined %s 3", tc.operator)
+		})
+	}
+}
+
 func Test_Render_String_Concat_Multiple(t *testing.T) {
 	r := require.New(t)
 

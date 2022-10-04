@@ -39,9 +39,10 @@ func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	if size <= 0 {
 		return nil, fmt.Errorf("size must be greater than zero")
 	}
-	u := reflect.Indirect(reflect.ValueOf(underlying))
 
+	u := reflect.Indirect(reflect.ValueOf(underlying))
 	group := []reflect.Value{}
+
 	switch u.Kind() {
 	case reflect.Array, reflect.Slice:
 		if u.Len() == size {
@@ -67,6 +68,7 @@ func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	default:
 		return nil, fmt.Errorf("can not use %T in groupBy", underlying)
 	}
+
 	g := &groupBy{
 		group: group,
 	}
@@ -82,7 +84,9 @@ func (g *groupBy) Next() interface{} {
 	if g.pos >= len(g.group) {
 		return nil
 	}
+
 	v := g.group[g.pos]
 	g.pos++
+
 	return v.Interface()
 }

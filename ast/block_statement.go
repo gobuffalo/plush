@@ -10,6 +10,8 @@ type BlockStatement struct {
 	Statements []Statement
 }
 
+var _ Statement = &BlockStatement{}
+
 func (bs *BlockStatement) statementNode() {}
 
 // InnerText gets the raw string representation of the block's contents.

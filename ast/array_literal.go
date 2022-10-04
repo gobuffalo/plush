@@ -10,6 +10,8 @@ type ArrayLiteral struct {
 	Elements []Expression
 }
 
+var _ Expression = &ArrayLiteral{}
+
 func (al *ArrayLiteral) expressionNode() {}
 
 func (al *ArrayLiteral) String() string {

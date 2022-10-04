@@ -28,6 +28,7 @@ func (l *Lexer) NextToken() token.Token {
 	if l.inside {
 		return l.nextInsideToken()
 	}
+
 	var tok token.Token
 
 	// l.skipWhitespace()
@@ -46,6 +47,7 @@ func (l *Lexer) NextToken() token.Token {
 	tok.Type = token.HTML
 	tok.Literal = l.readHTML()
 	tok.LineNumber = l.curLine
+
 	return tok
 }
 
@@ -222,6 +224,7 @@ func (l *Lexer) skipWhitespace() {
 		l.readChar()
 		return
 	}
+
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
 		l.readChar()
 	}
@@ -233,9 +236,11 @@ func (l *Lexer) readChar() {
 	} else {
 		l.ch = l.input[l.readPosition]
 	}
+
 	if l.ch == '\n' {
 		l.curLine++
 	}
+
 	l.position = l.readPosition
 	l.readPosition++
 }
@@ -303,7 +308,6 @@ func (l *Lexer) readHTML() string {
 	position := l.position
 
 	for l.ch != 0 {
-
 		if l.ch == '\\' && l.prevChar() == '\\' && l.peekChar() == '<' {
 			// escape escaping
 			l.readChar()
@@ -316,10 +320,12 @@ func (l *Lexer) readHTML() string {
 			l.readChar()
 			l.readChar()
 		}
+
 		if l.ch == '<' && l.peekChar() == '%' {
 			l.inside = true
 			break
 		}
+
 		l.readChar()
 	}
 	return strings.Replace(l.input[position:l.position], "\\<%", "<%", -1)
@@ -334,7 +340,7 @@ func isDigit(ch byte) bool {
 }
 
 func isDot(ch byte) bool {
-	return '.' == ch
+	return ch == '.'
 }
 
 func (l *Lexer) newToken(tokenType token.Type) token.Token {

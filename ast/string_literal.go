@@ -5,6 +5,9 @@ type StringLiteral struct {
 	Value string
 }
 
+var _ Comparable = &StringLiteral{}
+var _ Expression = &StringLiteral{}
+
 func (sl *StringLiteral) validIfCondition() bool { return true }
 
 func (sl *StringLiteral) expressionNode() {}

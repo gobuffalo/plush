@@ -11,6 +11,8 @@ type HashLiteral struct {
 	Pairs map[Expression]Expression
 }
 
+var _ Expression = &HashLiteral{}
+
 func (hl *HashLiteral) expressionNode() {}
 
 func (hl *HashLiteral) String() string {

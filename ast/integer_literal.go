@@ -5,6 +5,9 @@ type IntegerLiteral struct {
 	Value int
 }
 
+var _ Comparable = &IntegerLiteral{}
+var _ Expression = &IntegerLiteral{}
+
 func (il *IntegerLiteral) validIfCondition() bool { return true }
 
 func (il *IntegerLiteral) expressionNode() {}

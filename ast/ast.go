@@ -38,5 +38,9 @@ type Expression interface {
 }
 
 type Comparable interface {
+	// TODO: not sure what is the purpose of this interface.
+	// The only method of this interface is validIfCondition that returns
+	// true always for all implementations. Need to check but it could be
+	// something like isCondition or isComparable of Expression interface.
 	validIfCondition() bool
 }

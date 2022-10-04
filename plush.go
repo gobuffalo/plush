@@ -49,6 +49,7 @@ func Parse(input string) (*Template, error) {
 
 	moot.Lock()
 	defer moot.Unlock()
+
 	t, ok := cache[input]
 	if ok {
 		return t, nil

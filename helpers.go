@@ -66,6 +66,7 @@ func (h HelperContext) BlockWith(hc hctx.Context) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("expected *Context, got %T", hc)
 	}
+
 	octx := h.compiler.ctx
 	defer func() { h.compiler.ctx = octx }()
 	h.compiler.ctx = ctx
@@ -73,11 +74,14 @@ func (h HelperContext) BlockWith(hc hctx.Context) (string, error) {
 	if h.block == nil {
 		return "", fmt.Errorf("no block defined")
 	}
+
 	i, err := h.compiler.evalBlockStatement(h.block)
 	if err != nil {
 		return "", err
 	}
+
 	bb := &bytes.Buffer{}
 	h.compiler.write(bb, i)
+
 	return bb.String(), nil
 }

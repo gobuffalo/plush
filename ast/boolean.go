@@ -5,6 +5,9 @@ type Boolean struct {
 	Value bool
 }
 
+var _ Comparable = &Boolean{}
+var _ Expression = &Boolean{}
+
 func (b *Boolean) validIfCondition() bool { return true }
 
 func (b *Boolean) expressionNode() {}

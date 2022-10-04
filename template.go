@@ -21,10 +21,12 @@ func NewTemplate(input string) (*Template, error) {
 	t := &Template{
 		Input: input,
 	}
+
 	err := t.Parse()
 	if err != nil {
 		return t, err
 	}
+
 	return t, nil
 }
 
@@ -35,10 +37,12 @@ func (t *Template) Parse() error {
 	if t.program != nil {
 		return nil
 	}
+
 	program, err := parser.Parse(t.Input)
 	if err != nil {
 		return err
 	}
+
 	t.program = program
 	return nil
 }

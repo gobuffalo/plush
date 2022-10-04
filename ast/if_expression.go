@@ -12,6 +12,8 @@ type IfExpression struct {
 	ElseBlock *BlockStatement
 }
 
+var _ Expression = &IfExpression{}
+
 type ElseIfExpression struct {
 	TokenAble
 	Condition Expression

@@ -7,82 +7,69 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Return_Exit_With_InfixExpression(t *testing.T) {
-	r := require.New(t)
-	input := `
- 	<%
- 		let numberify = fn(arg) {
- 			if (arg == "one") {
- 				return 1+1;
- 			}
- 			if (arg == "two") {
- 				return 44;
- 			}
- 			if (arg == "three") {
- 				return 2;
- 			}
- 			return "unsupported"
- 		}
- 	%>
- 	<%= numberify("one") %>
- 	`
-	s, err := Render(input, NewContext())
+func Test_Return_Exit_With__InfixExpression(t *testing.T) {
+	tests := []struct {
+		name     string
+		success  bool
+		expected string
+		input    string
+	}{
+		{"infix_expression", true, "2", `<%
+		let numberify = fn(arg) {
+			if (arg == "one") {
+				return 1+1;
+			}
+			if (arg == "two") {
+				return 44;
+			}
+			if (arg == "three") {
+				return 2;
+			}
+			return "unsupported"
+		} %>
+		<%= numberify("one") %>`},
+		{"simple_return", true, "445", `<%
+		let numberify = fn(arg) {
+			if (arg == "one") {
+				return 1;
+			}
+			if (arg == "two") {
+				return 445;
+			}
+			if (arg == "three") {
+				return 3;
+			}
+			return "unsupported"
+		} %>
+		<%= numberify("two") %>`},
+		{"default_return", true, "default value", `<%
+		let numberify = fn(arg) {
+			if (arg == "one") {
+				return 1;
+			}
+			if (arg == "two") {
+				return 445;
+			}
+			if (arg == "three") {
+				return 3;
+			}
+			return "default value"
+		} %>
+		<%= numberify("six") %>`},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := require.New(t)
 
-	r.NoError(err)
-	r.Equal("2", strings.TrimSpace(s))
-}
-
-func Test_Simple_Return_Exit(t *testing.T) {
-	r := require.New(t)
-
-	input := `
- 	<%
- 		let numberify = fn(arg) {
- 			if (arg == "one") {
- 				return 1;
- 			}
- 			if (arg == "two") {
- 				return 445;
- 			}
- 			if (arg == "three") {
- 				return 3;
- 			}
- 			return "unsupported"
- 		}
- 	%>
- 	<%= numberify("two") %>
- 	`
-
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("445", strings.TrimSpace(s))
-}
-
-func Test_Simple_Return_Default(t *testing.T) {
-	r := require.New(t)
-
-	input := `
- 	<%
- 		let numberify = fn(arg) {
- 			if (arg == "one") {
- 				return 1;
- 			}
- 			if (arg == "two") {
- 				return 445;
- 			}
- 			if (arg == "three") {
- 				return 3;
- 			}
- 			return "unsupported"
- 		}
- 	%>
- 	<%= numberify("six") %>
- 	`
-
-	s, err := Render(input, NewContext())
-
-	r.NoError(err)
-	r.Equal("unsupported", strings.TrimSpace(s))
+			s, err := Render(tc.input, NewContext())
+			if tc.success {
+				r.NoError(err)
+			} else {
+				r.Error(err)
+			}
+			r.Equal(tc.expected, strings.TrimSpace(s))
+		})
+	}
 }
 
 func Test_User_Function_Return(t *testing.T) {

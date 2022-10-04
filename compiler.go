@@ -435,9 +435,11 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 
 func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, error) {
 	lres, err := c.evalExpression(node.Left)
-	if err != nil && node.Operator != "==" && node.Operator != "!=" {
+	if err != nil &&
+		node.Operator != "==" && node.Operator != "!=" &&
+		node.Operator != "||" && node.Operator != "&&" {
 		return nil, err
-	} // nil lres is acceptable only for '==' and '!='
+	} // nil lres is acceptable only for '==', '!=', and logical operators
 
 	switch { // fast return
 	case node.Operator == "&&" && !c.isTruthy(lres):
@@ -447,9 +449,11 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 	}
 
 	rres, err := c.evalExpression(node.Right)
-	if err != nil && node.Operator != "==" && node.Operator != "!=" {
+	if err != nil &&
+		node.Operator != "==" && node.Operator != "!=" &&
+		node.Operator != "||" && node.Operator != "&&" {
 		return nil, err
-	} // nil rres is acceptable only for '==' and '!='
+	} // nil rres is acceptable only for '==', '!=', and logical operators
 
 	switch node.Operator {
 	case "&&", "||":

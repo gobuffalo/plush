@@ -12,6 +12,9 @@ type ReturnStatement struct {
 	ReturnValue Expression
 }
 
+var _ Printable = &ReturnStatement{}
+var _ Statement = &ReturnStatement{}
+
 func (rs *ReturnStatement) Printable() bool {
 	return true
 }

@@ -5,6 +5,9 @@ type FloatLiteral struct {
 	Value float64
 }
 
+var _ Comparable = &FloatLiteral{}
+var _ Expression = &FloatLiteral{}
+
 func (il *FloatLiteral) validIfCondition() bool { return true }
 
 func (il *FloatLiteral) expressionNode() {}

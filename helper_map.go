@@ -21,6 +21,7 @@ func NewHelperMap() (HelperMap, error) {
 	if err != nil {
 		return hm, err
 	}
+
 	return hm, nil
 }
 
@@ -29,10 +30,13 @@ func NewHelperMap() (HelperMap, error) {
 func (h *HelperMap) Add(key string, helper interface{}) error {
 	h.moot.Lock()
 	defer h.moot.Unlock()
+
 	if h.helpers == nil {
 		h.helpers = map[string]interface{}{}
 	}
+
 	h.helpers[key] = helper
+
 	return nil
 }
 
@@ -44,6 +48,7 @@ func (h *HelperMap) AddMany(helpers map[string]interface{}) error {
 			return err
 		}
 	}
+
 	return nil
 }
 

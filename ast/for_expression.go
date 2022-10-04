@@ -12,10 +12,13 @@ type ForExpression struct {
 	Iterable  Expression
 }
 
+var _ Expression = &ForExpression{}
+
 func (fe *ForExpression) expressionNode() {}
 
 func (fe *ForExpression) String() string {
 	var out bytes.Buffer
+
 	out.WriteString("for (")
 	out.WriteString(fe.KeyName)
 	out.WriteString(", ")
@@ -23,9 +26,12 @@ func (fe *ForExpression) String() string {
 	out.WriteString(") in ")
 	out.WriteString(fe.Iterable.String())
 	out.WriteString(" { ")
+
 	if fe.Block != nil {
 		out.WriteString(fe.Block.String())
 	}
+
 	out.WriteString(" }")
+
 	return out.String()
 }

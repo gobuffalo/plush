@@ -10,6 +10,8 @@ type LetStatement struct {
 	Value Expression
 }
 
+var _ Statement = &LetStatement{}
+
 func (ls *LetStatement) statementNode() {}
 
 func (ls *LetStatement) String() string {

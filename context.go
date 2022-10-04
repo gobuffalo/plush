@@ -30,6 +30,7 @@ func (c *Context) New() hctx.Context {
 func (c *Context) Set(key string, value interface{}) {
 	c.moot.Lock()
 	defer c.moot.Unlock()
+
 	c.data[key] = value
 }
 
@@ -117,5 +118,6 @@ func NewContextWithOuter(data map[string]interface{}, out *Context) *Context {
 func NewContextWithContext(ctx context.Context) *Context {
 	c := NewContext()
 	c.Context = ctx
+
 	return c
 }

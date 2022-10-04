@@ -70,9 +70,7 @@ func Test_Render_ScriptFunction(t *testing.T) {
 	input := `<% let add = fn(x) { return x + 2; }; %><%= add(2) %>`
 
 	s, err := Render(input, NewContext())
-	if err != nil {
-		r.NoError(err)
-	}
+	r.NoError(err)
 	r.Equal("4", s)
 }
 

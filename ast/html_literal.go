@@ -5,6 +5,9 @@ type HTMLLiteral struct {
 	Value string
 }
 
+var _ Printable = &HTMLLiteral{}
+var _ Expression = &HTMLLiteral{}
+
 func (hl *HTMLLiteral) Printable() bool {
 	return true
 }

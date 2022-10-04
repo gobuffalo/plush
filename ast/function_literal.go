@@ -11,6 +11,8 @@ type FunctionLiteral struct {
 	Block      *BlockStatement
 }
 
+var _ Expression = &FunctionLiteral{}
+
 func (fl *FunctionLiteral) expressionNode() {}
 
 func (fl *FunctionLiteral) String() string {

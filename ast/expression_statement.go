@@ -5,6 +5,8 @@ type ExpressionStatement struct {
 	Expression Expression
 }
 
+var _ Statement = &ExpressionStatement{}
+
 func (es *ExpressionStatement) statementNode() {}
 
 func (es *ExpressionStatement) String() string {

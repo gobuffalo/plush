@@ -71,90 +71,57 @@ func Test_Let_Inside_Helper(t *testing.T) {
 }
 
 func Test_Render_Let_Hash(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let h = {"a": "A"} %><%= h["a"] %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>A</p>", s)
+	tests := []struct {
+		name     string
+		success  bool
+		input    string
+		expected string
+	}{
+		{"success", true, `<p><% let h = {"a": "A"} %><%= h["a"] %></p>`, "<p>A</p>"},
+		{"assign", true, `<p><% let h = {"a": "A"} %><% h["a"] = "C" %><%= h["a"] %></p>`, "<p>C</p>"},
+		{"assign", true, `<p><% let h = {"a": "A"} %><% h["b"] = "D" %><%= h["b"] %></p>`, "<p>D</p>"},
+		{"intvar", true, `<p><% let h = {"a": "A"} %><% h["b"] = 3 %><%= h["b"] %></p>`, "<p>3</p>"},
+		{"invalid", true, `<p><% let h = {"a": "A"} %><% h["b"] = 3 %><%= h["c"] %></p>`, "<p></p>"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := require.New(t)
+			s, err := Render(tc.input, NewContext())
+			if tc.success {
+				r.NoError(err)
+			} else {
+				r.Error(err)
+			}
+			r.Equal(tc.expected, s)
+		})
+	}
 }
 
-func Test_Render_Let_HashAssign(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let h = {"a": "A"} %><% h["a"] = "C"%><%= h["a"] %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>C</p>", s)
-}
-
-func Test_Render_Let_HashAssign_NewKey(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let h = {"a": "A"} %><% h["b"] = "d" %><%= h["b"] %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>d</p>", s)
-}
-
-func Test_Render_Let_HashAssign_Int(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let h = {"a": "A"} %><% h["b"] = 3 %><%= h["b"] %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>3</p>", s)
-}
-
-func Test_Render_Let_HashAssign_InvalidKey(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let h = {"a": "A"} %><% h["b"] = 3 %><%= h["c"] %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p></p>", s)
-}
-
-func Test_Render_Let_ArrayAssign_InvalidKey(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a["b"] = 3 %><%= a["c"] %></p>`
-	_, err := Render(input, NewContext())
-	r.Error(err)
-}
-
-func Test_Render_Let_ArrayAssign_ValidIndex(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[0] = 3 %><%= a[0] %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>3</p>", s)
-}
-
-func Test_Render_Let_ArrayAssign_Resultaddition(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[4] = 3 %><%= a[4] + 2 %></p>`
-	s, err := Render(input, NewContext())
-	r.NoError(err)
-	r.Equal("<p>5</p>", s)
-}
-
-func Test_Render_Let_ArrayAssign_OutofBoundsIndex(t *testing.T) {
-	r := require.New(t)
-
-	input := `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[5] = 3 %><%= a[4] + 2 %></p>`
-	_, err := Render(input, NewContext())
-	r.Error(err)
-}
-
-func Test_Render_Access_Array_OutofBoundsIndex(t *testing.T) {
-	r := require.New(t)
-
-	input := `<% let a = [1, 2, "three", "four", 3.75] %><%= a[5]  %>`
-	_, err := Render(input, NewContext())
-	r.Error(err)
+func Test_Render_Let_Array(t *testing.T) {
+	tests := []struct {
+		name     string
+		success  bool
+		input    string
+		expected string
+	}{
+		{"success", true, `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[0] = 3 %><%= a[0] %></p>`, "<p>3</p>"},
+		{"addition", true, `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[4] = 3 %><%= a[4] + 2 %></p>`, "<p>5</p>"},
+		{"invalid_key", false, `<p><% let a = [1, 2, "three", "four", 3.75] %><% a["b"] = 3 %><%= a["c"] %></p>`, ""},
+		{"outofbounds_assign", false, `<p><% let a = [1, 2, "three", "four", 3.75] %><% a[5] = 3 %><%= a[4] + 2 %></p>`, ""},
+		{"outofbounds_access", false, `<p><% let a = [1, 2, "three", "four", 3.75] %><%= a[5] %></p>`, ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := require.New(t)
+			s, err := Render(tc.input, NewContext())
+			if tc.success {
+				r.NoError(err)
+			} else {
+				r.Error(err)
+			}
+			r.Equal(tc.expected, s)
+		})
+	}
 }
 
 type Category1 struct {
@@ -164,12 +131,37 @@ type Product1 struct {
 	Name []string
 }
 
-func Test_Render_Access_CalleeArray_OutofBoundIndex(t *testing.T) {
-	r := require.New(t)
-	ctx := NewContext()
-	product_listing := Category1{}
-	ctx.Set("product_listing", product_listing)
-	input := `<% let a = product_listing.Products[0].Name[0] %><%= a  %>`
-	_, err := Render(input, ctx)
-	r.Error(err)
+func Test_Render_Access_CalleeArray(t *testing.T) {
+	tests := []struct {
+		name     string
+		success  bool
+		expected string
+		data     Category1
+	}{
+		{"success", true, "Buffalo", Category1{
+			[]Product1{
+				{Name: []string{"Buffalo"}},
+			},
+		}},
+		{"outofbounds", false, "", Category1{}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := require.New(t)
+			input := `<% let a = product_listing.Products[0].Name[0] %><%= a  %>`
+
+			ctx := NewContext()
+			ctx.Set("product_listing", tc.data)
+
+			s, err := Render(input, ctx)
+			if tc.success {
+				r.NoError(err)
+			} else {
+				r.Error(err)
+			}
+			r.Equal(tc.expected, s)
+		})
+	}
+
 }

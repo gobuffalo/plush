@@ -36,7 +36,6 @@ func Test_Let_Ident_NotInitialized(t *testing.T) {
 	%>`
 
 	ctx := NewContext()
-	//ctx.Set("myArray", []string{"a", "b"})
 
 	_, err := Render(input, ctx)
 	r.Error(err)

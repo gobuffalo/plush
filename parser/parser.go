@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -108,9 +107,7 @@ func (p *parser) parseProgram() *ast.Program {
 			}
 		}
 
-		if stmt != nil &&
-			(reflect.ValueOf(stmt).Kind() == reflect.Ptr && !reflect.ValueOf(stmt).IsNil()) &&
-			strings.TrimSpace(stmt.String()) != "" {
+		if stmt != nil && strings.TrimSpace(stmt.String()) != "" {
 			program.Statements = append(program.Statements, stmt)
 		}
 

@@ -159,6 +159,9 @@ func (p *parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		l := p.parseLetStatement()
+		if l == nil {
+			return nil
+		}
 		return l
 	case token.S_START:
 		p.nextToken()
@@ -199,7 +202,7 @@ func (p *parser) parseLetStatement() *ast.LetStatement {
 	stmt.Name = &ast.Identifier{TokenAble: ast.TokenAble{Token: p.curToken}, Value: p.curToken.Literal}
 
 	if !p.expectPeek(token.ASSIGN) {
-		return nil
+		return stmt
 	}
 
 	p.nextToken()

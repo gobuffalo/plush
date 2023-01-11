@@ -27,6 +27,7 @@ func Test_Let_Reassignment(t *testing.T) {
 	r.NoError(err)
 	r.Equal("bar\n    \n  \nbaz", strings.TrimSpace(s))
 }
+
 func Test_Let_Ident_NotInitialized(t *testing.T) {
 	r := require.New(t)
 	input := `<% let foo
@@ -40,6 +41,7 @@ func Test_Let_Ident_NotInitialized(t *testing.T) {
 	_, err := Render(input, ctx)
 	r.Error(err)
 }
+
 func Test_Let_Reassignment_UnknownIdent(t *testing.T) {
 	r := require.New(t)
 	input := `<% foo = "baz" %>`

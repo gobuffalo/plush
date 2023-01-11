@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -108,9 +107,7 @@ func (p *parser) parseProgram() *ast.Program {
 			}
 		}
 
-		if stmt != nil &&
-			(reflect.ValueOf(stmt).Kind() == reflect.Ptr && !reflect.ValueOf(stmt).IsNil()) &&
-			strings.TrimSpace(stmt.String()) != "" {
+		if stmt != nil && strings.TrimSpace(stmt.String()) != "" {
 			program.Statements = append(program.Statements, stmt)
 		}
 
@@ -162,6 +159,9 @@ func (p *parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		l := p.parseLetStatement()
+		if l == nil {
+			return nil
+		}
 		return l
 	case token.S_START:
 		p.nextToken()
@@ -202,7 +202,7 @@ func (p *parser) parseLetStatement() *ast.LetStatement {
 	stmt.Name = &ast.Identifier{TokenAble: ast.TokenAble{Token: p.curToken}, Value: p.curToken.Literal}
 
 	if !p.expectPeek(token.ASSIGN) {
-		return nil
+		return stmt
 	}
 
 	p.nextToken()

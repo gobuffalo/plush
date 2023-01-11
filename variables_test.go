@@ -28,18 +28,24 @@ func Test_Let_Reassignment(t *testing.T) {
 	r.Equal("bar\n    \n  \nbaz", strings.TrimSpace(s))
 }
 
-func Test_Let_Ident_NotInitialized(t *testing.T) {
+func Test_Let_SyntaxError_NoEqualSign(t *testing.T) {
 	r := require.New(t)
-	input := `<% let foo
-		if (foo){
-			foo = 1
-		}
-	%>`
+	input := `<% let foo %>`
 
 	ctx := NewContext()
 
 	_, err := Render(input, ctx)
-	r.Error(err)
+	r.ErrorContains(err, "expected next token to be =")
+}
+
+func Test_Let_SyntaxError_NoIdentifier(t *testing.T) {
+	r := require.New(t)
+	input := `<% let = %>`
+
+	ctx := NewContext()
+
+	_, err := Render(input, ctx)
+	r.ErrorContains(err, "expected next token to be IDENT")
 }
 
 func Test_Let_Reassignment_UnknownIdent(t *testing.T) {
@@ -50,7 +56,7 @@ func Test_Let_Reassignment_UnknownIdent(t *testing.T) {
 	ctx.Set("myArray", []string{"a", "b"})
 
 	_, err := Render(input, ctx)
-	r.Error(err)
+	r.ErrorContains(err, "\"foo\": unknown identifier")
 }
 
 func Test_Let_Inside_Helper(t *testing.T) {

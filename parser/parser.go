@@ -156,13 +156,14 @@ func (p *parser) noPrefixParseFnError(t token.Type) {
 }
 
 func (p *parser) parseStatement() ast.Statement {
+	// Warning: ast.Statement is an interface so please make sure all callee
+	// methods do not return nil from themselves.
+	// If you are adding another case here, please make sure the callee does
+	// not return nil or you should add nil checking and explicitly return
+	// concrete nil. (https://github.com/gobuffalo/plush/pull/171)
 	switch p.curToken.Type {
 	case token.LET:
-		l := p.parseLetStatement()
-		if l == nil {
-			return nil
-		}
-		return l
+		return p.parseLetStatement()
 	case token.S_START:
 		p.nextToken()
 		return p.parseStatement()
@@ -196,7 +197,7 @@ func (p *parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{TokenAble: ast.TokenAble{Token: p.curToken}}
 
 	if !p.expectPeek(token.IDENT) {
-		return nil
+		return stmt
 	}
 
 	stmt.Name = &ast.Identifier{TokenAble: ast.TokenAble{Token: p.curToken}, Value: p.curToken.Literal}

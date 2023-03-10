@@ -320,6 +320,14 @@ func (c *compiler) evalAccessIndex(left, index interface{}, node *ast.IndexExpre
 	rv := reflect.ValueOf(left)
 	switch rv.Kind() {
 	case reflect.Map:
+		mapKeyType := reflect.TypeOf(left).Key().Kind()
+		keyType := reflect.TypeOf(index).Kind()
+		if mapKeyType != reflect.Interface &&
+			keyType != mapKeyType {
+			err = fmt.Errorf("cannot use %v (%s constant) as %s value in map index", index, keyType.String(), mapKeyType.String())
+			return nil, err
+		}
+
 		val := rv.MapIndex(reflect.ValueOf(index))
 		if !val.IsValid() {
 			return nil, nil

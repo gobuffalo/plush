@@ -1,9 +1,10 @@
-package plush
+package plush_test
 
 import (
 	"strings"
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -61,7 +62,7 @@ func Test_Return_Exit_With__InfixExpression(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
 
-			s, err := Render(tc.input, NewContext())
+			s, err := plush.Render(tc.input, plush.NewContext())
 			if tc.success {
 				r.NoError(err)
 			} else {
@@ -74,7 +75,7 @@ func Test_Return_Exit_With__InfixExpression(t *testing.T) {
 
 func Test_User_Function_Return(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	in := `<%
  	let print = fn(obj) {
  		if (obj.Secret) {
@@ -94,17 +95,17 @@ func Test_User_Function_Return(t *testing.T) {
 	}
 
 	ctx.Set("data", obj{Secret: true, String: "your royal highness"})
-	out, err := Render(in, ctx)
+	out, err := plush.Render(in, ctx)
 	r.NoError(err, "Render")
 	r.Equal(`You are: **********.`, out)
 
 	ctx.Set("data", obj{Secret: true, GiveHint: true, String: "your royal highness"})
-	out, err = Render(in, ctx)
+	out, err = plush.Render(in, ctx)
 	r.NoError(err, "Render")
 	r.Equal(`You are: your roy****.`, out)
 
 	ctx.Set("data", obj{Secret: false, String: "your royal highness"})
-	out, err = Render(in, ctx)
+	out, err = plush.Render(in, ctx)
 	r.NoError(err, "Render")
 	r.Equal(`You are: your royal highness.`, out)
 }

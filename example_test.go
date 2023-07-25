@@ -1,9 +1,11 @@
-package plush
+package plush_test
 
 import (
 	"fmt"
 	"html/template"
 	"log"
+
+	"github.com/gobuffalo/plush/v4"
 )
 
 // ExampleRender using `if`, `for`, `else`, functions, etc...
@@ -20,10 +22,10 @@ func ExampleRender() {
 <% } %>
 </html>`
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("names", []string{"john", "paul", "george", "ringo"})
 
-	s, err := Render(html, ctx)
+	s, err := plush.Render(html, ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +57,7 @@ let greet = fn(n) {
 %>
 <h1><%= greet(h["name"]) %></h1>`
 
-	s, err := Render(html, NewContext())
+	s, err := plush.Render(html, plush.NewContext())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,14 +76,14 @@ func ExampleRender_customHelperFunctions() {
 <% } %>
 `
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("one", func() int {
 		return 1
 	})
 	ctx.Set("greet", func(s string) string {
 		return fmt.Sprintf("Hi %s", s)
 	})
-	ctx.Set("can", func(s string, help HelperContext) (template.HTML, error) {
+	ctx.Set("can", func(s string, help plush.HelperContext) (template.HTML, error) {
 		if s == "update" {
 			h, err := help.Block()
 			return template.HTML(h), err
@@ -89,7 +91,7 @@ func ExampleRender_customHelperFunctions() {
 		return "", nil
 	})
 
-	s, err := Render(html, ctx)
+	s, err := plush.Render(html, ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -103,7 +105,7 @@ func ExampleRender_customHelperFunctions() {
 func ExampleRender_forIterator() {
 	html := `<%= for (v) in between(3,6) { %><%=v%><% } %>`
 
-	s, err := Render(html, NewContext())
+	s, err := plush.Render(html, plush.NewContext())
 	if err != nil {
 		log.Fatal(err)
 	}

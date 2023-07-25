@@ -1,8 +1,9 @@
-package plush
+package plush_test
 
 import (
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,7 +13,7 @@ func Test_LineNumberErrors(t *testing.T) {
 	<%= f.Foo %>
 </p>`
 
-	_, err := Render(input, NewContext())
+	_, err := plush.Render(input, plush.NewContext())
 	r.Error(err)
 	r.Contains(err.Error(), "line 2:")
 }
@@ -25,7 +26,7 @@ func Test_LineNumberErrors_ForLoop(t *testing.T) {
 	<% } %>
 	`
 
-	_, err := Render(input, NewContext())
+	_, err := plush.Render(input, plush.NewContext())
 	r.Error(err)
 	r.Contains(err.Error(), "line 2:")
 }
@@ -40,7 +41,7 @@ func Test_LineNumberErrors_ForLoop2(t *testing.T) {
 	<% } %>
 	`
 
-	_, err := Parse(input)
+	_, err := plush.Parse(input)
 	r.Error(err)
 	r.Contains(err.Error(), "line 2:")
 }
@@ -52,9 +53,9 @@ func Test_LineNumberErrors_InsideForLoop(t *testing.T) {
 		<%= n.Foo %>
 	<% } %>
 	`
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("numbers", []int{1, 2})
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.Error(err)
 	r.Contains(err.Error(), "line 3:")
 }
@@ -70,9 +71,9 @@ func Test_LineNumberErrors_MissingKeyword(t *testing.T) {
 		<%= n %>
 	<% } %>
 	`
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("numbers", []int{1, 2})
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.Error(err)
 	r.Contains(err.Error(), "line 6:")
 }

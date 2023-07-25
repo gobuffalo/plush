@@ -1,11 +1,11 @@
-package lexer
+package lexer_test
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/gobuffalo/plush/v4/lexer"
 	"github.com/gobuffalo/plush/v4/token"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_NextToken_Simple(t *testing.T) {
@@ -20,7 +20,7 @@ func Test_NextToken_Simple(t *testing.T) {
 		{token.E_END, "%>"},
 	}
 
-	l := New(input)
+	l := lexer.New(input)
 	for _, tt := range tests {
 		tok := l.NextToken()
 		r.Equal(tt.tokenType, tok.Type)
@@ -44,7 +44,7 @@ func Test_NextToken_SkipLineComments(t *testing.T) {
 		{token.E_END, "%>"},
 	}
 
-	l := New(input)
+	l := lexer.New(input)
 	for _, tt := range tests {
 		tok := l.NextToken()
 		r.Equal(tt.tokenType, tok.Type)
@@ -64,7 +64,7 @@ func Test_EscapeStringQuote(t *testing.T) {
 		{token.E_END, "%>"},
 	}
 
-	l := New(input)
+	l := lexer.New(input)
 	for _, tt := range tests {
 		tok := l.NextToken()
 		r.Equal(tt.tokenType, tok.Type)
@@ -82,7 +82,7 @@ func Test_EscapeExpression(t *testing.T) {
 		{token.HTML, `<p><%= 1 %></p>`},
 	}
 
-	l := New(input)
+	l := lexer.New(input)
 	for _, tt := range tests {
 		tok := l.NextToken()
 		r.Equal(tt.tokenType, tok.Type)
@@ -93,7 +93,7 @@ func Test_EscapeExpression(t *testing.T) {
 func Test_Escaping_EscapeExpression(t *testing.T) {
 	r := require.New(t)
 	input := `C:\\<%= "temp" %>`
-	l := New(input)
+	l := lexer.New(input)
 
 	tests := []struct {
 		tokenType    token.Type
@@ -126,7 +126,7 @@ func Test_NextToken_WithHTML(t *testing.T) {
 		{token.HTML, `</p>`},
 	}
 
-	l := New(input)
+	l := lexer.New(input)
 	for _, tt := range tests {
 		tok := l.NextToken()
 		r.Equal(tt.tokenType, tok.Type)
@@ -332,7 +332,7 @@ my-helper()
 		{token.EOF, ""},
 	}
 
-	l := New(input)
+	l := lexer.New(input)
 
 	for _, tt := range tests {
 		tok := l.NextToken()

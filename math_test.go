@@ -1,9 +1,10 @@
-package plush
+package plush_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,7 +32,7 @@ func Test_Render_Int_Math(t *testing.T) {
 	}
 	for _, tt := range tests {
 		input := fmt.Sprintf("<%%= %d %s %d %%>", tt.a, tt.op, tt.b)
-		s, err := Render(input, NewContext())
+		s, err := plush.Render(input, plush.NewContext())
 		r.NoError(err)
 		r.Equal(tt.res, s)
 	}
@@ -61,7 +62,7 @@ func Test_Render_Float_Math(t *testing.T) {
 	}
 	for _, tt := range tests {
 		input := fmt.Sprintf("<%%= %f %s %f %%>", tt.a, tt.op, tt.b)
-		s, err := Render(input, NewContext())
+		s, err := plush.Render(input, plush.NewContext())
 		r.NoError(err)
 		r.Equal(tt.res, s)
 	}
@@ -87,7 +88,7 @@ func Test_Render_String_Math(t *testing.T) {
 
 	for _, tt := range tests {
 		input := fmt.Sprintf("<%%= %q %s %q %%>", tt.a, tt.op, tt.b)
-		s, err := Render(input, NewContext())
+		s, err := plush.Render(input, plush.NewContext())
 		r.NoError(err)
 		r.Equal(tt.res, s)
 	}
@@ -114,7 +115,7 @@ func Test_Render_Operator_UndefinedVar(t *testing.T) {
 		t.Run(tc.operator, func(t *testing.T) {
 			r := require.New(t)
 			input := fmt.Sprintf("<%%= undefined %s 3 %%>", tc.operator)
-			s, err := Render(input, NewContext())
+			s, err := plush.Render(input, plush.NewContext())
 			if tc.errorExpected {
 				r.Error(err, "undefined %s 3 --> '%v'", tc.operator, tc.result)
 			} else {
@@ -123,7 +124,7 @@ func Test_Render_Operator_UndefinedVar(t *testing.T) {
 			r.Equal(tc.result, s, "undefined %s 3", tc.operator)
 
 			input = fmt.Sprintf("<%%= 3 %s unknown %%>", tc.operator)
-			s, err = Render(input, NewContext())
+			s, err = plush.Render(input, plush.NewContext())
 			if tc.errorExpected {
 				r.Error(err, "3 %s undefined --> '%v'", tc.operator, tc.result)
 			} else {
@@ -138,7 +139,7 @@ func Test_Render_String_Concat_Multiple(t *testing.T) {
 	r := require.New(t)
 
 	input := `<%= "a" + "b" + "c" %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("abc", s)
 }
@@ -147,7 +148,7 @@ func Test_Render_String_Int_Concat(t *testing.T) {
 	r := require.New(t)
 
 	input := `<%= "a"  + 1 %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("a1", s)
 }
@@ -156,7 +157,7 @@ func Test_Render_Bool_Concat(t *testing.T) {
 	r := require.New(t)
 
 	input := `<%= true + 1 %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.Equal("true", s)
 	r.NoError(err)
 }

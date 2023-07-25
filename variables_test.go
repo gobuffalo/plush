@@ -1,10 +1,11 @@
-package plush
+package plush_test
 
 import (
 	"html/template"
 	"strings"
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/gobuffalo/tags/v3"
 	"github.com/stretchr/testify/require"
 )
@@ -20,10 +21,10 @@ func Test_Let_Reassignment(t *testing.T) {
   <% } %>
 <% } %>`
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("myArray", []string{"a", "b"})
 
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("bar\n    \n  \nbaz", strings.TrimSpace(s))
 }
@@ -32,9 +33,9 @@ func Test_Let_SyntaxError_NoEqualSign(t *testing.T) {
 	r := require.New(t)
 	input := `<% let foo %>`
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.ErrorContains(err, "expected next token to be =")
 }
 
@@ -42,9 +43,9 @@ func Test_Let_SyntaxError_NoIdentifier(t *testing.T) {
 	r := require.New(t)
 	input := `<% let = %>`
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.ErrorContains(err, "expected next token to be IDENT")
 }
 
@@ -52,17 +53,17 @@ func Test_Let_Reassignment_UnknownIdent(t *testing.T) {
 	r := require.New(t)
 	input := `<% foo = "baz" %>`
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("myArray", []string{"a", "b"})
 
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.ErrorContains(err, "\"foo\": unknown identifier")
 }
 
 func Test_Let_Inside_Helper(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContextWith(map[string]interface{}{
-		"divwrapper": func(opts map[string]interface{}, helper HelperContext) (template.HTML, error) {
+	ctx := plush.NewContextWith(map[string]interface{}{
+		"divwrapper": func(opts map[string]interface{}, helper plush.HelperContext) (template.HTML, error) {
 			body, err := helper.Block()
 			if err != nil {
 				return template.HTML(""), err
@@ -82,7 +83,7 @@ func Test_Let_Inside_Helper(t *testing.T) {
 </ul>
 <% } %>`
 
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Contains(s, "<li>0 - 1</li>")
 	r.Contains(s, "<li>1 - 2</li>")
@@ -106,7 +107,7 @@ func Test_Render_Let_Hash(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
-			s, err := Render(tc.input, NewContext())
+			s, err := plush.Render(tc.input, plush.NewContext())
 			if tc.success {
 				r.NoError(err)
 			} else {
@@ -133,7 +134,7 @@ func Test_Render_Let_Array(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
-			s, err := Render(tc.input, NewContext())
+			s, err := plush.Render(tc.input, plush.NewContext())
 			if tc.success {
 				r.NoError(err)
 			} else {
@@ -171,10 +172,10 @@ func Test_Render_Access_CalleeArray(t *testing.T) {
 			r := require.New(t)
 			input := `<% let a = product_listing.Products[0].Name[0] %><%= a  %>`
 
-			ctx := NewContext()
+			ctx := plush.NewContext()
 			ctx.Set("product_listing", tc.data)
 
-			s, err := Render(input, ctx)
+			s, err := plush.Render(input, ctx)
 			if tc.success {
 				r.NoError(err)
 			} else {

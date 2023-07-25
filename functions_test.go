@@ -1,4 +1,4 @@
-package plush
+package plush_test
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,7 @@ func Test_Render_Function_Call(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f() %></p>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"f": func() string {
 			return "hi!"
 		},
@@ -26,7 +27,7 @@ func Test_Render_Unknown_Function_Call(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f() %></p>`
-	_, err := Render(input, NewContext())
+	_, err := plush.Render(input, plush.NewContext())
 	r.Error(err)
 }
 
@@ -34,7 +35,7 @@ func Test_Render_Function_Call_With_Arg(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f("mark") %></p>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"f": func(s string) string {
 			return fmt.Sprintf("hi %s!", s)
 		},
@@ -47,7 +48,7 @@ func Test_Render_Function_Call_With_Variable_Arg(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f(name) %></p>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"f": func(s string) string {
 			return fmt.Sprintf("hi %s!", s)
 		},
@@ -61,7 +62,7 @@ func Test_Render_Function_Call_With_Hash(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f({name: name}) %></p>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"f": func(m map[string]interface{}) string {
 			return fmt.Sprintf("hi %s!", m["name"])
 		},
@@ -75,7 +76,7 @@ func Test_Render_Function_Call_With_Syntax_Error_Hash(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f({name: name) %></p>`
-	_, err := Render(input, NewContextWith(map[string]interface{}{
+	_, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"f": func(m map[string]interface{}) string {
 			return fmt.Sprintf("hi %s!", m["name"])
 		},
@@ -89,7 +90,7 @@ func Test_Render_Function_Call_With_Error(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f() %></p>`
-	_, err := Render(input, NewContextWith(map[string]interface{}{
+	_, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"f": func() (string, error) {
 			return "hi!", errors.New("oops")
 		},
@@ -101,8 +102,8 @@ func Test_Render_Function_Call_With_Block(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= f() { %>hello<% } %></p>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
-		"f": func(h HelperContext) string {
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"f": func(h plush.HelperContext) string {
 			s, _ := h.Block()
 			return s
 		},
@@ -121,7 +122,7 @@ func Test_Render_Function_Call_On_Callee(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= g.Greet("mark") %></p>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"g": greeter{},
 	}))
 	r.NoError(err)
@@ -131,8 +132,8 @@ func Test_Render_Function_Call_On_Callee(t *testing.T) {
 func Test_Render_Function_Optional_Map(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo() %>|<%= bar({a: "A"}) %>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
-		"foo": func(opts map[string]interface{}, help HelperContext) string {
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"foo": func(opts map[string]interface{}, help plush.HelperContext) string {
 			return "foo"
 		},
 		"bar": func(opts map[string]interface{}) string {
@@ -183,7 +184,7 @@ func Test_Render_Function_With_Backticks_And_Quotes(t *testing.T) {
 	  LEFT JOIN papers on a.id=papers.id
 	 WHERE (papers.doc_status = ANY (ARRAY[1, 3])) AND papers.status = 1
    WITH DATA`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"raw": func(arg string) template.HTML {
 			return template.HTML(arg)
 		},

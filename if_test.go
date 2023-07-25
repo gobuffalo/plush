@@ -1,8 +1,9 @@
-package plush
+package plush_test
 
 import (
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,7 +48,7 @@ func Test_If_Condition(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
-			s, err := Render(tc.input, NewContext())
+			s, err := plush.Render(tc.input, plush.NewContext())
 			if tc.success {
 				r.NoError(err)
 				r.Equal(tc.expected, s)
@@ -59,9 +60,9 @@ func Test_If_Condition(t *testing.T) {
 }
 
 func Test_Condition_Only(t *testing.T) {
-	ctx_empty := NewContext()
+	ctx_empty := plush.NewContext()
 
-	ctx_with_paths := NewContext()
+	ctx_with_paths := plush.NewContext()
 	ctx_with_paths.Set("paths", "cart")
 
 	tests := []struct {
@@ -69,7 +70,7 @@ func Test_Condition_Only(t *testing.T) {
 		expected string
 		name     string
 		success  bool
-		context  *Context
+		context  *plush.Context
 	}{
 		{`<%= paths == nil %>`, "true", "unknown_equal_to_nil", true, ctx_empty},
 		{`<%= nil == paths %>`, "true", "nil_equal_to_unknown", true, ctx_empty},
@@ -99,7 +100,7 @@ func Test_Condition_Only(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
-			s, err := Render(tc.input, tc.context)
+			s, err := plush.Render(tc.input, tc.context)
 			if tc.success {
 				r.NoError(err)
 				r.Equal(tc.expected, s)
@@ -112,26 +113,26 @@ func Test_Condition_Only(t *testing.T) {
 
 func Test_If_Else_If_Else_True(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	input := `<p><%= if (state == "foo") { %>hi foo<% } else if (state == "bar") { %>hi bar<% } else if (state == "fizz") { %>hi fizz<% } else { %>hi buzz<% } %></p>`
 
 	ctx.Set("state", "foo")
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("<p>hi foo</p>", s)
 
 	ctx.Set("state", "bar")
-	s, err = Render(input, ctx)
+	s, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("<p>hi bar</p>", s)
 
 	ctx.Set("state", "fizz")
-	s, err = Render(input, ctx)
+	s, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("<p>hi fizz</p>", s)
 
 	ctx.Set("state", "buzz")
-	s, err = Render(input, ctx)
+	s, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("<p>hi buzz</p>", s)
 }
@@ -139,48 +140,48 @@ func Test_If_Else_If_Else_True(t *testing.T) {
 func Test_If_String_Truthy(t *testing.T) {
 	r := require.New(t)
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("username", "")
 
 	input := `<p><%= if (username && username != "") { return "hi" } else { return "bye" } %></p>`
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("<p>bye</p>", s)
 
 	ctx.Set("username", "foo")
-	s, err = Render(input, ctx)
+	s, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("<p>hi</p>", s)
 }
 
 func Test_If_Variable_Not_Set_But_Or_Condition_Is_True_Complex(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("path", "cart")
 	ctx.Set("paths", "cart")
 	input := `<%= if ( paths == "cart" || (page && page.PageTitle != "cafe") || paths == "cart") { %>hi<%} %>`
 
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("hi", s)
 }
 
 func Test_If_Syntax_Error_On_Last_Node(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("paths", "cart")
 	input := `<%= if ( paths == "cart" ||  pages ^^^ ) { %>hi<%} %>`
 
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.Error(err)
 }
 
 func Test_If_Syntax_Error_On_First_Node(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("paths", "cart")
 	input := `<%= if ( paths @#@# "cart" ||  pages) { %>hi<%} %>`
 
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.Error(err)
 }

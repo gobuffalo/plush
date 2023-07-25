@@ -12,7 +12,7 @@ import (
 // PartialFeeder is callback function should implemented on application side.
 type PartialFeeder func(string) (string, error)
 
-func partialHelper(name string, data map[string]interface{}, help HelperContext) (template.HTML, error) {
+func PartialHelper(name string, data map[string]interface{}, help HelperContext) (template.HTML, error) {
 	if help.Context == nil {
 		return "", fmt.Errorf("invalid context. abort")
 	}
@@ -50,7 +50,7 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 	}
 
 	if layout, ok := data["layout"].(string); ok {
-		return partialHelper(
+		return PartialHelper(
 			layout,
 			map[string]interface{}{"yield": template.HTML(part)},
 			help)

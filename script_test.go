@@ -1,22 +1,23 @@
-package plush
+package plush_test
 
 import (
 	"bytes"
 	"fmt"
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_RunScript(t *testing.T) {
 	r := require.New(t)
 	bb := &bytes.Buffer{}
-	ctx := NewContextWith(map[string]interface{}{
+	ctx := plush.NewContextWith(map[string]interface{}{
 		"out": func(i interface{}) {
 			bb.WriteString(fmt.Sprint(i))
 		},
 	})
-	err := RunScript(script, ctx)
+	err := plush.RunScript(script, ctx)
 	r.NoError(err)
 	r.Equal("3hiasdfasdf", bb.String())
 }

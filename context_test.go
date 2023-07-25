@@ -1,4 +1,4 @@
-package plush
+package plush_test
 
 import (
 	"html/template"
@@ -6,12 +6,13 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_Context_Set(t *testing.T) {
 	r := require.New(t)
-	c := NewContext()
+	c := plush.NewContext()
 	r.Nil(c.Value("foo"))
 	c.Set("foo", "bar")
 	r.NotNil(c.Value("foo"))
@@ -19,7 +20,7 @@ func Test_Context_Set(t *testing.T) {
 
 func Test_Context_Set_Concurrency(t *testing.T) {
 	r := require.New(t)
-	c := NewContext()
+	c := plush.NewContext()
 
 	wg := errgroup.Group{}
 	f := func() error {
@@ -35,7 +36,7 @@ func Test_Context_Set_Concurrency(t *testing.T) {
 
 func Test_Context_Get(t *testing.T) {
 	r := require.New(t)
-	c := NewContext()
+	c := plush.NewContext()
 	r.Nil(c.Value("foo"))
 	c.Set("foo", "bar")
 	r.Equal("bar", c.Value("foo"))
@@ -44,7 +45,7 @@ func Test_Context_Get(t *testing.T) {
 func Test_NewSubContext_Set(t *testing.T) {
 	r := require.New(t)
 
-	c := NewContext()
+	c := plush.NewContext()
 	r.Nil(c.Value("foo"))
 
 	sc := c.New()
@@ -58,7 +59,7 @@ func Test_NewSubContext_Set(t *testing.T) {
 func Test_NewSubContext_Get(t *testing.T) {
 	r := require.New(t)
 
-	c := NewContext()
+	c := plush.NewContext()
 	c.Set("foo", "bar")
 
 	sc := c.New()
@@ -67,7 +68,7 @@ func Test_NewSubContext_Get(t *testing.T) {
 
 func Test_Context_Override_Helper(t *testing.T) {
 	r := require.New(t)
-	c := NewContext()
+	c := plush.NewContext()
 	c.Set("debug", func(i interface{}) template.HTML {
 		return template.HTML("DEBUG")
 	})

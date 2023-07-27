@@ -1,10 +1,11 @@
-package parser
+package parser_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/gobuffalo/plush/v4/ast"
+	"github.com/gobuffalo/plush/v4/parser"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +22,7 @@ func Test_LetStatements(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := Parse(tt.input)
+		program, err := parser.Parse(tt.input)
 		r.NoError(err)
 
 		r.Len(program.Statements, 1)
@@ -51,7 +52,7 @@ func Test_ReturnStatements(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := Parse("<%" + tt.input + "%>")
+		program, err := parser.Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
 		r.Len(program.Statements, 1)
@@ -67,7 +68,7 @@ func Test_IdentifierExpression(t *testing.T) {
 	r := require.New(t)
 	input := "<% foobar; %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -81,7 +82,7 @@ func Test_IntegerLiteralExpression(t *testing.T) {
 	r := require.New(t)
 	input := "<% 5; %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -95,7 +96,7 @@ func Test_FloatLiteralExpression(t *testing.T) {
 	r := require.New(t)
 	input := "<% 1.23 %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -122,7 +123,7 @@ func Test_PrefixExpressions(t *testing.T) {
 	}
 
 	for _, tt := range prefixTests {
-		program, err := Parse("<%" + tt.input + "%>")
+		program, err := parser.Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
 		r.Len(program.Statements, 1)
@@ -166,7 +167,7 @@ func Test_InfixExpressions(t *testing.T) {
 	}
 
 	for _, tt := range infixTests {
-		program, err := Parse("<%" + tt.input + "%>")
+		program, err := parser.Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
 		r.Len(program.Statements, 1)
@@ -304,7 +305,7 @@ func Test_OperatorPrecedence(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := Parse("<%" + tt.input + "%>")
+		program, err := parser.Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
 		r.Equal(tt.expected, program.InnerText())
@@ -322,7 +323,7 @@ func Test_BooleanExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := Parse("<%" + tt.input + "%>")
+		program, err := parser.Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
 		r.Len(program.Statements, 1)
@@ -338,7 +339,7 @@ func Test_IfExpression(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x < y) { x } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -361,7 +362,7 @@ func Test_IfExpression_ComapreWithFunction(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (f() != "yes") { x } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -393,7 +394,7 @@ func Test_IfExpression_PrefixExpressions_InvalidCompar(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (!(x = 1)) { x } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 
 	r.Error(err, "syntax error: invalid if condition, got x = 1")
 }
@@ -401,7 +402,7 @@ func Test_IfExpression_With_Map_Array_Index(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (flash["error"] ) { x } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 
 	r.NoError(err)
 }
@@ -410,7 +411,7 @@ func Test_IfExpression_InfixExpressions_InvalidCompare(t *testing.T) {
 	r := require.New(t)
 	input := `<% if ( y == 1 && x = 1) { x } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 
 	r.Error(err, "syntax error: invalid if condition, got x = 1")
 }
@@ -419,7 +420,7 @@ func Test_IfExpression_Boolean(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (true) { x } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 
 	r.NoError(err)
 
@@ -429,7 +430,7 @@ func Test_IfExpression_Condition_CompareToString(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x == "yes") { x } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 
 	r.NoError(err, "syntax error: invalid if condition, got x = y")
 
@@ -438,7 +439,7 @@ func Test_IfExpression_Condition_Assign(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x = y) { x } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 
 	r.Error(err, "syntax error: invalid if condition, got x = y")
 
@@ -448,7 +449,7 @@ func Test_IfExpression_Condition_EmptyHash(t *testing.T) {
 	r := require.New(t)
 	input := `<% if ({}}) { x } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 	r.Error(err, "syntax error: invalid if statment, got {}")
 }
 
@@ -456,7 +457,7 @@ func Test_IfExpression_HTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p><% if (x < y) { %><%= x %><% } %></p>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 3)
@@ -483,7 +484,7 @@ func Test_IfExpression_HTML_NoClosingTag(t *testing.T) {
 	r := require.New(t)
 	// the template should have a missing '%>' after the if condition
 	input := `<p><% if (x < y) { <title>Hello Buffalo</title> <% } %>`
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.Error(err, "Error parsing invalid if statement expected")
 
 	// but there should still be two parsed statements
@@ -506,7 +507,7 @@ func Test_IfExpression_Return_HTML_NoClosingTag(t *testing.T) {
 	r := require.New(t)
 	// the template should have a missing '%>' after the if condition
 	input := `<p><%= if (x < y) { <title>Hello Buffalo</title> <% } %>`
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.Error(err, "Error parsing invalid if statement expected")
 
 	// but there should still be two parsed statements
@@ -529,7 +530,7 @@ func Test_IfElseExpression(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x < y) { x } else { y } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -557,7 +558,7 @@ func Test_FunctionLiteralParsing(t *testing.T) {
 	r := require.New(t)
 	input := `<% fn(x, y) { x + y; } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -590,7 +591,7 @@ func Test_FunctionParameterParsing(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := Parse("<%" + tt.input + "%>")
+		program, err := parser.Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -607,7 +608,7 @@ func Test_CallExpression(t *testing.T) {
 	r := require.New(t)
 	input := "<% add(1, 2 * 3, 4 + 5); %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -650,7 +651,7 @@ func Test_CallExpressionParameter(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := Parse("<%" + tt.input + "%>")
+		program, err := parser.Parse("<%" + tt.input + "%>")
 		r.NoError(err)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -670,7 +671,7 @@ func Test_CallExpressionParsing_WithCallee(t *testing.T) {
 	r := require.New(t)
 	input := `<%= g.Greet("mark"); %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -691,7 +692,7 @@ func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
 	r := require.New(t)
 	input := `<%= g.Foo.Greet("mark"); %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -712,7 +713,7 @@ func Test_IndexExpression_Nested_Structs_Start_WithCallee(t *testing.T) {
 	r := require.New(t)
 	input := `<% myarray[0].Name.Final %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -734,7 +735,7 @@ func Test_IndexExpression_Nested_Structs_Start_WithNested_Array(t *testing.T) {
 	r := require.New(t)
 	input := `<% myarray[0].Name[1].Final %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -760,7 +761,7 @@ func Test_CallExpressionParsing_WithBlock(t *testing.T) {
 	r := require.New(t)
 	input := `<p><%= foo() { %>hi<% } %></p>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 3)
@@ -785,7 +786,7 @@ func Test_StringLiteralExpression(t *testing.T) {
 	r := require.New(t)
 	input := `<% "hello world"; %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -798,7 +799,7 @@ func Test_StringBlockExpression(t *testing.T) {
 	r := require.New(t)
 	input := "<% `hello world`; %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -811,7 +812,7 @@ func Test_EmptyArrayLiterals(t *testing.T) {
 	r := require.New(t)
 	input := "<% [] %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -824,7 +825,7 @@ func Test_ArrayLiterals(t *testing.T) {
 	r := require.New(t)
 	input := "<% [1, 2 * 2, 3 + 3] %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -841,7 +842,7 @@ func Test_IndexExpressionsAssign(t *testing.T) {
 	r := require.New(t)
 	input := "<% myArray[2] = 1 %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -857,7 +858,7 @@ func Test_IndexExpressions(t *testing.T) {
 	r := require.New(t)
 	input := "<% myArray[1 + 1] %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -872,7 +873,7 @@ func Test_EmptyHashLiteral(t *testing.T) {
 	r := require.New(t)
 	input := "<% {} %>"
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -885,7 +886,7 @@ func Test_HashLiteralsStringKeys(t *testing.T) {
 	r := require.New(t)
 	input := `<% {"one": 1, "two": 2, "three": 3} %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -911,7 +912,7 @@ func Test_HashLiteralsBooleanKeys(t *testing.T) {
 	r := require.New(t)
 	input := `<%{true: 1, false: 2}%>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -936,7 +937,7 @@ func Test_HashLiteralsIntegerKeys(t *testing.T) {
 	r := require.New(t)
 	input := `<% {1: 1, 2: 2, 3: 3} %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -963,7 +964,7 @@ func Test_HashLiteralsWithExpressions(t *testing.T) {
 	r := require.New(t)
 	input := `<% {"one": 0 + 1, "two": 10 - 8, "three": 15 / 5} %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -1052,7 +1053,7 @@ func Test_ForExpression_WithContinue(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in myArray {  continue } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -1077,7 +1078,7 @@ func Test_ForExpression_WithBreak(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in myArray {  break } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -1102,7 +1103,7 @@ func Test_Continue_IfCondtion(t *testing.T) {
 	r := require.New(t)
 	input := `<% if(x == 2) { continue } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 	r.Error(err)
 }
 
@@ -1110,7 +1111,7 @@ func Test_Break_IfCondtion(t *testing.T) {
 	r := require.New(t)
 	input := `<% if(x == 2) { break } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 	r.Error(err)
 }
 
@@ -1118,7 +1119,7 @@ func Test_Empty_IfCondtion(t *testing.T) {
 	r := require.New(t)
 	input := `<% if() { v } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 	r.Error(err)
 }
 
@@ -1126,7 +1127,7 @@ func Test_Continue_Function(t *testing.T) {
 	r := require.New(t)
 	input := `<% fn(x, y) { continue } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 	r.Error(err)
 }
 
@@ -1134,7 +1135,7 @@ func Test_Break_Function(t *testing.T) {
 	r := require.New(t)
 	input := `<% fn(x, y) { break } %>`
 
-	_, err := Parse(input)
+	_, err := parser.Parse(input)
 	r.Error(err)
 }
 
@@ -1142,7 +1143,7 @@ func Test_ForExpression(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in myArray { v } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -1168,7 +1169,7 @@ func Test_ForExpression_Split(t *testing.T) {
 	<p><%= v %></p>
 	<% } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -1189,7 +1190,7 @@ func Test_ForExpression_Func(t *testing.T) {
 	<p><%= v %></p>
 	<% } %>`
 
-	program, err := Parse(input)
+	program, err := parser.Parse(input)
 	r.NoError(err)
 
 	r.Len(program.Statements, 1)
@@ -1219,7 +1220,7 @@ func Test_AndOrInfixExpressions(t *testing.T) {
 	}
 
 	for _, tt := range infixTests {
-		program, err := Parse("<% " + tt.input + "%>")
+		program, err := parser.Parse("<% " + tt.input + "%>")
 		r.NoError(err)
 
 		r.Len(program.Statements, 1)
@@ -1253,7 +1254,7 @@ create_table("users_2", {"timestamps": false}) {
 }
 drop_column("table_name", "column1_name")
 drop_column("table_name", "column2_name")`
-	p, err := Parse("<%" + input + "%>")
+	p, err := parser.Parse("<%" + input + "%>")
 	r.NoError(err)
 	r.Equal(input, p.String())
 }

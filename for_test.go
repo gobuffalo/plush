@@ -1,16 +1,17 @@
-package plush
+package plush_test
 
 import (
 	"strings"
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_Render_For_Array(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (i,v) in ["a", "b", "c"] {return v} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("", s)
 }
@@ -18,7 +19,7 @@ func Test_Render_For_Array(t *testing.T) {
 func Test_Render_For_Hash(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (k,v) in myMap { %><%= k + ":" + v%><% } %>`
-	s, err := Render(input, NewContextWith(map[string]interface{}{
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
 		"myMap": map[string]string{
 			"a": "A",
 			"b": "B",
@@ -32,7 +33,7 @@ func Test_Render_For_Hash(t *testing.T) {
 func Test_Render_For_Array_Return(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in ["a", "b", "c"] {return v} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("abc", s)
 }
@@ -50,7 +51,7 @@ func Test_Render_For_Array_Continue(t *testing.T) {
 
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("StartOddStart2StartOddStart4StartOddStart6StartOddStart8StartOddStart10", s)
@@ -67,7 +68,7 @@ func Test_Render_For_Array_WithNoOutput(t *testing.T) {
 
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("", s)
@@ -80,7 +81,7 @@ func Test_Render_For_Array_WithoutContinue(t *testing.T) {
 		}
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("12345678910", s)
@@ -92,7 +93,7 @@ func Test_Render_For_Array_ContinueNoControl(t *testing.T) {
 		continue
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("", s)
@@ -111,7 +112,7 @@ func Test_Render_For_Array_Break_String(t *testing.T) {
 
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("Start1Start2Start3Start4StartOdd", s)
@@ -125,7 +126,7 @@ func Test_Render_For_Array_WithBreakFirstValue(t *testing.T) {
 		}
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("", s)
@@ -140,7 +141,7 @@ func Test_Render_For_Array_WithBreakFirstValueWithReturn(t *testing.T) {
 		}
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("1", s)
@@ -151,7 +152,7 @@ func Test_Render_For_Array_Break(t *testing.T) {
 		break
 		return v   
 		} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 
 	r.NoError(err)
 	r.Equal("", s)
@@ -160,7 +161,7 @@ func Test_Render_For_Array_Break(t *testing.T) {
 func Test_Render_For_Array_Key_Only(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (v) in ["a", "b", "c"] {%><%=v%><%} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("abc", s)
 }
@@ -168,7 +169,7 @@ func Test_Render_For_Array_Key_Only(t *testing.T) {
 func Test_Render_For_Func_Range(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (v) in range(3,5) { %><%=v%><% } %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("345", s)
 }
@@ -176,7 +177,7 @@ func Test_Render_For_Func_Range(t *testing.T) {
 func Test_Render_For_Func_Between(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (v) in between(3,6) { %><%=v%><% } %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("45", s)
 }
@@ -184,7 +185,7 @@ func Test_Render_For_Func_Between(t *testing.T) {
 func Test_Render_For_Func_Until(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (v) in until(3) { %><%=v%><% } %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("012", s)
 }
@@ -192,7 +193,7 @@ func Test_Render_For_Func_Until(t *testing.T) {
 func Test_Render_For_Array_Key_Value(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in ["a", "b", "c"] {%><%=i%><%=v%><%} %>`
-	s, err := Render(input, NewContext())
+	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("0a1b2c", s)
 }
@@ -200,9 +201,9 @@ func Test_Render_For_Array_Key_Value(t *testing.T) {
 func Test_Render_For_Nil(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (i,v) in nilValue {return v} %>`
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("nilValue", nil)
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.Error(err)
 	r.Equal("", s)
 }
@@ -215,9 +216,9 @@ func Test_Render_For_Map_Nil_Value(t *testing.T) {
 			<%= k %>:<%= v %>
 	<% } %>
 `
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("flash", map[string][]string{})
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("", strings.TrimSpace(s))
 }
@@ -231,12 +232,12 @@ type Product struct {
 
 func Test_Render_For_Array_OutofBoundIndex(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	product_listing := Category{}
 	ctx.Set("product_listing", product_listing)
 	input := `<%= for (i, names) in product_listing.Products[0].Name { %>
 				<%= splt %>
 			<% } %>`
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.Error(err)
 }

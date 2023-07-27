@@ -35,7 +35,7 @@ func untilHelper(a int) Iterator {
 	return &ranger{pos: -1, end: a - 1}
 }
 
-func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
+func GroupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	if size <= 0 {
 		return nil, fmt.Errorf("size must be greater than zero")
 	}

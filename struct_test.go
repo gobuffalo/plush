@@ -1,31 +1,32 @@
-package plush
+package plush_test
 
 import (
 	"strings"
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_Render_Struct_Attribute(t *testing.T) {
 	r := require.New(t)
 	input := `<%= f.Name %>`
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	f := struct {
 		Name string
 	}{"Mark"}
 	ctx.Set("f", f)
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("Mark", s)
 }
 
 func Test_Render_UnknownAttribute_on_Callee(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("m", struct{}{})
 	input := `<%= m.Foo %>`
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.Error(err)
 	r.Contains(err.Error(), "'m' does not have a field or method named 'Foo' (m.Foo)")
 }
@@ -47,33 +48,33 @@ func (r *Robot) Name() string {
 
 func Test_Render_Function_on_sub_Struct(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	bender := Robot{
 		Avatar: Avatar("bender.jpg"),
 	}
 	ctx.Set("robot", bender)
 	input := `<%= robot.Avatar.URL() %>`
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("BENDER.JPG", s)
 }
 
 func Test_Render_Struct_PointerMethod(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	robot := Robot{name: "robot"}
 
 	t.Run("ByValue", func(t *testing.T) {
 		ctx.Set("robot", robot)
 		input := `<%= robot.Name() %>`
-		s, err := Render(input, ctx)
+		s, err := plush.Render(input, ctx)
 		r.NoError(err)
 		r.Equal("robot", s)
 	})
 	t.Run("ByPointer", func(t *testing.T) {
 		ctx.Set("robot", &robot)
 		input := `<%= robot.Name() %>`
-		s, err := Render(input, ctx)
+		s, err := plush.Render(input, ctx)
 		r.NoError(err)
 		r.Equal("robot", s)
 	})
@@ -106,8 +107,8 @@ func Test_Render_Struct_PointerMethod_IsNil(t *testing.T) {
 	}
 
 	for p := first; p != nil; p = p.Next {
-		ctx := NewContextWith(map[string]interface{}{"p": p})
-		res, err := Render(input, ctx)
+		ctx := plush.NewContextWith(map[string]interface{}{"p": p})
+		res, err := plush.Render(input, ctx)
 		r.NoError(err)
 		r.Equal(resE[p.N], res)
 
@@ -126,11 +127,11 @@ func Test_Render_Struct_PointerValue_Nil(t *testing.T) {
 		Name:  "Garn Clapstick",
 		Image: nil,
 	}
-	ctx := NewContextWith(map[string]interface{}{
+	ctx := plush.NewContextWith(map[string]interface{}{
 		"user": u,
 	})
 	input := `<%= user.Name %>: <%= user.Image %>`
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 
 	r.NoError(err)
 	r.Equal(`Garn Clapstick: `, res)
@@ -149,11 +150,11 @@ func Test_Render_Struct_PointerValue_NonNil(t *testing.T) {
 		Name:  "Scrinch Archipeligo",
 		Image: &image,
 	}
-	ctx := NewContextWith(map[string]interface{}{
+	ctx := plush.NewContextWith(map[string]interface{}{
 		"user": u,
 	})
 	input := `<%= user.Name %>: <%= user.Image %>`
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 
 	r.NoError(err)
 	r.Equal(`Scrinch Archipeligo: bicep.png`, res)
@@ -171,9 +172,9 @@ func Test_Render_Struct_Multiple_Access(t *testing.T) {
 	gg := make([]mylist, 3)
 	gg[0].Name = "John"
 	gg[1].Name = "Doe"
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("myarray", gg)
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("John Doe", res)
 
@@ -193,9 +194,9 @@ func Test_Render_Nested_Structs_Start_With_Slice(t *testing.T) {
 
 	gg := make([]mylist, 3)
 	gg[0].Name.Final = "Hello World"
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("myarray", gg)
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("Hello World", res)
 
@@ -214,16 +215,16 @@ func Test_Render_Nested_Structs_Start_With_Slice_End_With_Slice(t *testing.T) {
 
 	gg := make([]mylist, 3)
 	gg[0].Name = b{[]string{"Hello World"}}
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("myarray", gg)
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("Hello World", res)
 
 }
 func Test_Render_Nested_Structs_Ends_With_Slice(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 
 	type c struct {
 		Final []string
@@ -245,14 +246,14 @@ func Test_Render_Nested_Structs_Ends_With_Slice(t *testing.T) {
 	}
 	ctx.Set("robot", bender)
 	input := `<%= robot.Name.B.Final[0] %>`
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("bendser.jpg", s)
 }
 
 func Test_Render_Nested_Structs(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 
 	type c struct {
 		Final string
@@ -274,13 +275,13 @@ func Test_Render_Nested_Structs(t *testing.T) {
 	}
 	ctx.Set("robot", bender)
 	input := `<%= robot.Name.B.Final %>`
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("bendser.jpg", s)
 }
 func Test_Render_Struct_Access_Slice_Field(t *testing.T) {
 	r := require.New(t)
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	type D struct {
 		Final string
 	}
@@ -306,7 +307,7 @@ func Test_Render_Struct_Access_Slice_Field(t *testing.T) {
 	}
 	ctx.Set("robot", bender)
 	input := `<%= robot.Name.B.Final[0].Final %>`
-	s, err := Render(input, ctx)
+	s, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("String", s)
 }
@@ -338,9 +339,9 @@ func Test_Render_Struct_Nested_Slice_Access(t *testing.T) {
 	bc.A[1] = ca
 	gg[0].Name = []b{bc}
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("myarray", gg)
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("Hello World", res)
 
@@ -373,9 +374,9 @@ func Test_Render_Struct_Nested_Map_Slice_Access(t *testing.T) {
 	bc.A[1] = ca
 	gg[0].Name = []b{bc}
 
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("myarray", gg)
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("Hello World", res)
 
@@ -406,9 +407,9 @@ func Test_Render_Struct_Nested_With_Unexported_Fields(t *testing.T) {
 	departments["HR"] = employees
 
 	input := `<%= departments["HR"].employee[0].FirstName %>`
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("departments", departments)
-	_, err := Render(input, ctx)
+	_, err := plush.Render(input, ctx)
 	r.Error(err)
 	//r.Equal("John", res)
 
@@ -439,24 +440,24 @@ func Test_Render_Struct_Nested_Map_Access(t *testing.T) {
 	departments["HR"] = employees
 
 	input := `<%= departments["HR"].Employee[0].FirstName %> <%= departments["HR"].Employee[0].LastName %>`
-	ctx := NewContext()
+	ctx := plush.NewContext()
 	ctx.Set("departments", departments)
-	res, err := Render(input, ctx)
+	res, err := plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("John Doe", res)
 
 	input = `<%= departments["HR"].Employee[1].FirstName %> <%= departments["HR"].Employee[1].LastName %>`
-	res, err = Render(input, ctx)
+	res, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("Jane Dolittle", res)
 
 	input = `<%= departments["HR"].Employee[1].FirstName %> <%= departments["HR"].Employee[0].LastName %>`
-	res, err = Render(input, ctx)
+	res, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("Jane Doe", res)
 
 	input = `<%= departments["HR"].Employee[0].FirstName %> <%= departments["HR"].Employee[1].LastName %>`
-	res, err = Render(input, ctx)
+	res, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("John Dolittle", res)
 }

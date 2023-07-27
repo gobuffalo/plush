@@ -1,8 +1,9 @@
-package plush
+package plush_test
 
 import (
 	"testing"
 
+	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,9 +20,9 @@ func Test_Quote_Missing(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
-			ctx := NewContext()
+			ctx := plush.NewContext()
 			ctx.Set("foo", func(string) {})
-			_, err := Render(tc.input, ctx)
+			_, err := plush.Render(tc.input, ctx)
 			r.Error(err)
 		})
 	}

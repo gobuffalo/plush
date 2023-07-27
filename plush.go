@@ -26,6 +26,13 @@ var CacheEnabled bool
 var cache = map[string]*Template{}
 var moot = &sync.Mutex{}
 
+func CacheSet(key string, t *Template) {
+	moot.Lock()
+	defer moot.Unlock()
+
+	cache[key] = t
+}
+
 // BuffaloRenderer implements the render.TemplateEngine interface allowing velvet to be used as a template engine
 // for Buffalo
 func BuffaloRenderer(input string, data map[string]interface{}, helpers map[string]interface{}) (string, error) {

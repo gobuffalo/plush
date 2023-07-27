@@ -20,7 +20,7 @@ var Helpers = HelperMap{
 }
 
 func init() {
-	Helpers.Add("partial", partialHelper)
+	Helpers.Add("partial", PartialHelper)
 	Helpers.AddMany(helpers.ALL())
 	Helpers.Add(forms.FormKey, bootstrap.Form)
 	Helpers.Add(forms.FormForKey, bootstrap.FormFor)

@@ -299,7 +299,7 @@ fmt.Print(s)
 To nest html files, use `partial` as follows:
 
 ```erb
-<% partial("partials/_nested.plush.html")
+<%= partial("partials/_nested.plush.html") %>
 ```
 
 Plush looks for file starting with an underscore, so it is necessary to add it to the start of the filename.

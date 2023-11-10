@@ -294,6 +294,18 @@ fmt.Print(s)
 // output: 45
 ```
 
+## Nesting
+
+To nest html files, use `partial` as follows:
+
+```erb
+<% partial("partials/_nested.plush.html")
+```
+
+Plush looks for file starting with an underscore, so it is necessary to add it to the start of the filename.
+
+No special care is necessary for the nested file.
+
 ## Helpers
 
 For a full list, and documentation of, all the Helpers included in Plush, see [`github.com/gobuffalo/helpers`](https://godoc.org/github.com/gobuffalo/helpers).

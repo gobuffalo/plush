@@ -3,7 +3,6 @@ package plush
 import (
 	"bytes"
 	"fmt"
-	"log"
 
 	"github.com/gobuffalo/plush/v4/token"
 
@@ -399,7 +398,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		if rv.Kind() == reflect.Ptr {
 			rv = rv.Elem()
 		}
-		log.Println("FUND ME NSNSNS")
+
 		if rv.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
 		}
@@ -606,11 +605,13 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
 	var rv reflect.Value
+
 	if node.Callee != nil {
 		c, err := c.evalExpression(node.Callee)
 		if err != nil {
 			return nil, err
 		}
+
 		rc := reflect.ValueOf(c)
 		mname := node.Function.String()
 		if i, ok := node.Function.(*ast.Identifier); ok {
@@ -637,7 +638,6 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 			return rc.Interface(), nil
 		}
-
 	} else {
 		f, err := c.evalExpression(node.Function)
 		if err != nil {
@@ -663,7 +663,6 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	if rt.Kind() != reflect.Func {
 		return nil, fmt.Errorf("%+v (%T) is an invalid function", node.String(), rt)
 	}
-	log.Println("NONANANA")
 	rtNumIn := rt.NumIn()
 	isVariadic := rt.IsVariadic()
 	args := []reflect.Value{}

@@ -3,6 +3,7 @@ package plush
 import (
 	"bytes"
 	"fmt"
+	"log"
 
 	"github.com/gobuffalo/plush/v4/token"
 
@@ -398,7 +399,7 @@ func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 		if rv.Kind() == reflect.Ptr {
 			rv = rv.Elem()
 		}
-
+		log.Println("FUND ME NSNSNS")
 		if rv.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("'%s' does not have a field or method named '%s' (%s)", node.Callee.String(), node.Value, node)
 		}
@@ -605,13 +606,11 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
 	var rv reflect.Value
-
 	if node.Callee != nil {
 		c, err := c.evalExpression(node.Callee)
 		if err != nil {
 			return nil, err
 		}
-
 		rc := reflect.ValueOf(c)
 		mname := node.Function.String()
 		if i, ok := node.Function.(*ast.Identifier); ok {
@@ -623,6 +622,9 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			ptr := reflect.New(reflect.TypeOf(c))
 			ptr.Elem().Set(rc)
 			rv = ptr.MethodByName(mname)
+			if !rv.IsValid() {
+				return nil, fmt.Errorf("'%s' does not have a method named '%s' (%s.%s)", node.Callee.String(), mname, node.Callee.String(), mname)
+			}
 		}
 
 		if !rv.IsValid() {
@@ -635,6 +637,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 
 			return rc.Interface(), nil
 		}
+
 	} else {
 		f, err := c.evalExpression(node.Function)
 		if err != nil {
@@ -660,7 +663,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	if rt.Kind() != reflect.Func {
 		return nil, fmt.Errorf("%+v (%T) is an invalid function", node.String(), rt)
 	}
-
+	log.Println("NONANANA")
 	rtNumIn := rt.NumIn()
 	isVariadic := rt.IsVariadic()
 	args := []reflect.Value{}
@@ -799,6 +802,23 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	if len(res) > 0 {
 		if e, ok := res[len(res)-1].Interface().(error); ok {
 			return nil, fmt.Errorf("could not call %s function: %w", node.Function, e)
+		}
+		if node.ChainCallee != nil {
+			octx := c.ctx.(*Context)
+			defer func() {
+				c.ctx = octx
+			}()
+
+			c.ctx = octx.New()
+			for k, v := range octx.data {
+				c.ctx.Set(k, v)
+			}
+			c.ctx.Set(node.Function.String(), res[0].Interface())
+			vvs, err := c.evalExpression(node.ChainCallee)
+			if err != nil {
+				return nil, err
+			}
+			return vvs, err
 		}
 		return res[0].Interface(), nil
 	}

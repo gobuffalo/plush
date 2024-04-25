@@ -3,6 +3,7 @@ package plush_test
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gobuffalo/plush/v4"
 	"github.com/stretchr/testify/require"
@@ -460,4 +461,86 @@ func Test_Render_Struct_Nested_Map_Access(t *testing.T) {
 	res, err = plush.Render(input, ctx)
 	r.NoError(err)
 	r.Equal("John Dolittle", res)
+}
+
+type person struct {
+	likes []string
+	hates []string
+	born  time.Time
+}
+
+func (a person) GetAge() time.Duration {
+	return time.Since(a.born)
+}
+
+func (a person) GetBorn() time.Time {
+	return a.born
+}
+
+func (a person) Hates() []string {
+	return a.hates
+}
+func (a person) Likes() []string {
+	return a.likes
+}
+
+func Test_Render_Struct_With_ChainingFunction_ArrayAccess(t *testing.T) {
+	r := require.New(t)
+
+	tt := person{likes: []string{"pringles", "galaxy", "carrot cake", "world pendant", "gold braclet"},
+		hates: []string{"boiled eggs", "coconut"}}
+	input := `<%= nour.Likes()[0] %>`
+	ctx := plush.NewContext()
+	ctx.Set("nour", tt)
+	res, err := plush.Render(input, ctx)
+	r.NoError(err)
+	r.Equal("pringles", res)
+}
+
+func Test_Render_Struct_With_ChainingFunction_ArrayAccess_Outofbound(t *testing.T) {
+	r := require.New(t)
+
+	tt := person{likes: []string{"pringles", "galaxy", "carrot cake", "world pendant", "gold bracelet"},
+		hates: []string{"boiled eggs", "coconut"}}
+	input := `<%= nour.Hates()[30] %>`
+	ctx := plush.NewContext()
+	ctx.Set("nour", tt)
+	_, err := plush.Render(input, ctx)
+	r.Error(err)
+}
+
+func Test_Render_Struct_With_ChainingFunction_FunctionCall(t *testing.T) {
+	r := require.New(t)
+
+	tt := person{born: time.Date(2024, time.January, 11, 0, 0, 0, 0, time.UTC).AddDate(-31, 0, 0)}
+	input := `<%= nour.GetBorn().Format("Jan 2, 2006") %>`
+	ctx := plush.NewContext()
+	ctx.Set("nour", tt)
+	res, err := plush.Render(input, ctx)
+	r.NoError(err)
+	r.Equal("Jan 11, 1993", res)
+}
+
+func Test_Render_Struct_With_ChainingFunction_UndefinedStructProperty(t *testing.T) {
+	r := require.New(t)
+
+	tt := person{born: time.Now()}
+	input := `<%= nour.GetBorn().TEST %>`
+	ctx := plush.NewContext()
+	ctx.Set("nour", tt)
+	_, err := plush.Render(input, ctx)
+	r.Error(err)
+
+}
+
+func Test_Render_Struct_With_ChainingFunction_InvalidFunctionCall(t *testing.T) {
+	r := require.New(t)
+
+	tt := person{born: time.Now()}
+	input := `<%= nour.GetBorn().TEST("Jan 2, 2006") %>`
+	ctx := plush.NewContext()
+	ctx.Set("nour", tt)
+	_, err := plush.Render(input, ctx)
+	r.Error(err)
+	r.Contains(err.Error(), "'nour.GetBorn' does not have a method named 'TEST' (nour.GetBorn.TEST)")
 }

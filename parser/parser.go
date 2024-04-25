@@ -670,6 +670,18 @@ func (p *parser) parseCallExpression(function ast.Expression) ast.Expression {
 		exp.Block = p.parseBlockStatement()
 	}
 
+	if p.peekTokenIs(token.DOT) {
+		calleeIdent := &ast.Identifier{Value: exp.Function.String()}
+		p.nextToken()
+		p.nextToken()
+		parseExp := p.parseExpression(LOWEST)
+
+		exp.ChainCallee = p.assignCallee(parseExp, calleeIdent)
+		if exp.ChainCallee == nil {
+			return nil
+		}
+	}
+
 	return exp
 }
 
@@ -749,6 +761,9 @@ func (p *parser) assignCallee(exp ast.Expression, calleeIdent *ast.Identifier) (
 			msg := fmt.Sprintf("line %d: syntax error: invalid nested index access, expected an identifier %v", p.curToken.LineNumber, ss)
 			p.errors = append(p.errors, msg)
 		}
+	case *ast.CallExpression:
+		ss.Callee = calleeIdent
+		assignedCallee = ss
 	case *ast.Identifier:
 		ss.OriginalCallee.Callee = calleeIdent
 		assignedCallee = ss

@@ -544,3 +544,15 @@ func Test_Render_Struct_With_ChainingFunction_InvalidFunctionCall(t *testing.T) 
 	r.Error(err)
 	r.Contains(err.Error(), "'nour.GetBorn' does not have a method named 'TEST' (nour.GetBorn.TEST)")
 }
+
+func Test_Render_Function_on_Invalid_Function_Struct(t *testing.T) {
+	r := require.New(t)
+	ctx := plush.NewContext()
+	bender := Robot{
+		Avatar: Avatar("bender.jpg"),
+	}
+	ctx.Set("robot", bender)
+	input := `<%= robot.Avatar.URL2() %>`
+	_, err := plush.Render(input, ctx)
+	r.Error(err)
+}

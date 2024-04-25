@@ -7,11 +7,12 @@ import (
 
 type CallExpression struct {
 	TokenAble
-	Callee    Expression
-	Function  Expression
-	Arguments []Expression
-	Block     *BlockStatement
-	ElseBlock *BlockStatement
+	Callee      Expression
+	ChainCallee Expression
+	Function    Expression
+	Arguments   []Expression
+	Block       *BlockStatement
+	ElseBlock   *BlockStatement
 }
 
 var _ Comparable = &CallExpression{}

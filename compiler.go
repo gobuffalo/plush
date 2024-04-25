@@ -623,6 +623,9 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			ptr := reflect.New(reflect.TypeOf(c))
 			ptr.Elem().Set(rc)
 			rv = ptr.MethodByName(mname)
+			if !rv.IsValid() {
+				return nil, fmt.Errorf("'%s' does not have a method named '%s' (%s.%s)", node.Callee.String(), mname, node.Callee.String(), mname)
+			}
 		}
 
 		if !rv.IsValid() {
@@ -660,7 +663,6 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	if rt.Kind() != reflect.Func {
 		return nil, fmt.Errorf("%+v (%T) is an invalid function", node.String(), rt)
 	}
-
 	rtNumIn := rt.NumIn()
 	isVariadic := rt.IsVariadic()
 	args := []reflect.Value{}
@@ -799,6 +801,23 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	if len(res) > 0 {
 		if e, ok := res[len(res)-1].Interface().(error); ok {
 			return nil, fmt.Errorf("could not call %s function: %w", node.Function, e)
+		}
+		if node.ChainCallee != nil {
+			octx := c.ctx.(*Context)
+			defer func() {
+				c.ctx = octx
+			}()
+
+			c.ctx = octx.New()
+			for k, v := range octx.data {
+				c.ctx.Set(k, v)
+			}
+			c.ctx.Set(node.Function.String(), res[0].Interface())
+			vvs, err := c.evalExpression(node.ChainCallee)
+			if err != nil {
+				return nil, err
+			}
+			return vvs, err
 		}
 		return res[0].Interface(), nil
 	}

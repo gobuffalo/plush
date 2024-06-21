@@ -8,6 +8,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_Render_Int_Math_Division_By_Zero(t *testing.T) {
+	r := require.New(t)
+	input := `<%= 10 / 0 %>`
+	s, err := plush.Render(input, plush.NewContext())
+	r.Error(err)
+	r.Empty(s)
+	r.Contains(err.Error(), "division by zero 10 / 0")
+}
+
+func Test_Render_Int_Float_Division_By_Zero(t *testing.T) {
+	r := require.New(t)
+	input := `<%= 10.5 / 0.0 %>`
+	s, err := plush.Render(input, plush.NewContext())
+	r.Error(err)
+	r.Empty(s)
+	r.Contains(err.Error(), "division by zero 10.5 / 0")
+}
+
 func Test_Render_Int_Math(t *testing.T) {
 	r := require.New(t)
 

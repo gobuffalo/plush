@@ -530,6 +530,9 @@ func (c *compiler) intsOperator(l int, r int, op string) (interface{}, error) {
 	case "-":
 		return l - r, nil
 	case "/":
+		if r == 0 {
+			return nil, fmt.Errorf("division by zero %v %s %v", l, op, r)
+		}
 		return l / r, nil
 	case "*":
 		return l * r, nil
@@ -556,6 +559,9 @@ func (c *compiler) floatsOperator(l float64, r float64, op string) (interface{},
 	case "-":
 		return l - r, nil
 	case "/":
+		if r == 0 {
+			return nil, fmt.Errorf("division by zero %v %s %v", l, op, r)
+		}
 		return l / r, nil
 	case "*":
 		return l * r, nil

@@ -1,7 +1,7 @@
 # Plush
 
 [![Standard Test](https://github.com/gobuffalo/plush/actions/workflows/standard-go-test.yml/badge.svg)](https://github.com/gobuffalo/plush/actions/workflows/standard-go-test.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/gobuffalo/plush/v4.svg)](https://pkg.go.dev/github.com/gobuffalo/plush/v4)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gobuffalo/plush/v5.svg)](https://pkg.go.dev/github.com/gobuffalo/plush/v5)
 
 Plush is the templating system that [Go](http://golang.org) both needs _and_ deserves. Powerful, flexible, and extendable, Plush is there to make writing your templates that much easier.
 
@@ -207,8 +207,8 @@ for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
   if (i > 0) {
     continue
   }
-  return v   
-} 
+  return v
+}
 ```
 
 You can terminate the for loop with `break`:
@@ -217,8 +217,8 @@ for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
   if (i > 5) {
     break
   }
-  return v   
-} 
+  return v
+}
 ```
 
 The values inside the `()` part of the statement are the names you wish to give to the key (or index) and the value of the expression. The `expression` can be an array, map, or iterator type.
@@ -294,9 +294,9 @@ fmt.Print(s)
 // output: 45
 ```
 
-## Helpers
+## Default helpers
 
-For a full list, and documentation of, all the Helpers included in Plush, see [`github.com/gobuffalo/helpers`](https://godoc.org/github.com/gobuffalo/helpers).
+Plush ships with a comprehensive list of helpers to make your life easier. For more info check the helpers package.
 
 ### Custom Helpers
 
@@ -350,4 +350,3 @@ This package absolutely 100% could not have been written without the help of Tho
 Not only did the book make understanding the process of writing lexers, parsers, and asts, but it also provided the basis for the syntax of Plush itself.
 
 If you have yet to read Thorsten's book, I can't recommend it enough. Please go and buy it!
-

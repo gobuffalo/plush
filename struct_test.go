@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gobuffalo/plush/v4"
+	"github.com/gobuffalo/plush/v5"
 	"github.com/stretchr/testify/require"
 )
 

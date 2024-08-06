@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gobuffalo/plush/v4/ast"
-	"github.com/gobuffalo/plush/v4/lexer"
-	"github.com/gobuffalo/plush/v4/token"
+	"github.com/gobuffalo/plush/v5/ast"
+	"github.com/gobuffalo/plush/v5/lexer"
+	"github.com/gobuffalo/plush/v5/token"
 )
 
 type (

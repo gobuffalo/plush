@@ -1,8 +1,6 @@
-package plush
+package helpers
 
-import (
-	"sync"
-)
+import "sync"
 
 // HelperMap holds onto helpers and validates they are properly formed.
 type HelperMap struct {
@@ -11,18 +9,13 @@ type HelperMap struct {
 }
 
 // NewHelperMap containing all of the "default" helpers from "plush.Helpers".
-func NewHelperMap() (HelperMap, error) {
+func NewMap(helpers map[string]interface{}) HelperMap {
 	hm := HelperMap{
-		helpers: map[string]interface{}{},
+		helpers: helpers,
 		moot:    &sync.Mutex{},
 	}
 
-	err := hm.AddMany(Helpers.Helpers())
-	if err != nil {
-		return hm, err
-	}
-
-	return hm, nil
+	return hm
 }
 
 // Add a new helper to the map. New Helpers will be validated to ensure they
@@ -54,5 +47,9 @@ func (h *HelperMap) AddMany(helpers map[string]interface{}) error {
 
 // Helpers returns the underlying list of helpers from the map
 func (h HelperMap) Helpers() map[string]interface{} {
+	return h.helpers
+}
+
+func (h HelperMap) All() map[string]interface{} {
 	return h.helpers
 }

@@ -3,8 +3,8 @@ package lexer_test
 import (
 	"testing"
 
-	"github.com/gobuffalo/plush/v4/lexer"
-	"github.com/gobuffalo/plush/v4/token"
+	"github.com/gobuffalo/plush/v5/lexer"
+	"github.com/gobuffalo/plush/v5/token"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,7 +30,7 @@ func Test_NextToken_Simple(t *testing.T) {
 
 func Test_NextToken_SkipLineComments(t *testing.T) {
 	r := require.New(t)
-	input := `<%= 
+	input := `<%=
 		# comment
 		1
 		# another line comment

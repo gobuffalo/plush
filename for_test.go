@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gobuffalo/plush/v4"
+	"github.com/gobuffalo/plush/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,13 +43,13 @@ func Test_Render_For_Array_Continue(t *testing.T) {
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		%>Start<%
 		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
-			
-			
+
+
 			%>Odd<%
 			continue
 		}
 
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 
@@ -60,13 +60,13 @@ func Test_Render_For_Array_Continue(t *testing.T) {
 func Test_Render_For_Array_WithNoOutput(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
-	
+
 		if (v == 1 || v == 2 || v ==3 || v == 4|| v == 5 || v == 6 || v == 7 || v == 8 || v == 9 || v == 10) {
 
 			continue
 		}
 
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 
@@ -79,7 +79,7 @@ func Test_Render_For_Array_WithoutContinue(t *testing.T) {
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
 		}
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 
@@ -91,7 +91,7 @@ func Test_Render_For_Array_ContinueNoControl(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		continue
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 
@@ -104,13 +104,13 @@ func Test_Render_For_Array_Break_String(t *testing.T) {
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		%>Start<%
 		if (v == 5) {
-			
-			
+
+
 			%>Odd<%
 			break
 		}
 
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 
@@ -124,7 +124,7 @@ func Test_Render_For_Array_WithBreakFirstValue(t *testing.T) {
 		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
 			break
 		}
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 
@@ -139,7 +139,7 @@ func Test_Render_For_Array_WithBreakFirstValueWithReturn(t *testing.T) {
 			%><%=v%><%
 			break
 		}
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 
@@ -150,7 +150,7 @@ func Test_Render_For_Array_Break(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		break
-		return v   
+		return v
 		} %>`
 	s, err := plush.Render(input, plush.NewContext())
 

@@ -5,8 +5,6 @@ import (
 	"html/template"
 	"path/filepath"
 	"strings"
-
-	"github.com/gobuffalo/github_flavored_markdown"
 )
 
 // PartialFeeder is callback function should implemented on application side.
@@ -35,11 +33,6 @@ func PartialHelper(name string, data map[string]interface{}, help HelperContext)
 
 	if part, err = Render(part, help.Context); err != nil {
 		return "", err
-	}
-
-	if strings.HasSuffix(name, ".md") {
-		part = string(github_flavored_markdown.Markdown([]byte(part)))
-		part = strings.TrimSuffix(part, "\n")
 	}
 
 	if ct, ok := help.Value("contentType").(string); ok {

@@ -3,7 +3,7 @@ package plush
 import (
 	"fmt"
 
-	"github.com/gobuffalo/plush/v4/token"
+	"github.com/gobuffalo/plush/v5/token"
 
 	"html/template"
 	"reflect"
@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gobuffalo/helpers/hctx"
-	"github.com/gobuffalo/plush/v4/ast"
+	"github.com/gobuffalo/plush/v5/ast"
+	"github.com/gobuffalo/plush/v5/helpers/hctx"
 )
 
 type ErrUnknownIdentifier struct {

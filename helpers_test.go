@@ -3,7 +3,7 @@ package plush_test
 import (
 	"testing"
 
-	"github.com/gobuffalo/plush/v4"
+	"github.com/gobuffalo/plush/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,5 +34,4 @@ func Test_Helpers_WithoutData(t *testing.T) {
 		r.NoError(err)
 		r.Equal(tt.E, s)
 	}
-
 }

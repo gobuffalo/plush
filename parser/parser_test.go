@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gobuffalo/plush/v4/ast"
-	"github.com/gobuffalo/plush/v4/parser"
+	"github.com/gobuffalo/plush/v5/ast"
+	"github.com/gobuffalo/plush/v5/parser"
 	"github.com/stretchr/testify/require"
 )
 

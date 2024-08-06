@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"sync"
 
-	"github.com/gobuffalo/helpers/hctx"
+	"github.com/gobuffalo/plush/v5/helpers/hctx"
 )
 
 // DefaultTimeFormat is the default way of formatting a time.Time type.

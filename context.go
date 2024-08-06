@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/gobuffalo/helpers/hctx"
+	"github.com/gobuffalo/plush/v5/helpers/hctx"
 )
 
 var _ context.Context = &Context{}
@@ -85,7 +85,7 @@ func NewContextWith(data map[string]interface{}) *Context {
 		moot:    &sync.Mutex{},
 	}
 
-	for k, v := range Helpers.helpers {
+	for k, v := range Helpers.All() {
 		if !c.Has(k) {
 			c.Set(k, v)
 		}
@@ -105,7 +105,7 @@ func NewContextWithOuter(data map[string]interface{}, out *Context) *Context {
 		moot:    &sync.Mutex{},
 	}
 
-	for k, v := range Helpers.helpers {
+	for k, v := range Helpers.All() {
 		if !c.Has(k) && !c.outer.Has(k) {
 			c.Set(k, v)
 		}

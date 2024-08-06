@@ -3,7 +3,7 @@ package plush_test
 import (
 	"testing"
 
-	"github.com/gobuffalo/plush/v4"
+	"github.com/gobuffalo/plush/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,12 +32,12 @@ func Test_BlockComment(t *testing.T) {
 	r := require.New(t)
 	input := map[string]string{
 		"test1": `
-		<%# this is 
+		<%# this is
 		a block comment %>
 		Hi
 		`,
 		"test2": `
-		<% <%# this is 
+		<% <%# this is
 		a block comment %> %>
 		Hi`,
 	}

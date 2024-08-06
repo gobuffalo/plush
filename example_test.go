@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"log"
 
-	"github.com/gobuffalo/plush/v4"
+	"github.com/gobuffalo/plush/v5"
 )
 
 // ExampleRender using `if`, `for`, `else`, functions, etc...

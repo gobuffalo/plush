@@ -2,11 +2,10 @@ package plush_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/gobuffalo/helpers/hctx"
-	"github.com/gobuffalo/plush/v4"
+	"github.com/gobuffalo/plush/v5"
+	"github.com/gobuffalo/plush/v5/helpers/hctx"
 	"github.com/stretchr/testify/require"
 )
 
@@ -275,126 +274,6 @@ func Test_PartialHelper_Javascript_With_HTML_Partial(t *testing.T) {
 	html, err = plush.PartialHelper("js_having_html_partial.js", data, help)
 	r.NoError(err)
 	r.Equal(`alert('\u003Cdiv\u003E\\u003Cspan\\u003EFORM\\u003C/span\\u003E\u003C/div\u003E');`, string(html))
-}
-
-func Test_PartialHelper_Markdown(t *testing.T) {
-	r := require.New(t)
-
-	name := "index.md"
-	data := map[string]interface{}{}
-	help := plush.HelperContext{Context: plush.NewContext()}
-	help.Set("contentType", "text/markdown")
-	help.Set("partialFeeder", func(string) (string, error) {
-		return "`test`", nil
-	})
-
-	md, err := plush.PartialHelper(name, data, help)
-	r.NoError(err)
-	r.Equal(`<p><code>test</code></p>`, strings.TrimSpace(string(md)))
-}
-
-func Test_PartialHelper_Markdown_With_Layout(t *testing.T) {
-	r := require.New(t)
-
-	name := "index.md"
-	data := map[string]interface{}{
-		"layout": "container.html",
-	}
-	help := plush.HelperContext{Context: plush.NewContext()}
-	help.Set("partialFeeder", func(name string) (string, error) {
-		if name == data["layout"] {
-			return `<html>This <em>is</em> a <%= yield %></html>`, nil
-		}
-		return `**test**`, nil
-	})
-
-	html, err := plush.PartialHelper(name, data, help)
-	r.NoError(err)
-	r.Equal("<html>This <em>is</em> a <p><strong>test</strong></p></html>", string(html))
-}
-
-func Test_PartialHelper_Markdown_With_Layout_Reversed(t *testing.T) {
-	r := require.New(t)
-
-	name := "index.html"
-	data := map[string]interface{}{
-		"layout": "container.md",
-	}
-	help := plush.HelperContext{Context: plush.NewContext()}
-	help.Set("partialFeeder", func(name string) (string, error) {
-		if name == data["layout"] {
-			return `This *is* a <%= yield %>`, nil
-		}
-		return `<strong>test</strong>`, nil
-	})
-
-	html, err := plush.PartialHelper(name, data, help)
-	r.NoError(err)
-	r.Equal(`<p>This <em>is</em> a <strong>test</strong></p>`, strings.TrimSpace(string(html)))
-}
-
-func Test_PartialHelpers_Markdown_With_Nested_CodeBlock(t *testing.T) {
-	// for https://github.com/gobuffalo/plush/issues/82
-	r := require.New(t)
-
-	main := `<%= partial("outer.md") %>`
-	outer := `<span>Some text</span>
-
-<%= partial("inner.md") %>
-`
-	inner := "```go\n" + `if true {
-    fmt.Println()
-}` + "\n```"
-
-	help := plush.HelperContext{Context: plush.NewContext()}
-	help.Set("contentType", "text/markdown")
-	help.Set("partialFeeder", func(name string) (string, error) {
-		if name == "outer.md" {
-			return outer, nil
-		}
-		return inner, nil
-	})
-
-	html, err := plush.Render(main, help)
-	r.NoError(err)
-	r.Equal(`<p><span>Some text</span></p>
-
-<div class="highlight highlight-go"><pre>if true {
-    fmt.Println()
-}
-</pre></div>`, string(html))
-}
-
-func Test_PartialHelpers_With_Indentation(t *testing.T) {
-	r := require.New(t)
-
-	main := `<div>
-    <div>
-        <%= partial("dummy.md") %>
-    </div>
-</div>`
-	partial := "```go\n" +
-		"if true {\n" +
-		"    fmt.Println()\n" +
-		"}\n" +
-		"```"
-
-	ctx := plush.NewContext()
-	ctx.Set("partialFeeder", func(string) (string, error) {
-		return partial, nil
-	})
-
-	html, err := plush.Render(main, ctx)
-	r.NoError(err)
-	r.Equal(`<div>
-    <div>
-        <div class="highlight highlight-go"><pre>if true {
-    fmt.Println()
-}
-</pre></div>
-    </div>
-</div>`,
-		string(html))
 }
 
 func Test_PartialHelper_NoDefaultHelperOverride(t *testing.T) {

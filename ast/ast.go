@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/gobuffalo/plush/v4/token"
+import "github.com/gobuffalo/plush/v5/token"
 
 type TokenAble struct {
 	token.Token

@@ -1,7 +1,6 @@
 package plush
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/gobuffalo/plush/v4/token"
@@ -36,7 +35,7 @@ type compiler struct {
 }
 
 func (c *compiler) compile() (string, error) {
-	bb := &bytes.Buffer{}
+	bb := &strings.Builder{}
 
 	for _, stmt := range c.program.Statements {
 		var res interface{}
@@ -70,7 +69,7 @@ func (c *compiler) compile() (string, error) {
 	return bb.String(), nil
 }
 
-func (c *compiler) write(bb *bytes.Buffer, i interface{}) {
+func (c *compiler) write(bb *strings.Builder, i interface{}) {
 	switch t := i.(type) {
 	case time.Time:
 		if dtf, ok := c.ctx.Value("TIME_FORMAT").(string); ok {

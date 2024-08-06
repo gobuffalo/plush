@@ -340,9 +340,10 @@ func (c *compiler) evalAccessIndex(left, index interface{}, node *ast.IndexExpre
 		}
 	case reflect.Array, reflect.Slice:
 		if i, ok := index.(int); ok {
-			if i < 0 || i >= rv.Len() {
+			if rv.Len()-1 < i {
 				err = fmt.Errorf("array index out of bounds, got index %d, while array size is %d", index, rv.Len())
 			} else {
+
 				if node.Callee != nil {
 					returnValue, err = c.evalIndexCallee(rv.Index(i), node)
 				} else {

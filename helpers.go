@@ -1,8 +1,8 @@
 package plush
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/gobuffalo/helpers"
@@ -80,7 +80,7 @@ func (h HelperContext) BlockWith(hc hctx.Context) (string, error) {
 		return "", err
 	}
 
-	bb := &bytes.Buffer{}
+	bb := &strings.Builder{}
 	h.compiler.write(bb, i)
 
 	return bb.String(), nil

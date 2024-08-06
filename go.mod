@@ -1,6 +1,6 @@
 module github.com/gobuffalo/plush/v5
 
-go 1.22
+go 1.21
 
 require (
 	github.com/gobuffalo/flect v1.0.2

@@ -556,3 +556,34 @@ func Test_Render_Function_on_Invalid_Function_Struct(t *testing.T) {
 	_, err := plush.Render(input, ctx)
 	r.Error(err)
 }
+
+func Test_Render_Struct_Nested_Slice_Access_Out_Of_Range(t *testing.T) {
+	r := require.New(t)
+	type d struct {
+		Final string
+	}
+	type c struct {
+		He []d
+	}
+	type b struct {
+		A []c
+	}
+	type mylist struct {
+		Name []b
+	}
+
+	input := `<%= myarray[0].Name[0].A[1].He[2].Final %>`
+
+	gg := make([]mylist, 3)
+
+	var bc b
+
+	gg[0].Name = []b{bc}
+
+	ctx := plush.NewContext()
+	ctx.Set("myarray", gg)
+	res, err := plush.Render(input, ctx)
+	r.Error(err)
+	r.Empty(res)
+	r.Error(err, "line 1: array index out of bounds, got index 1, while array size is 0")
+}

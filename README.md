@@ -191,7 +191,7 @@ Arrays in Plush will get translated to the Go type `[]interface{}` when used.
 []interface{}{ 1, 2, "three", "four", h }
 ```
 
-Arrays in plush can be appended using the followg format:
+Arrays in plush can be appended using the following format:
 
 ```erb
 <% let a = [1, 2, "three", "four", h] %> <% a = a + "hello world"%>

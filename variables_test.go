@@ -2,6 +2,7 @@ package plush_test
 
 import (
 	"html/template"
+	"log"
 	"strings"
 	"testing"
 
@@ -172,6 +173,37 @@ func Test_Render_Let_ArrayAsssign_AssignableToArrayInterface(t *testing.T) {
 	input := `<p><% let a = myArray %></p><% a[0] = "HELLO WORLD" %>`
 	_, err := plush.Render(input, ctx)
 	r.NoError(err)
+}
+
+func Test_Render_AppendArray_WithTypeIntArrayTypeString(t *testing.T) {
+	r := require.New(t)
+	ctx := plush.NewContext()
+
+	ctx.Set("myArray", []string{"a", "b"})
+	input := `<% let a = myArray %><% a = a + 1 %><%= a %>`
+	_, err := plush.Render(input, ctx)
+	r.Error(err)
+	r.Contains(err.Error(), "cannot append '1' (untyped int constant) as string value in assignment")
+}
+
+func Test_Render_AppendArray_CreatedInPlush(t *testing.T) {
+	r := require.New(t)
+
+	input := `<% let a = [1,2,"HelloWorld"] %><% a = a + 2.2 %><%= a %>`
+	s, err := plush.Render(input, plush.NewContext())
+	r.NoError(err)
+	r.Equal(s, "12HelloWorld2.2")
+}
+func Test_Render_AppendArray_WithTypeInterface(t *testing.T) {
+	r := require.New(t)
+	ctx := plush.NewContext()
+
+	ctx.Set("myArray", []interface{}{"a", "b"})
+	input := `<% let a = myArray %><% a = a + 1 %><%= a %>`
+	s, err := plush.Render(input, ctx)
+	log.Println(s)
+	r.NoError(err)
+	r.Equal("ab1", s)
 }
 
 type Category1 struct {

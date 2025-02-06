@@ -499,9 +499,34 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 		}
 	case bool:
 		return c.boolsOperator(lres, rres, node.Operator)
+	default:
+		if reflect.TypeOf(t).Kind() == reflect.Slice || reflect.TypeOf(t).Kind() == reflect.Array {
+			return c.arrayOperator(lres, rres, node.Operator)
+		}
 	}
 
 	return nil, fmt.Errorf("unable to operate (%s) on %T and %T ", node.Operator, lres, rres)
+}
+
+func (c *compiler) arrayOperator(l interface{}, r interface{}, op string) (interface{}, error) {
+	var err error
+	switch op {
+	case "+":
+		elemType := reflect.TypeOf(l).Elem()
+		if elemType.Kind() != reflect.Interface {
+			t := reflect.ValueOf(r).Type()
+			if elemType != t {
+				err = fmt.Errorf("cannot append '%v' (untyped %s constant) as %s value in assignment", r, t, elemType)
+			}
+		}
+		if err == nil {
+			return reflect.Append(reflect.ValueOf(l), reflect.ValueOf(r)), nil
+		}
+	default:
+		err = fmt.Errorf("unkown operator (%s) on %T and %T ", op, l, r)
+	}
+
+	return nil, err
 }
 
 func (c *compiler) nilsOperator(l interface{}, r interface{}, op string) (interface{}, error) {

@@ -145,6 +145,35 @@ func Test_Render_Let_Array(t *testing.T) {
 	}
 }
 
+func Test_Render_Let_ArrayAsssign_Unassignable(t *testing.T) {
+	r := require.New(t)
+	ctx := plush.NewContext()
+
+	type tt struct {
+		P string
+	}
+
+	ctx.Set("myArray", []tt{tt{P: "t"}})
+	input := `<p><% let a = myArray %></p><% a[0] = "HELLO WORLD" %>`
+	_, err := plush.Render(input, ctx)
+	r.Error(err)
+	r.Contains(err.Error(), "cannot use 'HELLO WORLD' (untyped string constant) as plush_test.tt value in assignment")
+}
+
+func Test_Render_Let_ArrayAsssign_AssignableToArrayInterface(t *testing.T) {
+	r := require.New(t)
+	ctx := plush.NewContext()
+
+	type tt struct {
+		P string
+	}
+
+	ctx.Set("myArray", []interface{}{tt{P: "t"}, tt{P: "g"}})
+	input := `<p><% let a = myArray %></p><% a[0] = "HELLO WORLD" %>`
+	_, err := plush.Render(input, ctx)
+	r.NoError(err)
+}
+
 type Category1 struct {
 	Products []Product1
 }

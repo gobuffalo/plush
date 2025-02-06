@@ -302,7 +302,16 @@ func (c *compiler) evalUpdateIndex(left, index, value interface{}) error {
 			if rv.Len()-1 < i {
 				err = fmt.Errorf("array index out of bounds, got index %d, while array size is %v", i, rv.Len())
 			} else {
-				rv.Index(i).Set(reflect.ValueOf(value))
+				elemType := reflect.TypeOf(left).Elem()
+				if elemType.Kind() != reflect.Interface {
+					t := reflect.ValueOf(value).Type()
+					if elemType != t {
+						err = fmt.Errorf("cannot use '%v' (untyped %s constant) as %s value in assignment", value, t, elemType)
+					}
+				}
+				if err == nil {
+					rv.Index(i).Set(reflect.ValueOf(value))
+				}
 			}
 		} else {
 			err = fmt.Errorf("can't access Slice/Array with a non int Index (%v)", index)

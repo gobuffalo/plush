@@ -191,6 +191,14 @@ Arrays in Plush will get translated to the Go type `[]interface{}` when used.
 []interface{}{ 1, 2, "three", "four", h }
 ```
 
+Arrays in plush can be appended using the followg format:
+
+```erb
+<% let a = [1, 2, "three", "four", h] %> <% a = a + "hello world"%>
+```
+
+If the array passed to plush is not of type `[]interface{}` and an attempt is made to append a value with a data type that does not match the underlying array type, an error will be returned. 
+
 ## For Loops
 
 There are three different types that can be looped over: maps, arrays/slices, and iterators. The format for them all looks the same:

@@ -2,6 +2,7 @@ package plush
 
 import (
 	"fmt"
+	"sync"
 	"unsafe"
 
 	"github.com/gobuffalo/plush/v5/token"
@@ -28,6 +29,12 @@ func (e *ErrUnknownIdentifier) Error() string {
 	return fmt.Sprintf("%q: %s", e.ID, e.Err)
 }
 
+var builderPool = sync.Pool{
+	New: func() interface{} {
+		return new(strings.Builder)
+	},
+}
+
 type compiler struct {
 	ctx     hctx.Context
 	program *ast.Program
@@ -36,7 +43,9 @@ type compiler struct {
 }
 
 func (c *compiler) compile() (string, error) {
-	bb := &strings.Builder{}
+	bb := builderPool.Get().(*strings.Builder)
+	bb.Reset()
+	defer builderPool.Put(bb)
 
 	for _, stmt := range c.program.Statements {
 		var res interface{}

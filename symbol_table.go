@@ -42,41 +42,44 @@ func (s *SymbolTable) Declare(name string, value interface{}) {
 
 // Assign searches outer scopes and updates an existing variable
 func (s *SymbolTable) Assign(name string, value interface{}) bool {
-	if id, ok := s.localInterner.Lookup(name); ok {
-		for curr := s; curr != nil; curr = curr.parent {
-			if _, exists := curr.vars[id]; exists {
-				curr.vars[id] = value
-				return true
-			}
+	var id int
+	var ok bool
+
+	// Try local interner first
+	if id, ok = s.localInterner.Lookup(name); !ok {
+		// Then try global interner
+		if id, ok = s.globalInterner.Lookup(name); !ok {
+			return false
 		}
 	}
-	if id, ok := s.globalInterner.Lookup(name); ok {
-		for curr := s; curr != nil; curr = curr.parent {
-			if _, exists := curr.vars[id]; exists {
-				curr.vars[id] = value
-				return true
-			}
+
+	for curr := s; curr != nil; curr = curr.parent {
+		if _, exists := curr.vars[id]; exists {
+			curr.vars[id] = value
+			return true
 		}
 	}
+
 	return false
 }
 
 // Resolve finds the value of a variable
 func (s *SymbolTable) Resolve(name string) (interface{}, bool) {
-	if id, ok := s.localInterner.Lookup(name); ok {
-		for curr := s; curr != nil; curr = curr.parent {
-			if val, exists := curr.vars[id]; exists {
+	var id int
+	var ok bool
 
-				return val, true
-			}
+	// Try local first
+	if id, ok = s.localInterner.Lookup(name); !ok {
+		// Try global if not found locally
+		if id, ok = s.globalInterner.Lookup(name); !ok {
+			return nil, false
 		}
 	}
 
-	if id, ok := s.globalInterner.Lookup(name); ok {
-		for curr := s; curr != nil; curr = curr.parent {
-			if val, exists := curr.vars[id]; exists {
-				return val, true
-			}
+	// Only one walk through the scope chain, using the ID we found
+	for curr := s; curr != nil; curr = curr.parent {
+		if val, exists := curr.vars[id]; exists {
+			return val, true
 		}
 	}
 

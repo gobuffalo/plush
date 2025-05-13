@@ -200,6 +200,45 @@ func Test_If_BlockScope_Declare(t *testing.T) {
 	r.Equal("<p>Hello World</p>", s)
 }
 
+func Test_If_BlockScope_Nested_Declare(t *testing.T) {
+	r := require.New(t)
+
+	ctx := plush.NewContext()
+
+	input := `<p><% let username = "Hello World" %><%= if (username && username != "") { 
+		let username = "hi" 
+		username = "hi" 
+		if (username == "hi"){
+			username = "hi2"
+		}
+	} else { 
+		let username = "bye"
+		username = "1"
+	 }%><%= username %></p>`
+	s, err := plush.Render(input, ctx)
+	r.NoError(err)
+	r.Equal("<p>Hello World</p>", s)
+}
+
+func Test_If_BlockScope_Nested_Overwrite(t *testing.T) {
+	r := require.New(t)
+
+	ctx := plush.NewContext()
+
+	input := `<p><% let username = "Hello World" %><%= if (username && username != "") { 
+		username = "hi" 
+		if (username == "hi"){
+			username = "hi2"
+		}
+	} else { 
+		let username = "bye"
+		username = "1"
+	 }%><%= username %></p>`
+	s, err := plush.Render(input, ctx)
+	r.NoError(err)
+	r.Equal("<p>hi2</p>", s)
+}
+
 func Test_If_Variable_Not_Set_But_Or_Condition_Is_True_Complex(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()

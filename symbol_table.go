@@ -45,15 +45,25 @@ func (s *SymbolTable) Assign(name string, value interface{}) bool {
 	var id int
 	var ok bool
 
+	isLocal := false
+
 	// Try local interner first
 	if id, ok = s.localInterner.Lookup(name); !ok {
 		// Then try global interner
 		if id, ok = s.globalInterner.Lookup(name); !ok {
 			return false
 		}
+	} else {
+		isLocal = true
 	}
 
+	firstK := 0
 	for curr := s; curr != nil; curr = curr.parent {
+		//Skip if we know it's not in the first local scope
+		if !isLocal && firstK == 0 {
+			firstK += 1
+			continue
+		}
 		if _, exists := curr.vars[id]; exists {
 			curr.vars[id] = value
 			return true
@@ -68,16 +78,25 @@ func (s *SymbolTable) Resolve(name string) (interface{}, bool) {
 	var id int
 	var ok bool
 
+	isLocal := false
 	// Try local first
 	if id, ok = s.localInterner.Lookup(name); !ok {
 		// Try global if not found locally
 		if id, ok = s.globalInterner.Lookup(name); !ok {
 			return nil, false
 		}
+	} else {
+		isLocal = true
 	}
 
+	firstK := 0
 	// Only one walk through the scope chain, using the ID we found
 	for curr := s; curr != nil; curr = curr.parent {
+		//Skip if we know it's not in the first local scope
+		if !isLocal && firstK == 0 {
+			firstK += 1
+			continue
+		}
 		if val, exists := curr.vars[id]; exists {
 			return val, true
 		}

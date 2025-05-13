@@ -8,6 +8,7 @@ type Context interface {
 	context.Context
 	New() Context
 	Has(key string) bool
+	Update(key string, value interface{}) bool
 	Set(key string, value interface{})
 }
 

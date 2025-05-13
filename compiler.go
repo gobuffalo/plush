@@ -167,13 +167,13 @@ func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}
 	}
 
 	n := node.Name.Value
-	if !c.ctx.Has(n) {
+	if !c.ctx.Update(n, v) {
 		return nil, &ErrUnknownIdentifier{
 			ID: n,
 		}
 	}
 
-	c.ctx.Set(n, v)
+	//c.ctx.Update(n, v)
 	return nil, nil
 }
 
@@ -218,6 +218,12 @@ func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}
 }
 
 func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
+	octx := c.ctx.(*Context)
+	defer func() {
+		c.ctx = octx
+	}()
+
+	c.ctx = octx.New()
 	con, err := c.evalExpression(node.Condition)
 	if err != nil {
 		if _, ok := err.(*ErrUnknownIdentifier); !ok {
@@ -859,9 +865,6 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			}()
 
 			c.ctx = octx.New()
-			for k, v := range octx.data {
-				c.ctx.Set(k, v)
-			}
 			c.ctx.Set(node.Function.String(), res[0].Interface())
 			vvs, err := c.evalExpression(node.ChainCallee)
 			if err != nil {
@@ -882,11 +885,6 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 	}()
 
 	c.ctx = octx.New()
-	// must copy all data from original (it includes application defined helpers)
-	for k, v := range octx.data {
-		c.ctx.Set(k, v)
-	}
-
 	iter, err := c.evalExpression(node.Iterable)
 	if err != nil {
 		return nil, err
@@ -1093,11 +1091,6 @@ func (c *compiler) evalIndexCallee(rv reflect.Value, node *ast.IndexExpression) 
 	}()
 
 	c.ctx = octx.New()
-	// must copy all data from original (it includes application defined helpers)
-	for k, v := range octx.data {
-		c.ctx.Set(k, v)
-	}
-
 	//The key here is needed to set the object in ctx for later evaluation
 	//For example, if this is a nested object person.Name[0]
 	//then we can set the value of Name[0] to person.Name

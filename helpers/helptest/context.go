@@ -54,7 +54,9 @@ func (f HelperContext) Value(key interface{}) interface{} {
 	}
 	return f.Context.Value(key)
 }
-
+func (f *HelperContext) Update(key string, value interface{}) (returnData bool) {
+	return
+}
 func (f *HelperContext) Set(key string, value interface{}) {
 	f.data.Store(key, value)
 }

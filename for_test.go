@@ -16,6 +16,14 @@ func Test_Render_For_Array(t *testing.T) {
 	r.Equal("", s)
 }
 
+func Test_Render_For_Update_Global_Scope(t *testing.T) {
+	r := require.New(t)
+	input := `<% let varTest = "" %><% for (i,v) in ["a", "b", "c"] {varTest =  v} %><%= varTest %>`
+	s, err := plush.Render(input, plush.NewContext())
+	r.NoError(err)
+	r.Equal("c", s)
+}
+
 func Test_Render_For_Hash(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (k,v) in myMap { %><%= k + ":" + v%><% } %>`

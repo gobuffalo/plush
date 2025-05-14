@@ -172,8 +172,6 @@ func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}
 			ID: n,
 		}
 	}
-
-	//c.ctx.Update(n, v)
 	return nil, nil
 }
 

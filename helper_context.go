@@ -50,7 +50,8 @@ func (h HelperContext) BlockWith(hc hctx.Context) (string, error) {
 
 	octx := h.compiler.ctx
 	defer func() { h.compiler.ctx = octx }()
-	h.compiler.ctx = ctx
+
+	h.compiler.ctx = ctx.New()
 
 	if h.block == nil {
 		return "", fmt.Errorf("no block defined")

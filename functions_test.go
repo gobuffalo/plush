@@ -112,6 +112,35 @@ func Test_Render_Function_Call_With_Block(t *testing.T) {
 	r.Equal("<p>hello</p>", s)
 }
 
+func Test_Render_Function_Call_With_Block_Update_Global_Scope(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><% let i = "hello-world" <%= f() { i = "bye" } %><%= i %></p>`
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"f": func(h plush.HelperContext) string {
+			s, _ := h.Block()
+			return s
+		},
+	}))
+	r.NoError(err)
+	r.Equal("<p>bye</p>", s)
+}
+
+func Test_Render_Function_Call_With_Block_Update_Local_Scope(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><%= f() { let i = "hello-world" } %><%= i %></p>`
+	_, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"f": func(h plush.HelperContext) string {
+			s, _ := h.Block()
+			return s
+		},
+	}))
+
+	r.Error(err)
+	r.Errorf(err, `line 1: "i": unknown identifier`)
+}
+
 type greeter struct{}
 
 func (g greeter) Greet(s string) string {

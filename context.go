@@ -12,9 +12,9 @@ var _ context.Context = &Context{}
 // Context holds all of the data for the template that is being rendered.
 type Context struct {
 	context.Context
-	data  map[string]interface{}
+	data  *SymbolTable
 	outer *Context
-	moot  *sync.Mutex
+	moot  *sync.RWMutex
 }
 
 // New context containing the current context. Values set on the new context
@@ -30,18 +30,25 @@ func (c *Context) New() hctx.Context {
 func (c *Context) Set(key string, value interface{}) {
 	c.moot.Lock()
 	defer c.moot.Unlock()
+	c.data.Declare(key, value)
+}
 
-	c.data[key] = value
+func (c *Context) Update(key string, value interface{}) bool {
+	c.moot.Lock()
+	defer c.moot.Unlock()
+	return c.data.Assign(key, value)
 }
 
 // Value from the context, or it's parent's context if one exists.
 func (c *Context) Value(key interface{}) interface{} {
+	c.moot.RLock()
+	defer c.moot.RUnlock()
+
 	if s, ok := key.(string); ok {
-		if v, ok := c.data[s]; ok {
-			return v
-		}
-		if c.outer != nil {
-			return c.outer.Value(s)
+
+		gg, ok := c.data.Resolve(s)
+		if ok {
+			return gg
 		}
 	}
 
@@ -50,7 +57,10 @@ func (c *Context) Value(key interface{}) interface{} {
 
 // Has checks the existence of the key in the context.
 func (c *Context) Has(key string) bool {
-	return c.Value(key) != nil
+	c.moot.RLock()
+	defer c.moot.RUnlock()
+
+	return c.data.Has(key)
 }
 
 // Export all the known values in the context.
@@ -62,9 +72,6 @@ func (c *Context) export() map[string]interface{} {
 		for k, v := range c.outer.export() {
 			m[k] = v
 		}
-	}
-	for k, v := range c.data {
-		m[k] = v
 	}
 
 	return m
@@ -78,13 +85,16 @@ func NewContext() *Context {
 // NewContextWith returns a fully formed context using the data
 // provided.
 func NewContextWith(data map[string]interface{}) *Context {
+
 	c := &Context{
 		Context: context.Background(),
-		data:    data,
+		data:    NewScope(nil),
 		outer:   nil,
-		moot:    &sync.Mutex{},
+		moot:    &sync.RWMutex{},
 	}
-
+	for k, v := range data {
+		c.Set(k, v)
+	}
 	for k, v := range Helpers.All() {
 		if !c.Has(k) {
 			c.Set(k, v)
@@ -100,17 +110,13 @@ func NewContextWith(data map[string]interface{}) *Context {
 func NewContextWithOuter(data map[string]interface{}, out *Context) *Context {
 	c := &Context{
 		Context: context.Background(),
-		data:    data,
+		data:    NewScope(out.data),
 		outer:   out,
-		moot:    &sync.Mutex{},
+		moot:    &sync.RWMutex{},
 	}
-
-	for k, v := range Helpers.All() {
-		if !c.Has(k) && !c.outer.Has(k) {
-			c.Set(k, v)
-		}
+	for k, v := range data {
+		c.Set(k, v)
 	}
-
 	return c
 }
 

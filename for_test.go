@@ -38,6 +38,45 @@ func Test_Render_For_Hash(t *testing.T) {
 	r.Contains(s, "b:B")
 }
 
+func Test_Render_For_Global_Scope_Key_Access(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (k,v) in myMap { %><%= k + ":" + v%><% } %> <%= k %>`
+	_, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"myMap": map[string]string{
+			"a": "A",
+		},
+	}))
+	r.Error(err)
+	r.Errorf(err, `line 1: "k": unknown identifier`)
+}
+
+func Test_Render_For_Global_Scope_Value_Access(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (k,v) in myMap { %><%= k + ":" + v%><% } %> <%= v %>`
+	_, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"myMap": map[string]string{
+			"a": "A",
+		},
+	}))
+	r.Error(err)
+	r.Errorf(err, `line 1: "v": unknown identifier`)
+}
+
+func Test_Render_For_Nested_For_With_Same_Iterators_Keys(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (k,v) in myMap { %><%=  for (k,v) in myMap2 { %><%= k + ":" + v%><% } %>%><%}%>`
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"myMap": map[string]string{
+			"a": "A",
+		},
+		"myMap2": map[string]string{
+			"b": "B",
+		},
+	}))
+	r.NoError(err)
+	r.Contains(s, "b:B")
+}
+
 func Test_Render_For_Array_Return(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in ["a", "b", "c"] {return v} %>`
@@ -204,6 +243,30 @@ func Test_Render_For_Array_Key_Value(t *testing.T) {
 	s, err := plush.Render(input, plush.NewContext())
 	r.NoError(err)
 	r.Equal("0a1b2c", s)
+}
+
+func Test_Render_For_Array_Key_Global_Scope_Same_Identifier(t *testing.T) {
+	r := require.New(t)
+	input := `<%   let i = 10000 %><%= for (i,v) in ["a", "b", "c"] {%><%=i%><%=v%><%} %><%= i %>`
+	s, err := plush.Render(input, plush.NewContext())
+	r.NoError(err)
+	r.Equal("0a1b2c10000", s)
+}
+
+func Test_Render_For_Array_Key_Not_Defined(t *testing.T) {
+	r := require.New(t)
+	input := `<%= for (i,v) in ["a", "b", "c"] {%><%=i%><%=v%><%} %><%= i %>`
+	_, err := plush.Render(input, plush.NewContext())
+	r.Error(err)
+	r.Errorf(err, `line 1: "i": unknown identifier`)
+}
+
+func Test_Render_For_Array_Value_Global_Scope(t *testing.T) {
+	r := require.New(t)
+	input := ` <%= for (i,v) in ["a", "b", "c"] {%><%=i%><%=v%><%} %><%= v %>`
+	_, err := plush.Render(input, plush.NewContext())
+	r.Error(err)
+	r.Errorf(err, `line 1: "v": unknown identifier`)
 }
 
 func Test_Render_For_Nil(t *testing.T) {

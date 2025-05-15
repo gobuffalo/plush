@@ -14,7 +14,7 @@ type Context struct {
 	context.Context
 	data  *SymbolTable
 	outer *Context
-	moot  *sync.Mutex
+	moot  *sync.RWMutex
 }
 
 // New context containing the current context. Values set on the new context
@@ -41,6 +41,9 @@ func (c *Context) Update(key string, value interface{}) bool {
 
 // Value from the context, or it's parent's context if one exists.
 func (c *Context) Value(key interface{}) interface{} {
+	c.moot.RLock()
+	defer c.moot.RUnlock()
+
 	if s, ok := key.(string); ok {
 
 		gg, ok := c.data.Resolve(s)
@@ -54,27 +57,10 @@ func (c *Context) Value(key interface{}) interface{} {
 
 // Has checks the existence of the key in the context.
 func (c *Context) Has(key string) bool {
+	c.moot.RLock()
+	defer c.moot.RUnlock()
 
-	if _, ok := c.data.localInterner.Lookup(key); ok {
-		for curr := c.data; curr != nil; curr = curr.parent {
-			id := curr.localInterner.Intern(key)
-			if _, ok := curr.vars[id]; ok {
-				return true
-			}
-
-		}
-	}
-	if _, ok := c.data.localInterner.Lookup(key); ok {
-		for curr := c.data; curr != nil; curr = curr.parent {
-			id := curr.globalInterner.Intern(key)
-			if _, ok := curr.vars[id]; ok {
-				return true
-			}
-		}
-
-	}
-
-	return false
+	return c.data.Has(key)
 }
 
 // Export all the known values in the context.
@@ -104,7 +90,7 @@ func NewContextWith(data map[string]interface{}) *Context {
 		Context: context.Background(),
 		data:    NewScope(nil),
 		outer:   nil,
-		moot:    &sync.Mutex{},
+		moot:    &sync.RWMutex{},
 	}
 	for k, v := range data {
 		c.Set(k, v)
@@ -126,7 +112,7 @@ func NewContextWithOuter(data map[string]interface{}, out *Context) *Context {
 		Context: context.Background(),
 		data:    NewScope(out.data),
 		outer:   out,
-		moot:    &sync.Mutex{},
+		moot:    &sync.RWMutex{},
 	}
 	for k, v := range data {
 		c.Set(k, v)

@@ -28,6 +28,37 @@ func TestSymbolTable_Declare_And_Resolve(t *testing.T) {
 	r.Equal(42, val)
 }
 
+func TestSymbolTable_Declare_And_Has(t *testing.T) {
+	r := require.New(t)
+
+	scope := plush.NewScope(nil)
+	r.NotNil(scope)
+	scope.Declare("x", 42)
+
+	ok := scope.Has("x")
+
+	r.True(ok)
+}
+
+func TestSymbolTable_Declare_And_Has_Child(t *testing.T) {
+	r := require.New(t)
+
+	scope := plush.NewScope(nil)
+	r.NotNil(scope)
+	scope.Declare("x", 42)
+	childA := plush.NewScope(scope)
+	r.NotNil(scope)
+	childA.Declare("y", 42)
+	ok := childA.Has("x")
+
+	r.True(ok)
+
+	ok = childA.Has("y")
+	r.True(ok)
+
+	ok = childA.Has("d")
+	r.False(ok)
+}
 func TestSymbolTable_Resolve_From_Parent_Scope(t *testing.T) {
 	r := require.New(t)
 

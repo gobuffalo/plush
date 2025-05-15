@@ -73,7 +73,7 @@ func (s *SymbolTable) Assign(name string, value interface{}) bool {
 	return false
 }
 
-// Resolve finds the value of a variable
+// Has finds the value of a variable
 func (s *SymbolTable) Has(name string) bool {
 	var id int
 	var ok bool

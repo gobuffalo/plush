@@ -119,6 +119,16 @@ func Test_BuffaloRenderer(t *testing.T) {
 	r.Equal("GeorgeRingo", s)
 }
 
+func Test_BuffaloRenderer_Data_Persistence(t *testing.T) {
+	r := require.New(t)
+	input := `<%= contentFor("name") { %>MD<% }  %>`
+	data := map[string]interface{}{}
+	s, err := plush.BuffaloRenderer(input, data, map[string]interface{}{})
+	r.NoError(err)
+	r.Empty(s)
+	r.Contains(data, "contentFor:name")
+}
+
 func Test_Helper_Nil_Arg(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo(nil, "k") %><%= foo(one, "k") %>`

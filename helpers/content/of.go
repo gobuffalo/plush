@@ -14,6 +14,9 @@ import (
 	<%= contentOf("buttons", {"label": "Click me"}) %>
 */
 func ContentOf(name string, data hctx.Map, help hctx.HelperContext) (template.HTML, error) {
+	if help.Value("contentFor:"+name) == nil {
+		return template.HTML(""), nil
+	}
 	fn, ok := help.Value("contentFor:" + name).(func(data hctx.Map) (template.HTML, error))
 	if !ok {
 		if !help.HasBlock() {

@@ -44,8 +44,13 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 	for k, v := range helpers {
 		data[k] = v
 	}
-
-	return t.Exec(NewContextWith(data))
+	gs := NewContextWith(data)
+	defer func() {
+		for k := range gs.data.localInterner.stringToID {
+			data[k] = gs.Value(k)
+		}
+	}()
+	return t.Exec(gs)
 }
 
 // Parse an input string and return a Template, and caches the parsed template.

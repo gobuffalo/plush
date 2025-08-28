@@ -22,6 +22,9 @@ func (hl *HashLiteral) String() string {
 	var out bytes.Buffer
 
 	pairs := []string{}
+	if len(hl.Pairs) == 0 {
+		return ""
+	}
 	for _, key := range hl.Order {
 		if key == nil {
 			continue

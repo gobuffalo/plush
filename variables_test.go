@@ -3,6 +3,7 @@ package plush_test
 import (
 	"html/template"
 	"log"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -184,6 +185,18 @@ func Test_Render_AppendArray_WithTypeIntArrayTypeString(t *testing.T) {
 	_, err := plush.Render(input, ctx)
 	r.Error(err)
 	r.Contains(err.Error(), "cannot append '1' (untyped int constant) as string value in assignment")
+}
+
+func Test_Render_AppendArray_ItemAppenedNotReflectValue(t *testing.T) {
+	r := require.New(t)
+	ctx := plush.NewContext()
+	input := `<% let a = [1,"22",33] %><% a = a + 1 %><%= a %>`
+	rr, err := plush.Render(input, ctx)
+	r.NoError(err)
+	r.Equal("122331", rr)
+	val, ok := ctx.Value("a").([]interface{})
+	r.True(ok)
+	r.Equal(reflect.Int, reflect.TypeOf(val[3]).Kind())
 }
 
 func Test_Render_AppendArray_CreatedInPlush(t *testing.T) {

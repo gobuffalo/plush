@@ -521,25 +521,31 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 	return nil, fmt.Errorf("unable to operate (%s) on %T and %T ", node.Operator, lres, rres)
 }
 
-func (c *compiler) arrayOperator(l interface{}, r interface{}, op string) (interface{}, error) {
-	var err error
+func (c *compiler) arrayOperator(l, r interface{}, op string) (interface{}, error) {
 	switch op {
 	case "+":
-		elemType := reflect.TypeOf(l).Elem()
-		if elemType.Kind() != reflect.Interface {
+		lv := reflect.ValueOf(l)
+		if lv.Kind() != reflect.Slice && lv.Kind() != reflect.Array {
+			return nil, fmt.Errorf("left operand must be a slice/array, got %T", l)
+		}
+		elem := lv.Type().Elem()
+		rv := reflect.ValueOf(r)
+
+		if elem.Kind() == reflect.Interface {
+			return reflect.Append(lv, rv).Interface(), nil
+		}
+
+		if !rv.Type().AssignableTo(elem) {
 			t := reflect.ValueOf(r).Type()
-			if elemType != t {
-				err = fmt.Errorf("cannot append '%v' (untyped %s constant) as %s value in assignment", r, t, elemType)
+			if elem != t {
+				return nil, fmt.Errorf("cannot append '%v' (untyped %s constant) as %s value in assignment", r, reflect.ValueOf(r).Type(), elem)
 			}
 		}
-		if err == nil {
-			return reflect.Append(reflect.ValueOf(l), reflect.ValueOf(r)), nil
-		}
-	default:
-		err = fmt.Errorf("unkown operator (%s) on %T and %T ", op, l, r)
-	}
+		return reflect.Append(lv, rv).Interface(), nil
 
-	return nil, err
+	default:
+		return nil, fmt.Errorf("unknown operator %q on %T and %T", op, l, r)
+	}
 }
 
 func (c *compiler) nilsOperator(l interface{}, r interface{}, op string) (interface{}, error) {

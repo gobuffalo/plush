@@ -23,7 +23,7 @@ func (hl *HashLiteral) String() string {
 
 	pairs := []string{}
 	if len(hl.Pairs) == 0 {
-		return ""
+		hl.Pairs = make(map[Expression]Expression)
 	}
 	for _, key := range hl.Order {
 		if key == nil {

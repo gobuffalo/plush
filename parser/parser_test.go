@@ -1258,3 +1258,44 @@ drop_column("table_name", "column2_name")`
 	r.NoError(err)
 	r.Equal(input, p.String())
 }
+func Test_HashLiteralsMixWithIfAndFn(t *testing.T) {
+	r := require.New(t)
+	cases := []string{
+
+		`<% if ({"a":1}) { 1 } %>`,
+		`<% if ({"a":1} == {"a":1}) { } %>`,
+		`<% if (true) {"a":1} %>`,
+		`<% if (true) {"a":1, "b":2} %>`,
+		`<% if (true) { {"one": 1, "two": 2, "three": 3 %> } %>`,
+		`<% if (true) { {"a":1,} } %>`,
+		`<% if (true) { {"a": } } %>`,
+		`<% if (true) { {: 1} } %>`,
+		`<% if (true) { {"a":1 "b":2} } %>`,
+		`<% if (true) { {"a": (1 + )} } %>`,
+		`<% if (true) { {"a": [1,2, } } %>`,
+		`<% if (true) { {"a": {"b": } } } %>`,
+		`<% if (true) { {"a": foo(,2)} } %>`,
+		`<% if (true) { {"a": arr[]} } %>`,
+		`<% if (true) { {"a": arr[1,2]} } %>`,
+		`<% if (true) { {"a": .b} } %>`,
+		`<% if (true) { {"a": 1..2} } %>`,
+		`<% if (true) { {"a": 1e} } %>`,
+		`<% if (true) %>`,
+		`<% if (true) { {"a":1} else { {"b":2} } %>`,
+		`<% if (true) { {"a":1} } else {"b":2} %>`,
+		`<% if (true) { {"a":1} } else if (x) {"b":2} %>`,
+		`<% if (true) { {"a":1} %>`,
+		// function/block confusion
+		`<% foo { "a": 1, "b":2 %>`,
+		`<% foo() { {"a":1, "b":2 %> } %>`,
+	}
+	for _, input := range cases {
+
+		program, _ := parser.Parse(input)
+
+		r.NotPanics(func() {
+			_ = program.String()
+		}, "input: "+input)
+
+	}
+}

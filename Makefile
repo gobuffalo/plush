@@ -1,5 +1,5 @@
 test:
-	go test -failfast -short -cover ./...
+	go test -failfast -race -short -cover ./...
 	go mod tidy -v
 
 cov:

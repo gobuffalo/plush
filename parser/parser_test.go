@@ -1123,6 +1123,17 @@ func Test_Empty_IfCondtion(t *testing.T) {
 	r.Error(err)
 }
 
+func Test_Parse_HoleLiteralFunction(t *testing.T) {
+	r := require.New(t)
+	input := `<% let a = myArray %><% a = a + "1" %><%=a %><%H "testing Helo WORD"   a + 1 %><%= a %>`
+
+	program, err := parser.Parse(input)
+	r.NoError(err)
+	r.Len(program.Statements, 5)
+	r.NotNil(program.Statements[3].(*ast.HoleStatement))
+	r.Equal(program.Statements[3].String(), `"testing Helo WORD"   a + 1`)
+}
+
 func Test_Continue_Function(t *testing.T) {
 	r := require.New(t)
 	input := `<% fn(x, y) { continue } %>`

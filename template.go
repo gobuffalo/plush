@@ -10,8 +10,10 @@ import (
 // Template represents an input and helpers to be used
 // to evaluate and render the input.
 type Template struct {
-	Input   string
-	program *ast.Program
+	Input     string
+	program   *ast.Program
+	punchHole []HoleMarker
+	skeleton  string
 }
 
 // NewTemplate from the input string. Adds all of the
@@ -60,6 +62,7 @@ func (t *Template) Exec(ctx hctx.Context) (string, error) {
 	}
 
 	s, err := ev.compile()
+	t.punchHole = ev.postioStartEnds
 	return s, err
 }
 

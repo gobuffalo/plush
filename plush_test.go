@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/plush/v5"
+	"github.com/gobuffalo/plush/v5/templatecache/inmemory"
 	"github.com/stretchr/testify/require"
 )
 
@@ -119,6 +120,19 @@ func Test_BuffaloRenderer(t *testing.T) {
 	r.Equal("GeorgeRingo", s)
 }
 
+func Test_BuffaloRenderer_Nil_Data(t *testing.T) {
+	r := require.New(t)
+	input := `<%= foo() %>`
+	helpers := map[string]interface{}{
+		"foo": func() string {
+			return "test"
+		},
+	}
+	s, err := plush.BuffaloRenderer(input, nil, helpers)
+	r.NoError(err)
+	r.Equal("test", s)
+}
+
 func Test_BuffaloRenderer_Data_Persistence(t *testing.T) {
 	r := require.New(t)
 	input := `<%= contentFor("name") { %>MD<% }  %>`
@@ -162,18 +176,36 @@ func Test_UndefinedArg(t *testing.T) {
 func Test_Caching(t *testing.T) {
 	r := require.New(t)
 
+	fileCacheName := "testing 123"
 	template, err := plush.NewTemplate("<%= \"AA\" %>")
 	r.NoError(err)
 
-	plush.CacheSet("<%= a %>", template)
-	plush.CacheEnabled = true
+	imC := inmemory.NewMemoryCache()
+	plush.PlushCacheSetup(imC)
+	imC.Set(fileCacheName, template)
 
-	tc, err := plush.Parse("<%= a %>")
+	tc, err := plush.Parse("<%= a %>", fileCacheName)
 	r.NoError(err)
 	r.Equal(tc, template)
 
-	plush.CacheEnabled = false
+	imC = nil
 	tc, err = plush.Parse("<%= a %>")
+	r.NoError(err)
+	r.NotEqual(tc, template)
+}
+
+func Test_Caching_EmptyFileName(t *testing.T) {
+	r := require.New(t)
+
+	fileCacheName := "testing 123"
+	template, err := plush.NewTemplate("<%= \"AA\" %>")
+	r.NoError(err)
+
+	imC := inmemory.NewMemoryCache()
+	plush.PlushCacheSetup(imC)
+	imC.Set(fileCacheName, template)
+
+	tc, err := plush.Parse("<%= a %>")
 	r.NoError(err)
 	r.NotEqual(tc, template)
 }

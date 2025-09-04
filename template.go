@@ -62,7 +62,7 @@ func (t *Template) Exec(ctx hctx.Context) (string, error) {
 	}
 
 	s, err := ev.compile()
-	t.punchHole = ev.postioStartEnds
+	t.punchHole = ev.postionStartEnds
 	return s, err
 }
 

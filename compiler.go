@@ -36,11 +36,11 @@ var builderPool = sync.Pool{
 }
 
 type compiler struct {
-	ctx             hctx.Context
-	program         *ast.Program
-	curStmt         ast.Statement
-	inCheck         bool
-	postioStartEnds []HoleMarker
+	ctx              hctx.Context
+	program          *ast.Program
+	curStmt          ast.Statement
+	inCheck          bool
+	postionStartEnds []HoleMarker
 }
 
 func (c *compiler) compile() (string, error) {
@@ -56,7 +56,7 @@ func (c *compiler) compile() (string, error) {
 		case *ast.HoleStatement:
 			res, err = c.evalHoleStatement(node)
 			getString, _ := res.(template.HTML)
-			hh := fmt.Sprintf(punch_hole_constant, len(c.postioStartEnds))
+			hh := fmt.Sprintf(punch_hole_constant, len(c.postionStartEnds))
 			res = template.HTML(hh)
 			curPost := bb.Len()
 
@@ -68,7 +68,7 @@ func (c *compiler) compile() (string, error) {
 				content:     "",
 				err:         nil,
 			}
-			c.postioStartEnds = append(c.postioStartEnds, st)
+			c.postionStartEnds = append(c.postionStartEnds, st)
 		case *ast.ReturnStatement:
 			res, err = c.evalReturnStatement(node)
 

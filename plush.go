@@ -153,32 +153,21 @@ func renderHolesConcurrently(holes []HoleMarker, ctx hctx.Context) []HoleMarker 
 	var wg sync.WaitGroup
 	wg.Add(len(holes))
 
-	octx := ctx
-	defer func() {
-		ctx = octx
-	}()
+	octx := ctx.New()
 
+	octx.Set(holeTemplateFileKey, true)
 	for k, hole := range holes {
 
-		go func(k int, h HoleMarker) {
+		go func(k int, holeCtx hctx.Context, h HoleMarker) {
 			defer wg.Done()
-			// Create a new isolated context for each hole to prevent race conditions
-			// Each hole gets its own copy of the context, preventing concurrent modifications
-			holeCtx := ctx.New()
-			// Set a special internal key to indicate we are rendering holes
-			// This prevents infinite recursion if a hole template itself has holes
-			// or if the hole template is cached. The key uses internal prefixes to avoid
-			// collision with user-defined variables.
-			holeCtx.Set(holeTemplateFileKey, true)
 
-			// Render the hole's content (this could be a Plush template or any logic)
 			content, err := Render(h.input, holeCtx)
 			if err != nil {
 				holes[k].err = err
 				return
 			}
 			holes[k].content = content
-		}(k, hole)
+		}(k, octx.New(), hole)
 	}
 	wg.Wait()
 	return holes

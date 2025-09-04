@@ -107,12 +107,12 @@ func Render(input string, ctx hctx.Context) (string, error) {
 	}
 
 	// Execute template to get skeleton with hole markers
-	s, err := t.Exec(ctx)
+	s, holeMarkers, err := t.Exec(ctx)
 	if err != nil {
 		return "", err
 	}
 	t.skeleton = s
-
+	t.punchHole = holeMarkers
 	// Cache the template after successful execution (deferred to ensure caching even if hole rendering fails)
 	defer func() {
 		if cacheEnabled && templateCacheBackend != nil && filename != "" {

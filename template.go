@@ -50,10 +50,10 @@ func (t *Template) Parse() error {
 }
 
 // Exec the template using the content and return the results
-func (t *Template) Exec(ctx hctx.Context) (string, error) {
+func (t *Template) Exec(ctx hctx.Context) (string, []HoleMarker, error) {
 	err := t.Parse()
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	ev := compiler{
@@ -62,8 +62,7 @@ func (t *Template) Exec(ctx hctx.Context) (string, error) {
 	}
 
 	s, err := ev.compile()
-	t.punchHole = ev.postionStartEnds
-	return s, err
+	return s, ev.positionStartEnds, err
 }
 
 // Clone a template. This is useful for defining helpers on per "instance" of the template.

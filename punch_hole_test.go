@@ -18,9 +18,11 @@ func Test_Render_HolePunching_IntermediateOutput(t *testing.T) {
 	// Simulate first pass: get output with markers
 	tmpl, err := plush.Parse(input)
 	r.NoError(err)
-	s, err := tmpl.Exec(ctx)
+	s, holes, err := tmpl.Exec(ctx)
 	r.NoError(err)
+
 	// Check that the output contains the expected markers
+	r.Len(holes, 2)
 	r.Contains(s, "<PLUSH_HOLE_0>")
 	r.Contains(s, "<PLUSH_HOLE_1>")
 	r.Contains(s, "ab1<PLUSH_HOLE_0>ab1<PLUSH_HOLE_1>")

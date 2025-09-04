@@ -25,8 +25,10 @@ import (
 */
 var DefaultTimeFormat = "January 02, 2006 15:04:05 -0700"
 
-var holeTemplateFileKey = "hole_render_key_plush_" + fmt.Sprintf("%d", time.Now().UnixNano())
-var TemplateFileKey = "renderd_file_name_key_plush_" + fmt.Sprintf("%d", time.Now().UnixNano())
+// Internal keys with unique prefixes to prevent collision with user variables
+// These keys are used internally by the plush engine and should not be set by users. We ensure this by adding a unique timestamp.
+var holeTemplateFileKey = "__plush_internal_hole_render_key_" + fmt.Sprintf("%d", time.Now().UnixNano()) + "__"
+var TemplateFileKey = "__plush_internal_template_file_key_" + fmt.Sprintf("%d", time.Now().UnixNano()) + "__"
 var cacheEnabled bool
 
 var templateCacheBackend TemplateCache
@@ -163,9 +165,10 @@ func renderHolesConcurrently(holes []HoleMarker, ctx hctx.Context) []HoleMarker 
 			// Create a new isolated context for each hole to prevent race conditions
 			// Each hole gets its own copy of the context, preventing concurrent modifications
 			holeCtx := ctx.New()
-			// Set a special key in the context to indicate we are rendering holes
+			// Set a special internal key to indicate we are rendering holes
 			// This prevents infinite recursion if a hole template itself has holes
-			// or if the hole template is cached
+			// or if the hole template is cached. The key uses internal prefixes to avoid
+			// collision with user-defined variables.
 			holeCtx.Set(holeTemplateFileKey, true)
 
 			// Render the hole's content (this could be a Plush template or any logic)

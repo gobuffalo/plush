@@ -76,7 +76,7 @@ func Test_Render_HolePunching_SecondPass_WithCache(t *testing.T) {
 
 	ff := inmemory.NewMemoryCache()
 	plush.PlushCacheSetup(ff)
-	cacheFileName := "myfile"
+	cacheFileName := "myfile.plush"
 
 	ctx.Set("myArray", []string{"a", "b"})
 	ctx.Set(plush.TemplateFileKey, cacheFileName)

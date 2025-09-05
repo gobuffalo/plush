@@ -68,6 +68,7 @@ func Parse(input ...string) (*Template, error) {
 	if filename != "" && templateCacheBackend != nil {
 		t, ok := templateCacheBackend.Get(filename)
 		if ok {
+			t.IsCache = true
 			return t, nil
 		}
 	}
@@ -111,20 +112,27 @@ func Render(input string, ctx hctx.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	t.skeleton = s
-	t.punchHole = holeMarkers
+	//Don't bloat the cache with Sketons
+	if len(holeMarkers) > 0 {
+		t.Skeleton = s
+		t.PunchHole = holeMarkers
+	}
 	// Cache the template after successful execution (deferred to ensure caching even if hole rendering fails)
-	defer func() {
-		if cacheEnabled && templateCacheBackend != nil && filename != "" {
-			t.punchHole = holesCopy(t.punchHole)
-			templateCacheBackend.Set(filename, t)
-		}
-	}()
+	if !t.IsCache && cacheEnabled {
+		defer func() {
+			if templateCacheBackend != nil && filename != "" {
+				t.PunchHole = holesCopy(t.PunchHole)
+				if strings.HasSuffix(filename, ".plush") {
+					templateCacheBackend.Set(filename, t)
+				}
+			}
+		}()
+	}
 
 	// If we have holes and this is the main render pass (not hole rendering),
 	// render holes concurrently and fill them into the skeleton
-	if ctx.Value(holeTemplateFileKey) == nil && len(t.punchHole) > 0 {
-		hc := renderHolesConcurrently(t.punchHole, ctx)
+	if ctx.Value(holeTemplateFileKey) == nil && len(t.PunchHole) > 0 {
+		hc := renderHolesConcurrently(t.PunchHole, ctx)
 		return fillHoles(s, hc)
 	}
 
@@ -227,17 +235,16 @@ func holesCopy(holes []HoleMarker) []HoleMarker {
 func renderFromCache(filename string, ctx hctx.Context) (string, error) {
 
 	if filename != "" && cacheEnabled && templateCacheBackend != nil && ctx.Value(holeTemplateFileKey) == nil {
-		if filename != "" {
-			inCacheTemplate, inCache := templateCacheBackend.Get(filename)
-			if inCache &&
-				inCacheTemplate != nil &&
-				inCacheTemplate.skeleton != "" &&
-				len(inCacheTemplate.punchHole) > 0 {
-				hc := holesCopy(inCacheTemplate.punchHole)
-				hc = renderHolesConcurrently(hc, ctx)
-				return fillHoles(inCacheTemplate.skeleton, hc)
-			}
+		inCacheTemplate, inCache := templateCacheBackend.Get(filename)
+		if inCache &&
+			inCacheTemplate != nil &&
+			inCacheTemplate.Skeleton != "" &&
+			len(inCacheTemplate.PunchHole) > 0 {
+			hc := holesCopy(inCacheTemplate.PunchHole)
+			hc = renderHolesConcurrently(hc, ctx)
+			return fillHoles(inCacheTemplate.Skeleton, hc)
 		}
+
 	}
 	return "", errors.New("no cached template found")
 }

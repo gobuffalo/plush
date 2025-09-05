@@ -128,7 +128,6 @@ func Render(input string, ctx hctx.Context) (string, error) {
 			}
 		}()
 	}
-
 	// If we have holes and this is the main render pass (not hole rendering),
 	// render holes concurrently and fill them into the skeleton
 	if ctx.Value(holeTemplateFileKey) == nil && len(t.PunchHole) > 0 {
@@ -244,7 +243,6 @@ func renderFromCache(filename string, ctx hctx.Context) (string, error) {
 			hc = renderHolesConcurrently(hc, ctx)
 			return fillHoles(inCacheTemplate.Skeleton, hc)
 		}
-
 	}
 	return "", errors.New("no cached template found")
 }

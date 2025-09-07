@@ -52,6 +52,7 @@ func newParser(l *lexer.Lexer) *parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(token.HTML, p.parseHTMLLiteral)
+
 	p.registerPrefix(token.C_START, p.parseCommentLiteral)
 	p.registerPrefix(token.E_END, func() ast.Expression { return nil })
 
@@ -162,6 +163,8 @@ func (p *parser) parseStatement() ast.Statement {
 	// not return nil or you should add nil checking and explicitly return
 	// concrete nil. (https://github.com/gobuffalo/plush/pull/171)
 	switch p.curToken.Type {
+	case token.H_START:
+		return p.parseHoleStatment()
 	case token.LET:
 		return p.parseLetStatement()
 	case token.S_START:
@@ -327,6 +330,13 @@ func (p *parser) parseForLoopControlFlow() ast.Expression {
 	return stmt
 }
 
+func (p *parser) parseHoleStatment() ast.Statement {
+
+	return &ast.HoleStatement{
+		TokenAble:  ast.TokenAble{Token: p.curToken},
+		Statements: p.curToken.Literal,
+	}
+}
 func (p *parser) parseContinue() ast.Expression {
 	if !p.inForBlock {
 		p.errors = append(p.errors, fmt.Sprintf("line %d: continue is not in a loop", p.curToken.LineNumber))

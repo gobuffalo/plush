@@ -1,6 +1,7 @@
 package lexer_test
 
 import (
+	"log"
 	"testing"
 
 	"github.com/gobuffalo/plush/v5/lexer"
@@ -47,6 +48,28 @@ func Test_NextToken_SkipLineComments(t *testing.T) {
 	l := lexer.New(input)
 	for _, tt := range tests {
 		tok := l.NextToken()
+		r.Equal(tt.tokenType, tok.Type)
+		r.Equal(tt.tokenLiteral, tok.Literal)
+	}
+}
+
+func Test_HoleCache(t *testing.T) {
+	r := require.New(t)
+	input := `<%H "mark \"cool\" bates" %><%= a %>`
+	tests := []struct {
+		tokenType    token.Type
+		tokenLiteral string
+	}{
+		{token.H_START, ` "mark \"cool\" bates" `},
+		{token.E_START, "<%="},
+		{token.IDENT, "a"},
+		{token.E_END, "%>"},
+	}
+
+	l := lexer.New(input)
+	for _, tt := range tests {
+		tok := l.NextToken()
+		log.Println(tok.Literal)
 		r.Equal(tt.tokenType, tok.Type)
 		r.Equal(tt.tokenLiteral, tok.Literal)
 	}

@@ -124,6 +124,10 @@ func (l *Lexer) nextInsideToken() token.Token {
 			l.inside = true
 			l.readChar()
 			switch l.peekChar() {
+			case 'H':
+				l.readChar()
+				tok = token.Token{Type: token.H_START, Literal: l.readHString(), LineNumber: l.curLine}
+				l.inside = false
 			case '#':
 				l.readChar()
 				tok = token.Token{Type: token.C_START, Literal: "<%#", LineNumber: l.curLine}
@@ -302,6 +306,24 @@ func (l *Lexer) readBString() string {
 	}
 	s := l.input[position:l.position]
 	return s
+}
+
+func (l *Lexer) readHString() string {
+	position := l.position + 1
+	breakFound := false
+	for l.ch != 0 {
+		l.readChar()
+		if l.ch == '%' && l.peekChar() == '>' {
+			breakFound = true
+			break
+		}
+	}
+
+	if breakFound {
+		l.readChar()
+	}
+
+	return l.input[position : l.position-1]
 }
 
 func (l *Lexer) readHTML() string {

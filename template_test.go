@@ -14,7 +14,7 @@ func Test_Template_Exec_Concurrency(t *testing.T) {
 	tmpl, err := plush.NewTemplate(``)
 	r.NoError(err)
 	exec := func() error {
-		_, e := tmpl.Exec(plush.NewContext())
+		_, _, e := tmpl.Exec(plush.NewContext())
 		return e
 	}
 	wg := errgroup.Group{}

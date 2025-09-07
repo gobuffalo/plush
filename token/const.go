@@ -37,6 +37,7 @@ const (
 
 	S_START = "<%"
 	C_START = "<%#"
+	H_START = "<%H"
 	E_START = "<%="
 	E_END   = "%>"
 

@@ -30,11 +30,10 @@ func PartialHelper(name string, data map[string]interface{}, help HelperContext)
 	if part, err = pf(name); err != nil {
 		return "", err
 	}
-
+	help.Context.Set(TemplateFileKey, name)
 	if part, err = Render(part, help.Context); err != nil {
 		return "", err
 	}
-
 	if ct, ok := help.Value("contentType").(string); ok {
 		ext := filepath.Ext(name)
 		if strings.Contains(ct, "javascript") && ext != ".js" && ext != "" {

@@ -27,7 +27,8 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
-	out.WriteString(fl.Block.String())
-
+	if fl.Block != nil {
+		out.WriteString(fl.Block.String())
+	}
 	return out.String()
 }

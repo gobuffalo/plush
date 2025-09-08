@@ -24,7 +24,9 @@ func (fe *ForExpression) String() string {
 	out.WriteString(", ")
 	out.WriteString(fe.ValueName)
 	out.WriteString(") in ")
-	out.WriteString(fe.Iterable.String())
+	if fe.Iterable != nil {
+		out.WriteString(fe.Iterable.String())
+	}
 	out.WriteString(" { ")
 
 	if fe.Block != nil {

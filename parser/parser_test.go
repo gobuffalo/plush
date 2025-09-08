@@ -1329,3 +1329,22 @@ func Test_IndexExpression_MixWithFnBrackets(t *testing.T) {
 
 	}
 }
+
+func Test_ForExpression_MixWithFnBrackets(t *testing.T) {
+	r := require.New(t)
+
+	cases := []string{
+
+		`<%= for()]{  }%>`,
+		//`<%= a[)]  }%>`,
+	}
+	for _, input := range cases {
+
+		program, _ := parser.Parse(input)
+
+		r.NotPanics(func() {
+			_ = program.String()
+		}, "input: "+input)
+
+	}
+}

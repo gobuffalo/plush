@@ -23,10 +23,13 @@ func (ie *IndexExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(ie.Left.String())
+	if ie.Left != nil {
+		out.WriteString(ie.Left.String())
+	}
 	out.WriteString("[")
-	out.WriteString(ie.Index.String())
-
+	if ie.Index != nil {
+		out.WriteString(ie.Index.String())
+	}
 	if ie.Callee != nil {
 		out.WriteString("]")
 		out.WriteString("." + ie.Callee.String())

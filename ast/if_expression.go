@@ -26,16 +26,27 @@ func (ie *IfExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("if (")
-	out.WriteString(ie.Condition.String())
+	if ie.Condition != nil {
+		out.WriteString(ie.Condition.String())
+	}
 	out.WriteString(") { ")
-	out.WriteString(ie.Block.String())
+	if ie.Block != nil {
+		out.WriteString(ie.Block.String())
+	}
 	out.WriteString(" }")
 
 	for _, elseIf := range ie.ElseIf {
+		if elseIf == nil {
+			continue
+		}
 		out.WriteString(" } else if (")
-		out.WriteString(elseIf.Condition.String())
+		if elseIf.Condition != nil {
+			out.WriteString(elseIf.Condition.String())
+		}
 		out.WriteString(") { ")
-		out.WriteString(elseIf.Block.String())
+		if elseIf.Block != nil {
+			out.WriteString(elseIf.Block.String())
+		}
 		out.WriteString(" }")
 	}
 

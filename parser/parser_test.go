@@ -1356,6 +1356,8 @@ func Test_ParseCallExpression_NilFunction_ReactLikePatterns_Panic(t *testing.T) 
 	r := require.New(t)
 	// These patterns might occur in React compiled files or malformed templates
 	cases := []string{
+		`<%s key={someKey} {...props} />`,
+		`<%s {...props} />`,
 		`<%= ()() %>`,
 		`<%= [](1,2) %>`,
 		`<%= {}() %>`,

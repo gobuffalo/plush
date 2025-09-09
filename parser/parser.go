@@ -734,6 +734,11 @@ func (p *parser) parseArrayLiteral() ast.Expression {
 }
 
 func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	if left == nil {
+		msg := fmt.Sprintf("line %d: syntax error: invalid index access on nil expression", p.curToken.LineNumber)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	exp := &ast.IndexExpression{TokenAble: ast.TokenAble{Token: p.curToken}, Left: left}
 
 	p.nextToken()
@@ -766,6 +771,11 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 }
 
 func (p *parser) assignCallee(exp ast.Expression, calleeIdent *ast.Identifier) (assignedCallee ast.Expression) {
+	if exp == nil || calleeIdent == nil {
+		msg := fmt.Sprintf("line %d: syntax error: invalid callee assignment with nil values", p.curToken.LineNumber)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	assignedCallee = nil
 	switch ss := exp.(type) {
 	case *ast.IndexExpression:

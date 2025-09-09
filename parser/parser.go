@@ -644,6 +644,12 @@ func (p *parser) parseFunctionParameters() []*ast.Identifier {
 }
 
 func (p *parser) parseCallExpression(function ast.Expression) ast.Expression {
+
+	if function == nil {
+		msg := fmt.Sprintf("line %d: syntax error: invalid function literal call", p.curToken.LineNumber)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	exp := &ast.CallExpression{
 		TokenAble: ast.TokenAble{Token: p.curToken},
 		Function:  function,

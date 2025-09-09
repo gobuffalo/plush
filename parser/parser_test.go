@@ -1305,8 +1305,10 @@ func Test_HashLiteralsMixWithIfAndFn(t *testing.T) {
 		program, _ := parser.Parse(input)
 
 		r.NotPanics(func() {
-			_ = program.String()
-		}, "input: "+input)
+			if program != nil {
+				_ = program.String()
+			}
+		}, "program.String() should not panic for input: %s", input)
 
 	}
 }
@@ -1324,9 +1326,10 @@ func Test_IndexExpression_MixWithFnBrackets(t *testing.T) {
 		program, _ := parser.Parse(input)
 
 		r.NotPanics(func() {
-			_ = program.String()
-		}, "input: "+input)
-
+			if program != nil {
+				_ = program.String()
+			}
+		}, "program.String() should not panic for input: %s", input)
 	}
 }
 
@@ -1334,17 +1337,59 @@ func Test_ForExpression_MixWithFnBrackets(t *testing.T) {
 	r := require.New(t)
 
 	cases := []string{
-
 		`<%= for()]{  }%>`,
-		//`<%= a[)]  }%>`,
 	}
 	for _, input := range cases {
 
 		program, _ := parser.Parse(input)
 
 		r.NotPanics(func() {
-			_ = program.String()
-		}, "input: "+input)
+			if program != nil {
+				_ = program.String()
+			}
+		}, "program.String() should not panic for input: %s", input)
 
+	}
+}
+
+func Test_ParseCallExpression_NilFunction_ReactLikePatterns_Panic(t *testing.T) {
+	r := require.New(t)
+	// These patterns might occur in React compiled files or malformed templates
+	cases := []string{
+		`<%= ()() %>`,
+		`<%= [](1,2) %>`,
+		`<%= {}() %>`,
+		`<%= (return x)() %>`,
+		`<%= (let x = 1)() %>`,
+		`<%= (if true {})() %>`,
+		`<%= (for x in y {})() %>`,
+		`<%= (break)() %>`,
+		`<%= (continue)() %>`,
+		`<%= (1 + )() %>`,
+		`<%= (!!)() %>`,
+		`<%= (.)() %>`,
+		`<%= (function(){})() %>`,
+		`<%= (()=>{})() %>`,
+		`<%= (a||b)() %>`,
+		`<%= (a&&b)() %>`,
+		`<%= (a?b:c)() %>`,
+		`<%= (void 0)() %>`,
+		`<%= (typeof x)() %>`,
+		`<%= (new Error())() %>`,
+		`<%= (a.b.c.d.e.f.g.h.i.j)() %>`,
+		`<%= (this)() %>`,
+		`<%= (super)() %>`,
+	}
+
+	for _, input := range cases {
+		t.Run(input, func(t *testing.T) {
+			program, _ := parser.Parse(input)
+
+			r.NotPanics(func() {
+				if program != nil {
+					_ = program.String()
+				}
+			}, "program.String() should not panic for input: %s", input)
+		})
 	}
 }

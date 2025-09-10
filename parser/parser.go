@@ -646,7 +646,7 @@ func (p *parser) parseFunctionParameters() []*ast.Identifier {
 func (p *parser) parseCallExpression(function ast.Expression) ast.Expression {
 
 	if function == nil {
-		msg := fmt.Sprintf("line %d: syntax error: invalid function literal call", p.curToken.LineNumber)
+		msg := fmt.Sprintf("line %d: syntax error: attempted to call nil function", p.curToken.LineNumber)
 		p.errors = append(p.errors, msg)
 		return nil
 	}

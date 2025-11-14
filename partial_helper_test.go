@@ -2,10 +2,12 @@ package plush_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gobuffalo/plush/v5"
 	"github.com/gobuffalo/plush/v5/helpers/hctx"
+	"github.com/gobuffalo/plush/v5/helpers/meta"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,6 +49,30 @@ func Test_PartialHelper_Invalid_Feeder(t *testing.T) {
 	r.Error(err)
 	r.Contains(err.Error(), "could not find")
 	r.Equal("", string(html))
+}
+
+func Test_PartialHelper_NestedPartial_PathHandling(t *testing.T) {
+	r := require.New(t)
+	gg := meta.TemplateFileKey
+	partials := map[string]string{
+		"partials/code-1.plush.html": `<%= partial("testing/code-2.plush.html") %>`,
+		"testing/code-2.plush.html":  `<%= partial("testing/code-3.plush.html") %>`,
+		"testing/code-3.plush.html":  `CODE3 PRINT <%= ` + gg + ` %>`,
+	}
+	partialFeeder := func(name string) (string, error) {
+		return partials[name], nil
+	}
+
+	help := plush.HelperContext{Context: plush.NewContext()}
+	help.Set("partialFeeder", partialFeeder)
+	help.Set(meta.TemplateBaseFileNameKey, "path/product_listing")
+	help.Set(meta.TemplateFileKey, "/fake/templates/path/product_listing.html")
+	help.Set(meta.TemplateExtensionKey, "html")
+
+	html, err := plush.Render(`<%= partial("partials/code-1.plush.html") %>`, help)
+	r.NoError(err)
+	normalized := strings.ReplaceAll(html, "\\", "/")
+	r.Equal("CODE3 PRINT /fake/templates/testing/code-3.plush.html", normalized)
 }
 
 func Test_PartialHelper_Invalid_FeederFunction(t *testing.T) {

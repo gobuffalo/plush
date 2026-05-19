@@ -43,6 +43,14 @@ type compiler struct {
 	positionStartEnds []HoleMarker
 }
 
+// budget returns the active Budget from the current context, or nil if unlimited.
+func (c *compiler) budget() *Budget {
+	if ctx, ok := c.ctx.(*Context); ok {
+		return ctx.Budget()
+	}
+	return nil
+}
+
 func (c *compiler) compile() (string, error) {
 	bb := builderPool.Get().(*strings.Builder)
 	bb.Reset()
@@ -200,6 +208,9 @@ func (c *compiler) evalExpression(node ast.Expression) (interface{}, error) {
 }
 
 func (c *compiler) evalAssignExpression(node *ast.AssignExpression) (interface{}, error) {
+	if err := c.budget().SpendAssignment(); err != nil {
+		return nil, err
+	}
 	v, err := c.evalExpression(node.Value)
 	if err != nil {
 		return nil, err
@@ -255,6 +266,9 @@ func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}
 }
 
 func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error) {
+	if err := c.budget().SpendCondition(); err != nil {
+		return nil, err
+	}
 	octx := c.ctx.(*Context)
 	defer func() {
 		c.ctx = octx
@@ -436,6 +450,9 @@ func (c *compiler) evalHashLiteral(node *ast.HashLiteral) (interface{}, error) {
 }
 
 func (c *compiler) evalLetStatement(node *ast.LetStatement) (interface{}, error) {
+	if err := c.budget().SpendAssignment(); err != nil {
+		return nil, err
+	}
 	v, err := c.evalExpression(node.Value)
 	if err != nil {
 		return nil, err
@@ -447,6 +464,9 @@ func (c *compiler) evalLetStatement(node *ast.LetStatement) (interface{}, error)
 
 func (c *compiler) evalIdentifier(node *ast.Identifier) (interface{}, error) {
 	if node.Callee != nil {
+		if err := c.budget().SpendObjectTraversal(1); err != nil {
+			return nil, err
+		}
 		c, err := c.evalExpression(node.Callee)
 		if err != nil {
 			return nil, err
@@ -703,6 +723,13 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 }
 
 func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, error) {
+	funcName := node.Function.String()
+	if i, ok := node.Function.(*ast.Identifier); ok {
+		funcName = i.Value
+	}
+	if err := c.budget().SpendFunctionCall(funcName); err != nil {
+		return nil, err
+	}
 	var rv reflect.Value
 
 	if node.Callee != nil {
@@ -943,6 +970,9 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 	case reflect.Map:
 		keys := riter.MapKeys()
 		for i := 0; i < len(keys); i++ {
+			if err := c.budget().SpendLoop(); err != nil {
+				return nil, err
+			}
 			k := keys[i]
 			v := riter.MapIndex(k)
 			c.ctx.Set(node.KeyName, k.Interface())
@@ -972,6 +1002,9 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 		}
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < riter.Len(); i++ {
+			if err := c.budget().SpendLoop(); err != nil {
+				return nil, err
+			}
 			v := riter.Index(i)
 			c.ctx.Set(node.KeyName, i)
 			c.ctx.Set(node.ValueName, v.Interface())
@@ -1006,6 +1039,9 @@ func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, erro
 			i := 0
 			ii := it.Next()
 			for ii != nil {
+				if err := c.budget().SpendLoop(); err != nil {
+					return nil, err
+				}
 				c.ctx.Set(node.KeyName, i)
 				c.ctx.Set(node.ValueName, ii)
 

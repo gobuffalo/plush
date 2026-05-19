@@ -97,6 +97,22 @@ func Parse(input ...string) (*Template, error) {
 	return t, nil
 }
 
+// RenderWithBudget renders a template and enforces a work-unit limit.
+// Returns ErrBudgetExceeded if the template exhausts the budget.
+// Existing Render() is completely unchanged.
+func RenderWithBudget(input string, limit int64, ctx *Context) (string, error) {
+	b := NewBudget(limit)
+	ctx.WithBudget(b)
+	return Render(input, ctx)
+}
+
+// RenderWithBudgetConfig renders with a fully custom cost configuration.
+func RenderWithBudgetConfig(input string, limit int64, costs BudgetCosts, ctx *Context) (string, error) {
+	b := NewBudgetWithCosts(limit, costs)
+	ctx.WithBudget(b)
+	return Render(input, ctx)
+}
+
 func isHole(ctx hctx.Context) bool {
 	if ctx.Value(holeTemplateFileKey) == nil {
 		return false

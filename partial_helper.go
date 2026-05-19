@@ -24,6 +24,12 @@ func PartialHelper(name string, data map[string]interface{}, help HelperContext)
 		return "", fmt.Errorf("invalid context. abort")
 	}
 
+	if ctx, ok := help.Context.(*Context); ok {
+		if err := ctx.Budget().SpendSubRender(); err != nil {
+			return "", err
+		}
+	}
+
 	help.Context = help.New()
 	for k, v := range data {
 		help.Set(k, v)

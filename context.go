@@ -12,9 +12,28 @@ var _ context.Context = &Context{}
 // Context holds all of the data for the template that is being rendered.
 type Context struct {
 	context.Context
-	data  *SymbolTable
-	outer *Context
-	moot  *sync.RWMutex
+	data   *SymbolTable
+	outer  *Context
+	moot   *sync.RWMutex
+	budget *Budget
+}
+
+// WithBudget attaches a Budget to this context. Returns self for chaining.
+func (c *Context) WithBudget(b *Budget) *Context {
+	c.budget = b
+	return c
+}
+
+// Budget returns the active budget, walking up the outer chain.
+// Returns nil if no budget is set (unlimited).
+func (c *Context) Budget() *Budget {
+	if c.budget != nil {
+		return c.budget
+	}
+	if c.outer != nil {
+		return c.outer.Budget()
+	}
+	return nil
 }
 
 // New context containing the current context. Values set on the new context

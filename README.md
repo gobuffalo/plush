@@ -358,3 +358,101 @@ This package absolutely 100% could not have been written without the help of Tho
 Not only did the book make understanding the process of writing lexers, parsers, and asts, but it also provided the basis for the syntax of Plush itself.
 
 If you have yet to read Thorsten's book, I can't recommend it enough. Please go and buy it!
+
+---
+
+## Render Budget
+
+Plush lets you attach a work-unit **budget** to any render to protect against runaway templates — deeply nested loops, recursive partials, or unexpectedly expensive helpers.
+
+A **nil budget = unlimited**, so all existing code is completely unaffected.
+
+### Quick start
+
+```go
+b := plush.NewBudget(10_000)
+ctx := plush.NewContext()
+ctx.Set("products", products)
+ctx.WithBudget(b)
+
+html, err := plush.Render(tmpl, ctx)
+if errors.Is(err, plush.ErrBudgetExceeded) {
+    log.Printf("budget exceeded: used=%d remaining=%d", b.Used(), b.Remaining())
+    return errorPage()
+}
+
+// One-liner convenience wrapper
+html, err = plush.RenderWithBudget(tmpl, 10_000, ctx)
+```
+
+### Default operation costs
+
+| Operation | Default cost |
+|---|---|
+| Loop iteration | 1 |
+| Helper / function call | 5 |
+| Filter call | 3 |
+| Partial / sub-render | 10 |
+| Condition check (`if`) | 1 |
+| Variable assignment | 0 |
+| Object traversal (per segment) | 1 |
+
+### Custom costs
+
+Pass a `BudgetCosts` struct to override any cost:
+
+```go
+costs := plush.ZeroCosts()          // start from all-zero
+costs.LoopIteration = 1
+costs.SubRender     = 25
+
+html, err = plush.RenderWithBudgetConfig(tmpl, 5_000, costs, ctx)
+```
+
+### Per-function costs
+
+Override the cost for individual functions registered in the context:
+
+```go
+costs := plush.DefaultBudgetCosts()
+costs.FunctionCosts = map[string]int64{
+    "expensiveQuery": 50, // charged 50 per call instead of the default 5
+    "cheapHelper":     1,
+}
+
+html, err = plush.RenderWithBudgetConfig(tmpl, 10_000, costs, ctx)
+```
+
+Functions not listed in `FunctionCosts` fall back to the `HelperCall` cost.
+
+### Stats report
+
+After rendering, call `b.Stats()` to see exactly where the budget was spent:
+
+```go
+b := plush.NewBudget(10_000)
+ctx.WithBudget(b)
+plush.Render(tmpl, ctx)
+
+s := b.Stats()
+fmt.Printf("total=%d  loops=%d  calls=%d  conditions=%d\n",
+    s.TotalUsed, s.LoopIterations, s.FunctionCalls, s.ConditionChecks)
+
+for name, units := range s.ByFunction {
+    fmt.Printf("  %s: %d units\n", name, units)
+}
+```
+
+`BudgetStats` fields:
+
+| Field | What it measures |
+|---|---|
+| `TotalUsed` | Sum of all units spent |
+| `LoopIterations` | Units from loop iterations |
+| `FunctionCalls` | Units from all function/helper calls |
+| `FilterCalls` | Units from filter calls |
+| `SubRenders` | Units from partial renders |
+| `ConditionChecks` | Units from `if`/`unless` evaluations |
+| `Assignments` | Units from variable assignments |
+| `ObjectTraversals` | Units from dot-notation traversal |
+| `ByFunction` | Per-function breakdown (map of name → units) |

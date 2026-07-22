@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSymbolTable_NewSymbolTable(t *testing.T) {
+func Test_Symbol_Table_New_Symbol_Table(t *testing.T) {
 	r := require.New(t)
 
 	scope := plush.NewScope(nil)
@@ -15,7 +15,7 @@ func TestSymbolTable_NewSymbolTable(t *testing.T) {
 	r.NotNil(scope)
 }
 
-func TestSymbolTable_Declare_And_Resolve(t *testing.T) {
+func Test_Symbol_Table_Declare_And_Resolve(t *testing.T) {
 	r := require.New(t)
 
 	scope := plush.NewScope(nil)
@@ -28,7 +28,7 @@ func TestSymbolTable_Declare_And_Resolve(t *testing.T) {
 	r.Equal(42, val)
 }
 
-func TestSymbolTable_Declare_And_Has(t *testing.T) {
+func Test_Symbol_Table_Declare_And_Has(t *testing.T) {
 	r := require.New(t)
 
 	scope := plush.NewScope(nil)
@@ -40,7 +40,7 @@ func TestSymbolTable_Declare_And_Has(t *testing.T) {
 	r.True(ok)
 }
 
-func TestSymbolTable_Declare_And_Has_Child(t *testing.T) {
+func Test_Symbol_Table_Declare_And_Has_Child(t *testing.T) {
 	r := require.New(t)
 
 	scope := plush.NewScope(nil)
@@ -59,7 +59,7 @@ func TestSymbolTable_Declare_And_Has_Child(t *testing.T) {
 	ok = childA.Has("d")
 	r.False(ok)
 }
-func TestSymbolTable_Resolve_From_Parent_Scope(t *testing.T) {
+func Test_Symbol_Table_Resolve_From_Parent_Scope(t *testing.T) {
 	r := require.New(t)
 
 	parent := plush.NewScope(nil)
@@ -77,7 +77,7 @@ func TestSymbolTable_Resolve_From_Parent_Scope(t *testing.T) {
 	r.True(ok)
 }
 
-func TestSymbolTable_Assign_To_ParentScope(t *testing.T) {
+func Test_Symbol_Table_Assign_To_Parent_Scope(t *testing.T) {
 	r := require.New(t)
 	parent := plush.NewScope(nil)
 
@@ -104,7 +104,7 @@ func TestSymbolTable_Assign_To_ParentScope(t *testing.T) {
 	r.Equal(200, val)
 }
 
-func TestSymbolTable_Assign_Non_Existent_Fails(t *testing.T) {
+func Test_Symbol_Table_Assign_Non_Existent_Fails(t *testing.T) {
 	r := require.New(t)
 
 	scope := plush.NewScope(nil)
@@ -116,7 +116,7 @@ func TestSymbolTable_Assign_Non_Existent_Fails(t *testing.T) {
 	r.False(assigned)
 }
 
-func TestSymbolTable_Declare_Nil_Ignored(t *testing.T) {
+func Test_Symbol_Table_Declare_Nil_Ignored(t *testing.T) {
 	r := require.New(t)
 	scope := plush.NewScope(nil)
 
@@ -128,7 +128,7 @@ func TestSymbolTable_Declare_Nil_Ignored(t *testing.T) {
 	r.False(ok)
 }
 
-func TestSymbolTable_Shadowing(t *testing.T) {
+func Test_Symbol_Table_Shadowing(t *testing.T) {
 
 	r := require.New(t)
 

@@ -10,6 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type functionPointerArgSection struct {
+	Name string
+}
+
 func Test_Render_Function_Call(t *testing.T) {
 	r := require.New(t)
 
@@ -56,6 +60,22 @@ func Test_Render_Function_Call_With_Variable_Arg(t *testing.T) {
 	}))
 	r.NoError(err)
 	r.Equal("<p>hi mark!</p>", s)
+}
+
+func Test_Render_Function_Call_With_Value_For_Pointer_Arg(t *testing.T) {
+	r := require.New(t)
+
+	input := `<p><%= f(section) %></p>`
+	section := functionPointerArgSection{Name: "hero"}
+	s, err := plush.Render(input, plush.NewContextWith(map[string]interface{}{
+		"section": section,
+		"f": func(s *functionPointerArgSection) string {
+			return s.Name
+		},
+	}))
+	r.NoError(err)
+	r.Equal("<p>hero</p>", s)
+	r.Equal("hero", section.Name)
 }
 
 func Test_Render_Function_Call_With_Hash(t *testing.T) {

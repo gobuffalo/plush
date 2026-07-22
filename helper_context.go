@@ -16,11 +16,20 @@ var _ hctx.HelperContext = &HelperContext{}
 // within the helper.
 type HelperContext struct {
 	hctx.Context
-	compiler *compiler
-	block    *ast.BlockStatement
+	compiler    *compiler
+	block       *ast.BlockStatement
+	blockRunner func(hctx.Context) (string, error)
 }
 
-const helperContextKind = "HelperContext"
+// NewHelperContext returns a HelperContext that can execute an optional block
+// using the supplied runner. It is used by alternate execution engines that
+// need to interoperate with helpers accepting plush.HelperContext.
+func NewHelperContext(ctx hctx.Context, runner func(hctx.Context) (string, error)) HelperContext {
+	return HelperContext{
+		Context:     ctx,
+		blockRunner: runner,
+	}
+}
 
 // Render a string with the current context
 func (h HelperContext) Render(s string) (string, error) {
@@ -29,7 +38,7 @@ func (h HelperContext) Render(s string) (string, error) {
 
 // HasBlock returns true if a block is associated with the helper function
 func (h HelperContext) HasBlock() bool {
-	return h.block != nil
+	return h.block != nil || h.blockRunner != nil
 }
 
 // Block executes the block of template associated with
@@ -43,15 +52,18 @@ func (h HelperContext) Block() (string, error) {
 // the helper, think the block inside of an "if" or "each"
 // statement, but with it's own context.
 func (h HelperContext) BlockWith(hc hctx.Context) (string, error) {
-	ctx, ok := hc.(*Context)
-	if !ok {
-		return "", fmt.Errorf("expected *Context, got %T", hc)
+	if h.blockRunner != nil {
+		return h.blockRunner(hc)
+	}
+
+	if hc == nil {
+		return "", fmt.Errorf("invalid context. abort")
 	}
 
 	octx := h.compiler.ctx
 	defer func() { h.compiler.ctx = octx }()
 
-	h.compiler.ctx = ctx.New()
+	h.compiler.ctx = hc.New()
 
 	if h.block == nil {
 		return "", fmt.Errorf("no block defined")

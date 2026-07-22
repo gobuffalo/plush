@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_SanitizeCacheKey(t *testing.T) {
+func Test_Sanitize_Cache_Key(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -38,7 +38,33 @@ func Test_SanitizeCacheKey(t *testing.T) {
 	}
 }
 
-func Test_CleanFilePath(t *testing.T) {
+func Test_Cache_Key_Already_Sanitized(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{"empty", "", true},
+		{"simple filename", "template.plush", true},
+		{"dash underscore dot", "user-profile_template.plush", true},
+		{"slash needs cleaning", "path/to/template.plush", false},
+		{"space needs cleaning", "path with spaces", false},
+		{"consecutive underscores collapse", "path__template.plush", false},
+		{"trailing underscore trims", "path_", false},
+		{"unicode needs cleaning", "файл", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, cacheKeyAlreadySanitized(tt.input))
+			if tt.expected {
+				require.Equal(t, tt.input, sanitizeCacheKey(tt.input))
+			}
+		})
+	}
+}
+
+func Test_Clean_File_Path(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -46,15 +72,15 @@ func Test_CleanFilePath(t *testing.T) {
 	}{
 		{"empty path", "", ""},
 		{"simple filename", "template.plush", "template.plush"},
-		{"unix path", "/path/to/template.plush", "path_to_template.plush"},
-		{"windows path", "\\path\\to\\template.plush", "path_to_template.plush"},
-		{"mixed separators", "/path\\to/template.plush", "path_to_template.plush"},
-		{"trailing slash", "/path/to/template/", "path_to_template"},
-		{"leading slash", "/template.plush", "template.plush"},
-		{"multiple leading slashes", "///path/to/file", "path_to_file"},
-		{"deep path", "/very/deep/path/to/user/profile.plush", "very_deep_path_to_user_profile.plush"},
-		{"path with spaces", "/path with spaces/template.plush", "path_with_spaces_template.plush"},
-		{"path with special chars", "/path@#$/template!.plush", "path_template_.plush"},
+		{"unix path", "/path/to/template.plush", "/path/to/template.plush"},
+		{"windows rooted path", "\\path\\to\\template.plush", "/path/to/template.plush"},
+		{"mixed separators", "/path\\to/template.plush", "/path/to/template.plush"},
+		{"trailing slash", "/path/to/template/", "/path/to/template"},
+		{"leading slash", "/template.plush", "/template.plush"},
+		{"multiple leading slashes", "///path/to/file", "/path/to/file"},
+		{"deep path", "/very/deep/path/to/user/profile.plush", "/very/deep/path/to/user/profile.plush"},
+		{"path with spaces", "/path with spaces/template.plush", "/path_with_spaces/template.plush"},
+		{"path with special chars", "/path@#$/template!.plush", "/path/template_.plush"},
 	}
 
 	for _, tt := range tests {
@@ -65,7 +91,7 @@ func Test_CleanFilePath(t *testing.T) {
 	}
 }
 
-func Test_CleanURLPath(t *testing.T) {
+func Test_Clean_URL_Path(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -93,7 +119,7 @@ func Test_CleanURLPath(t *testing.T) {
 	}
 }
 
-func Test_CleanFullURL(t *testing.T) {
+func Test_Clean_Full_URL(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -123,7 +149,7 @@ func Test_CleanFullURL(t *testing.T) {
 	}
 }
 
-func Test_CleanRequestURL(t *testing.T) {
+func Test_Clean_Request_URL(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -147,7 +173,7 @@ func Test_CleanRequestURL(t *testing.T) {
 	}
 }
 
-func Test_GenerateCacheKey(t *testing.T) {
+func Test_Generate_Cache_Key(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
@@ -164,19 +190,19 @@ func Test_GenerateCacheKey(t *testing.T) {
 			name:     "filename with path URL",
 			filename: "user/profile.plush",
 			url:      "/users/123",
-			expected: "user_profile.plush|url:users_123",
+			expected: "user/profile.plush|url:users_123",
 		},
 		{
 			name:     "filename with full URL",
 			filename: "templates/admin/dashboard.plush",
 			url:      "https://admin.example.com/dashboard",
-			expected: "templates_admin_dashboard.plush|url:admin.example.com_dashboard",
+			expected: "templates/admin/dashboard.plush|url:admin.example.com_dashboard",
 		},
 		{
 			name:     "complex filename and URL",
 			filename: "/very/deep/path/to/user-profile_template.plush",
 			url:      "https://api.example.com/v1/users/profile?id=123",
-			expected: "very_deep_path_to_user-profile_template.plush|url:api.example.com_v1_users_profile",
+			expected: "/very/deep/path/to/user-profile_template.plush|url:api.example.com_v1_users_profile",
 		},
 	}
 
@@ -187,22 +213,22 @@ func Test_GenerateCacheKey(t *testing.T) {
 				ctx.Set(meta.TemplateCurrentUrlKey, tt.url)
 			}
 
-			result := generateCacheKey(tt.filename, ctx)
+			result := generateCacheKeyFromCleanFilename(cleanFilePath(tt.filename), ctx)
 			require.Equal(t, tt.expected, result)
 		})
 	}
 }
 
-func Test_GenerateASTKey(t *testing.T) {
+func Test_Generate_AST_Key(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
 		expected string
 	}{
 		{"simple filename", "template.plush", "ast:template.plush"},
-		{"path filename", "/path/to/template.plush", "ast:path_to_template.plush"},
-		{"windows path", "\\path\\to\\template.plush", "ast:path_to_template.plush"},
-		{"complex path", "/very/deep/path/user-profile.plush", "ast:very_deep_path_user-profile.plush"},
+		{"path filename", "/path/to/template.plush", "ast:/path/to/template.plush"},
+		{"windows rooted path", "\\path\\to\\template.plush", "ast:/path/to/template.plush"},
+		{"complex path", "/very/deep/path/user-profile.plush", "ast:/very/deep/path/user-profile.plush"},
 	}
 
 	for _, tt := range tests {
@@ -213,7 +239,18 @@ func Test_GenerateASTKey(t *testing.T) {
 	}
 }
 
-func Test_GenerateFullKey(t *testing.T) {
+func Test_Generate_AST_Key_Uses_Full_Path_Not_Basename(t *testing.T) {
+	require.NotEqual(t,
+		GenerateASTKey("/templates/client-1/index.plush"),
+		GenerateASTKey("/templates/client-2/index.plush"),
+	)
+	require.NotEqual(t,
+		GenerateASTKey("/templates/client/index.plush"),
+		GenerateASTKey("/templates_client/index.plush"),
+	)
+}
+
+func Test_Generate_Full_Key(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
@@ -230,13 +267,13 @@ func Test_GenerateFullKey(t *testing.T) {
 			name:     "with URL",
 			filename: "user/profile.plush",
 			url:      "/users/123",
-			expected: "full:user_profile.plush|url:users_123",
+			expected: "full:user/profile.plush|url:users_123",
 		},
 		{
 			name:     "complex case",
 			filename: "/templates/admin/dashboard.plush",
 			url:      "https://admin.site.com/dashboard?tab=users",
-			expected: "full:templates_admin_dashboard.plush|url:admin.site.com_dashboard",
+			expected: "full:/templates/admin/dashboard.plush|url:admin.site.com_dashboard",
 		},
 	}
 
@@ -247,13 +284,13 @@ func Test_GenerateFullKey(t *testing.T) {
 				ctx.Set(meta.TemplateCurrentUrlKey, tt.url)
 			}
 
-			result := generateFullKey(tt.filename, ctx)
+			result := generateFullKeyFromCleanFilename(cleanFilePath(tt.filename), ctx)
 			require.Equal(t, tt.expected, result)
 		})
 	}
 }
 
-func Test_CacheKeyConsistency(t *testing.T) {
+func Test_Cache_Key_Consistency(t *testing.T) {
 	r := require.New(t)
 
 	// Test that same input produces same output
@@ -266,13 +303,14 @@ func Test_CacheKeyConsistency(t *testing.T) {
 	ctx2 := NewContext()
 	ctx2.Set(meta.TemplateCurrentUrlKey, url)
 
-	key1 := generateCacheKey(filename, ctx1)
-	key2 := generateCacheKey(filename, ctx2)
+	cleanFilename := cleanFilePath(filename)
+	key1 := generateCacheKeyFromCleanFilename(cleanFilename, ctx1)
+	key2 := generateCacheKeyFromCleanFilename(cleanFilename, ctx2)
 
 	r.Equal(key1, key2, "Same inputs should produce same cache keys")
 }
 
-func Test_CacheKeyVariations(t *testing.T) {
+func Test_Cache_Key_Variations(t *testing.T) {
 	r := require.New(t)
 
 	filename := "template.plush"
@@ -284,26 +322,27 @@ func Test_CacheKeyVariations(t *testing.T) {
 	ctx2 := NewContext()
 	ctx2.Set(meta.TemplateCurrentUrlKey, "/users/456")
 
-	key1 := generateCacheKey(filename, ctx1)
-	key2 := generateCacheKey(filename, ctx2)
+	cleanFilename := cleanFilePath(filename)
+	key1 := generateCacheKeyFromCleanFilename(cleanFilename, ctx1)
+	key2 := generateCacheKeyFromCleanFilename(cleanFilename, ctx2)
 
 	r.NotEqual(key1, key2, "Different URLs should produce different cache keys")
 }
 
-func Test_EdgeCases(t *testing.T) {
+func Test_Edge_Cases(t *testing.T) {
 	r := require.New(t)
 
 	// Test with nil context
 	ctx := NewContext()
-	key := generateCacheKey("test.plush", ctx)
+	key := generateCacheKeyFromCleanFilename(cleanFilePath("test.plush"), ctx)
 	r.Equal("test.plush", key)
 
 	// Test with empty filename
-	key = generateCacheKey("", ctx)
+	key = generateCacheKeyFromCleanFilename(cleanFilePath(""), ctx)
 	r.Equal("", key)
 
 	// Test with very long inputs
 	longFilename := strings.Repeat("a", 1000) + ".plush"
-	key = generateCacheKey(longFilename, ctx)
+	key = generateCacheKeyFromCleanFilename(cleanFilePath(longFilename), ctx)
 	r.Contains(key, strings.Repeat("a", 1000))
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_groupByHelper(t *testing.T) {
+func Test_Group_By_Helper(t *testing.T) {
 	r := require.New(t)
 	g, err := plush.GroupByHelper(2, []string{"a", "b", "c", "d", "e"})
 	r.NoError(err)
@@ -18,7 +18,7 @@ func Test_groupByHelper(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_groupByHelper_Exact(t *testing.T) {
+func Test_Group_By_Helper_Exact(t *testing.T) {
 	r := require.New(t)
 	g, err := plush.GroupByHelper(2, []string{"a", "b"})
 	r.NoError(err)
@@ -27,7 +27,7 @@ func Test_groupByHelper_Exact(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_groupByHelper_Pointer(t *testing.T) {
+func Test_Group_By_Helper_Pointer(t *testing.T) {
 	r := require.New(t)
 	g, err := plush.GroupByHelper(2, &[]string{"a", "b", "c", "d", "e"})
 	r.NoError(err)
@@ -38,7 +38,7 @@ func Test_groupByHelper_Pointer(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_groupByHelper_SmallGroup(t *testing.T) {
+func Test_Group_By_Helper_Small_Group(t *testing.T) {
 	r := require.New(t)
 	g, err := plush.GroupByHelper(1, []string{"a", "b", "c", "d", "e"})
 	r.NoError(err)
@@ -47,13 +47,13 @@ func Test_groupByHelper_SmallGroup(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_groupByHelper_NonGroupable(t *testing.T) {
+func Test_Group_By_Helper_Non_Groupable(t *testing.T) {
 	r := require.New(t)
 	_, err := plush.GroupByHelper(1, 1)
 	r.Error(err)
 }
 
-func Test_groupByHelper_ZeroSize(t *testing.T) {
+func Test_Group_By_Helper_Zero_Size(t *testing.T) {
 	r := require.New(t)
 	_, err := plush.GroupByHelper(0, []string{"a"})
 	r.Error(err)

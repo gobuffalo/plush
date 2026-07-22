@@ -28,7 +28,7 @@ func Test_Comment(t *testing.T) {
 	}
 }
 
-func Test_BlockComment(t *testing.T) {
+func Test_Block_Comment(t *testing.T) {
 	r := require.New(t)
 	input := map[string]string{
 		"test1": `

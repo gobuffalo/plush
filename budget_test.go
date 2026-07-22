@@ -9,7 +9,7 @@ import (
 
 // --- Core budget enforcement ---
 
-func TestBudget_LoopExceedsLimit(t *testing.T) {
+func Test_Budget_Loop_Exceeds_Limit(t *testing.T) {
 	r := require.New(t)
 	// 5 iterations, each costs 1, limit is 3 → should exceed
 	tmpl := `<% for (i,v) in items { } %>`
@@ -20,7 +20,7 @@ func TestBudget_LoopExceedsLimit(t *testing.T) {
 	r.True(errors.Is(err, ErrBudgetExceeded), "expected ErrBudgetExceeded, got %v", err)
 }
 
-func TestBudget_LoopWithinLimit(t *testing.T) {
+func Test_Budget_Loop_Within_Limit(t *testing.T) {
 	r := require.New(t)
 	tmpl := `<% for (i,v) in items { } %>`
 	ctx := NewContext()
@@ -32,7 +32,7 @@ func TestBudget_LoopWithinLimit(t *testing.T) {
 
 // --- Nil budget = unlimited (backwards compat) ---
 
-func TestBudget_NilIsUnlimited(t *testing.T) {
+func Test_Budget_Nil_Is_Unlimited(t *testing.T) {
 	r := require.New(t)
 	tmpl := `<% for (i,v) in items { } %>`
 	ctx := NewContext()
@@ -44,7 +44,7 @@ func TestBudget_NilIsUnlimited(t *testing.T) {
 
 // --- Zero cost fields are skipped ---
 
-func TestBudget_ZeroCostNeverExceeds(t *testing.T) {
+func Test_Budget_Zero_Cost_Never_Exceeds(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.LoopIteration = 0 // free
@@ -59,7 +59,7 @@ func TestBudget_ZeroCostNeverExceeds(t *testing.T) {
 
 // --- Custom helper call costs ---
 
-func TestBudget_CustomHelperCost(t *testing.T) {
+func Test_Budget_Custom_Helper_Cost(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.HelperCall = 100 // each call costs 100
@@ -75,7 +75,7 @@ func TestBudget_CustomHelperCost(t *testing.T) {
 
 // --- Remaining / Used ---
 
-func TestBudget_UsedAndRemaining(t *testing.T) {
+func Test_Budget_Used_And_Remaining(t *testing.T) {
 	r := require.New(t)
 	b := NewBudget(100)
 	ctx := NewContext()
@@ -91,7 +91,7 @@ func TestBudget_UsedAndRemaining(t *testing.T) {
 
 // --- Condition check cost ---
 
-func TestBudget_ConditionExceedsLimit(t *testing.T) {
+func Test_Budget_Condition_Exceeds_Limit(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.ConditionCheck = 5
@@ -106,7 +106,7 @@ func TestBudget_ConditionExceedsLimit(t *testing.T) {
 
 // --- Sub-render shares parent budget (unit test on Budget directly) ---
 
-func TestBudget_SubRenderSharesParentBudget(t *testing.T) {
+func Test_Budget_Sub_Render_Shares_Parent_Budget(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.SubRender = 50 // each snippet costs 50
@@ -124,7 +124,7 @@ func TestBudget_SubRenderSharesParentBudget(t *testing.T) {
 
 // --- NewBudget / WithCosts / Costs ---
 
-func TestBudget_WithCosts(t *testing.T) {
+func Test_Budget_With_Costs(t *testing.T) {
 	r := require.New(t)
 	b := NewBudget(1000)
 	custom := ZeroCosts()
@@ -134,7 +134,7 @@ func TestBudget_WithCosts(t *testing.T) {
 	r.Equal(int64(42), b.Costs().HelperCall)
 }
 
-func TestBudget_NewBudgetWithCosts(t *testing.T) {
+func Test_Budget_New_Budget_With_Costs(t *testing.T) {
 	r := require.New(t)
 	costs := DefaultBudgetCosts()
 	b := NewBudgetWithCosts(500, costs)
@@ -145,7 +145,7 @@ func TestBudget_NewBudgetWithCosts(t *testing.T) {
 
 // --- Per-function cost override ---
 
-func TestBudget_FunctionCostOverride_Exceeds(t *testing.T) {
+func Test_Budget_Function_Cost_Override_Exceeds(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.FunctionCosts = map[string]int64{
@@ -161,7 +161,7 @@ func TestBudget_FunctionCostOverride_Exceeds(t *testing.T) {
 	r.True(errors.Is(err, ErrBudgetExceeded), "expected ErrBudgetExceeded, got %v", err)
 }
 
-func TestBudget_FunctionCostOverride_FallsBackToHelperCall(t *testing.T) {
+func Test_Budget_Function_Cost_Override_Falls_Back_To_Helper_Call(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.HelperCall = 10
@@ -178,7 +178,7 @@ func TestBudget_FunctionCostOverride_FallsBackToHelperCall(t *testing.T) {
 	r.True(errors.Is(err, ErrBudgetExceeded), "expected ErrBudgetExceeded, got %v", err)
 }
 
-func TestBudget_FunctionCostOverride_CheapFunctionDoesNotExceed(t *testing.T) {
+func Test_Budget_Function_Cost_Override_Cheap_Function_Does_Not_Exceed(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.HelperCall = 100 // default is huge
@@ -197,7 +197,7 @@ func TestBudget_FunctionCostOverride_CheapFunctionDoesNotExceed(t *testing.T) {
 
 // --- Stats report ---
 
-func TestBudget_Stats_LoopIterations(t *testing.T) {
+func Test_Budget_Stats_Loop_Iterations(t *testing.T) {
 	r := require.New(t)
 	b := NewBudget(1_000)
 	ctx := NewContext()
@@ -214,7 +214,7 @@ func TestBudget_Stats_LoopIterations(t *testing.T) {
 	r.Equal(int64(0), s.ConditionChecks)
 }
 
-func TestBudget_Stats_FunctionCalls(t *testing.T) {
+func Test_Budget_Stats_Function_Calls(t *testing.T) {
 	r := require.New(t)
 	b := NewBudget(1_000)
 	ctx := NewContext()
@@ -230,7 +230,7 @@ func TestBudget_Stats_FunctionCalls(t *testing.T) {
 	r.Equal(int64(15), s.ByFunction["greet"])
 }
 
-func TestBudget_Stats_ByFunctionPerFunctionCost(t *testing.T) {
+func Test_Budget_Stats_By_Function_Per_Function_Cost(t *testing.T) {
 	r := require.New(t)
 	costs := ZeroCosts()
 	costs.FunctionCosts = map[string]int64{
@@ -253,7 +253,7 @@ func TestBudget_Stats_ByFunctionPerFunctionCost(t *testing.T) {
 	r.Equal(int64(24), s.TotalUsed)
 }
 
-func TestBudget_Stats_MixedOperations(t *testing.T) {
+func Test_Budget_Stats_Mixed_Operations(t *testing.T) {
 	r := require.New(t)
 	costs := BudgetCosts{
 		LoopIteration:  2,
@@ -277,7 +277,7 @@ func TestBudget_Stats_MixedOperations(t *testing.T) {
 	r.Equal(int64(23), s.TotalUsed)
 }
 
-func TestBudget_Stats_NilBudgetReturnsZero(t *testing.T) {
+func Test_Budget_Stats_Nil_Budget_Returns_Zero(t *testing.T) {
 	r := require.New(t)
 	var b *Budget
 	s := b.Stats()

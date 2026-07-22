@@ -46,7 +46,7 @@ func Test_Render_Hash_Array_Index(t *testing.T) {
 	r.Equal("Mark Bates|paul", s)
 }
 
-func Test_Render_HashCall(t *testing.T) {
+func Test_Render_Hash_Call(t *testing.T) {
 	r := require.New(t)
 	input := `<%= m["a"] %>`
 	ctx := plush.NewContext()
@@ -58,7 +58,7 @@ func Test_Render_HashCall(t *testing.T) {
 	r.Equal("A", s)
 }
 
-func Test_Render_HashCall_OnAttribute(t *testing.T) {
+func Test_Render_Hash_Call_On_Attribute(t *testing.T) {
 	r := require.New(t)
 	input := `<%= m.MyMap[key] %>`
 	ctx := plush.NewContext()
@@ -73,7 +73,7 @@ func Test_Render_HashCall_OnAttribute(t *testing.T) {
 	r.Equal("A", s)
 }
 
-func Test_Render_HashCall_OnAttribute_IntoFunction(t *testing.T) {
+func Test_Render_Hash_Call_On_Attribute_Into_Function(t *testing.T) {
 	r := require.New(t)
 	input := `<%= debug(m.MyMap[key]) %>`
 	ctx := plush.NewContext()

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ContentOf_MissingBlock(t *testing.T) {
+func Test_Content_Of_Missing_Block(t *testing.T) {
 	r := require.New(t)
 
 	cf := helptest.NewContext()
@@ -18,7 +18,7 @@ func Test_ContentOf_MissingBlock(t *testing.T) {
 	r.Empty(s)
 }
 
-func Test_ContentOf_MissingBlock_DefaultBlock(t *testing.T) {
+func Test_Content_Of_Missing_Block_Default_Block(t *testing.T) {
 	r := require.New(t)
 
 	cf := helptest.NewContext()
@@ -31,7 +31,7 @@ func Test_ContentOf_MissingBlock_DefaultBlock(t *testing.T) {
 	r.Equal(s, template.HTML("default"))
 }
 
-func Test_ContentOf(t *testing.T) {
+func Test_Content_Of(t *testing.T) {
 	r := require.New(t)
 
 	cf := helptest.NewContext()

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_GroupBy(t *testing.T) {
+func Test_Group_By(t *testing.T) {
 	r := require.New(t)
 	g, err := GroupBy(2, []string{"a", "b", "c", "d", "e"})
 	r.NoError(err)
@@ -17,7 +17,7 @@ func Test_GroupBy(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_GroupBy_Exact(t *testing.T) {
+func Test_Group_By_Exact(t *testing.T) {
 	r := require.New(t)
 	g, err := GroupBy(2, []string{"a", "b"})
 	r.NoError(err)
@@ -26,7 +26,7 @@ func Test_GroupBy_Exact(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_GroupBy_Pointer(t *testing.T) {
+func Test_Group_By_Pointer(t *testing.T) {
 	r := require.New(t)
 	g, err := GroupBy(2, &[]string{"a", "b", "c", "d", "e"})
 	r.NoError(err)
@@ -37,7 +37,7 @@ func Test_GroupBy_Pointer(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_GroupBy_SmallGroup(t *testing.T) {
+func Test_Group_By_Small_Group(t *testing.T) {
 	r := require.New(t)
 	g, err := GroupBy(1, []string{"a", "b", "c", "d", "e"})
 	r.NoError(err)
@@ -46,13 +46,13 @@ func Test_GroupBy_SmallGroup(t *testing.T) {
 	r.Nil(g.Next())
 }
 
-func Test_GroupBy_NonGroupable(t *testing.T) {
+func Test_Group_By_Non_Groupable(t *testing.T) {
 	r := require.New(t)
 	_, err := GroupBy(1, 1)
 	r.Error(err)
 }
 
-func Test_GroupBy_ZeroSize(t *testing.T) {
+func Test_Group_By_Zero_Size(t *testing.T) {
 	r := require.New(t)
 	_, err := GroupBy(0, []string{"a"})
 	r.Error(err)

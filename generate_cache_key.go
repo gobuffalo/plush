@@ -15,7 +15,8 @@ var (
 	// String pools for reducing allocations
 	stringPool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, 0, 1024) // Larger initial capacity for file paths
+			buf := make([]byte, 0, 1024) // Larger initial capacity for file paths
+			return &buf
 		},
 	}
 )
@@ -40,11 +41,17 @@ func sanitizeCacheKey(input string) string {
 	if input == "" {
 		return ""
 	}
+	if cacheKeyAlreadySanitized(input) {
+		return input
+	}
 
 	// Get buffer from pool with larger capacity for file paths
-	buf := stringPool.Get().([]byte)
-	buf = buf[:0]
-	defer stringPool.Put(buf)
+	bufPtr := stringPool.Get().(*[]byte)
+	buf := (*bufPtr)[:0]
+	defer func() {
+		*bufPtr = buf
+		stringPool.Put(bufPtr)
+	}()
 
 	// Ensure buffer has enough capacity to avoid reallocations
 	if cap(buf) < len(input) {
@@ -78,24 +85,64 @@ func sanitizeCacheKey(input string) string {
 	return string(buf)
 }
 
+func cacheKeyAlreadySanitized(input string) bool {
+	if input == "" {
+		return true
+	}
+	lastWasUnderscore := false
+	for i := 0; i < len(input); i++ {
+		char := input[i]
+		if charTable[char] != char {
+			return false
+		}
+		if char == '_' {
+			if lastWasUnderscore {
+				return false
+			}
+			lastWasUnderscore = true
+			continue
+		}
+		lastWasUnderscore = false
+	}
+	return !lastWasUnderscore
+}
+
 // Enhanced file path cleaning for better performance
 func cleanFilePath(filename string) string {
 	if filename == "" {
 		return ""
 	}
-	// Fast path separator normalization
 	var cleanPath string
 	if strings.ContainsRune(filename, '\\') {
 		cleanPath = strings.ReplaceAll(filename, "\\", "/")
 	} else {
 		cleanPath = filename
 	}
-
-	// Trim slashes
+	absolutePath := strings.HasPrefix(cleanPath, "/")
 	cleanPath = strings.Trim(cleanPath, "/")
+	if cleanPath == "" {
+		if absolutePath {
+			return "/"
+		}
+		return ""
+	}
 
-	// Sanitize in single pass
-	return sanitizeCacheKey(cleanPath)
+	parts := strings.Split(cleanPath, "/")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		part = sanitizeCacheKey(part)
+		if part != "" {
+			out = append(out, part)
+		}
+	}
+	cleanPath = strings.Join(out, "/")
+	if absolutePath && cleanPath != "" {
+		return "/" + cleanPath
+	}
+	return cleanPath
 }
 
 // Enhanced URL cleaning with optimized performance
@@ -142,6 +189,7 @@ func cleanFullURL(rawURL string) string {
 	slashCount := 0
 
 	// Parse URL components in single pass
+parseURL:
 	for i, r := range rawURL {
 		switch {
 		case !foundSlashes && r == ':':
@@ -165,7 +213,7 @@ func cleanFullURL(rawURL string) string {
 			} else if r == '?' || r == '#' {
 				// Query or fragment - end of host, no path
 				hostEnd = i
-				break
+				break parseURL
 			}
 			continue
 
@@ -173,7 +221,7 @@ func cleanFullURL(rawURL string) string {
 			if r == '?' || r == '#' {
 				// End of path
 				pathEnd = i
-				break
+				break parseURL
 			}
 		}
 	}
@@ -214,30 +262,29 @@ func cleanFullURL(rawURL string) string {
 	return strings.Join(parts, "_")
 }
 
-func generateCacheKey(filename string, ctx hctx.Context) string {
-	cleanFilename := cleanFilePath(filename)
-
-	if ctx.Value(meta.TemplateCurrentUrlKey) == nil {
+func generateCacheKeyFromCleanFilename(cleanFilename string, ctx hctx.Context) string {
+	currentURL := ctx.Value(meta.TemplateCurrentUrlKey)
+	if currentURL == nil {
 		return cleanFilename
 	}
-
-	keyParts := make([]string, 0, 2)
-	keyParts = append(keyParts, cleanFilename)
-	if url, ok := ctx.Value(meta.TemplateCurrentUrlKey).(string); ok && url != "" {
+	if url, ok := currentURL.(string); ok && url != "" {
 		cleanURL := cleanRequestURL(url)
 		if cleanURL != "" {
-			keyParts = append(keyParts, "url:"+cleanURL)
+			return cleanFilename + "|url:" + cleanURL
 		}
 	}
-
-	return strings.Join(keyParts, "|")
+	return cleanFilename
 }
 
 func GenerateASTKey(filename string) string {
 	cleanFilename := cleanFilePath(filename)
+	return GenerateASTKeyFromCleanFilename(cleanFilename)
+}
+
+func GenerateASTKeyFromCleanFilename(cleanFilename string) string {
 	return "ast:" + cleanFilename
 }
 
-func generateFullKey(filename string, ctx hctx.Context) string {
-	return "full:" + generateCacheKey(filename, ctx)
+func generateFullKeyFromCleanFilename(cleanFilename string, ctx hctx.Context) string {
+	return "full:" + generateCacheKeyFromCleanFilename(cleanFilename, ctx)
 }

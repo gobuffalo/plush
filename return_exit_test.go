@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Return_Exit_With__InfixExpression(t *testing.T) {
+func Test_Return_Exit_With_Infix_Expression(t *testing.T) {
 	tests := []struct {
 		name     string
 		success  bool

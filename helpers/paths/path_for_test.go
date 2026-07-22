@@ -31,7 +31,7 @@ type BadCar struct {
 	IDs int
 }
 
-func Test_PathFor(t *testing.T) {
+func Test_Path_For(t *testing.T) {
 	table := []struct {
 		in  interface{}
 		out string

@@ -1,11 +1,16 @@
 package helpers
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+)
 
 // HelperMap holds onto helpers and validates they are properly formed.
 type HelperMap struct {
 	helpers map[string]interface{}
 	moot    *sync.Mutex
+	version uint64
+	latest  uint64
 }
 
 // NewHelperMap containing all of the "default" helpers from "plush.Helpers".
@@ -29,6 +34,8 @@ func (h *HelperMap) Add(key string, helper interface{}) error {
 	}
 
 	h.helpers[key] = helper
+	h.version++
+	atomic.StoreUint64(&h.latest, h.version)
 
 	return nil
 }
@@ -52,4 +59,19 @@ func (h HelperMap) Helpers() map[string]interface{} {
 
 func (h HelperMap) All() map[string]interface{} {
 	return h.helpers
+}
+
+func (h *HelperMap) Version() uint64 {
+	return atomic.LoadUint64(&h.latest)
+}
+
+func (h *HelperMap) Snapshot() (map[string]interface{}, uint64) {
+	h.moot.Lock()
+	defer h.moot.Unlock()
+
+	out := make(map[string]interface{}, len(h.helpers))
+	for k, v := range h.helpers {
+		out[k] = v
+	}
+	return out, h.version
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_PartialHelper_Nil_Context(t *testing.T) {
+func Test_Partial_Helper_Nil_Context(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -24,7 +24,7 @@ func Test_PartialHelper_Nil_Context(t *testing.T) {
 	r.Equal("", string(html))
 }
 
-func Test_PartialHelper_Blank_Context(t *testing.T) {
+func Test_Partial_Helper_Blank_Context(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -37,7 +37,7 @@ func Test_PartialHelper_Blank_Context(t *testing.T) {
 	r.Equal("", string(html))
 }
 
-func Test_PartialHelper_Invalid_Feeder(t *testing.T) {
+func Test_Partial_Helper_Invalid_Feeder(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -51,7 +51,7 @@ func Test_PartialHelper_Invalid_Feeder(t *testing.T) {
 	r.Equal("", string(html))
 }
 
-func Test_PartialHelper_NestedPartial_PathHandling(t *testing.T) {
+func Test_Partial_Helper_Nested_Partial_Path_Handling(t *testing.T) {
 	r := require.New(t)
 	gg := meta.TemplateFileKey
 	partials := map[string]string{
@@ -75,7 +75,7 @@ func Test_PartialHelper_NestedPartial_PathHandling(t *testing.T) {
 	r.Equal("CODE3 PRINT /fake/templates/testing/code-3.plush.html", normalized)
 }
 
-func Test_PartialHelper_Invalid_FeederFunction(t *testing.T) {
+func Test_Partial_Helper_Invalid_Feeder_Function(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -91,7 +91,7 @@ func Test_PartialHelper_Invalid_FeederFunction(t *testing.T) {
 	r.Equal("", string(html))
 }
 
-func Test_PartialHelper_Feeder_Error(t *testing.T) {
+func Test_Partial_Helper_Feeder_Error(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -106,7 +106,7 @@ func Test_PartialHelper_Feeder_Error(t *testing.T) {
 	r.Contains(err.Error(), "me-rong")
 }
 
-func Test_PartialHelper_Good(t *testing.T) {
+func Test_Partial_Helper_Good(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -121,7 +121,7 @@ func Test_PartialHelper_Good(t *testing.T) {
 	r.Equal(`<div class="test">Plush!</div>`, string(html))
 }
 
-func Test_PartialHelper_With_Data(t *testing.T) {
+func Test_Partial_Helper_With_Data(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -136,7 +136,7 @@ func Test_PartialHelper_With_Data(t *testing.T) {
 	r.Equal(`<div class="test">Hello Yonghwan</div>`, string(html))
 }
 
-func Test_PartialHelper_With_InternalChange(t *testing.T) {
+func Test_Partial_Helper_With_Internal_Change(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -155,7 +155,7 @@ func Test_PartialHelper_With_InternalChange(t *testing.T) {
 	r.Equal(3, help.Value("number"))
 }
 
-func Test_PartialHelper_With_Recursion(t *testing.T) {
+func Test_Partial_Helper_With_Recursion(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -177,7 +177,7 @@ func Test_PartialHelper_With_Recursion(t *testing.T) {
 	r.Equal(3, help.Value("number"))
 }
 
-func Test_PartialHelper_Render_Error(t *testing.T) {
+func Test_Partial_Helper_Render_Error(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -191,7 +191,7 @@ func Test_PartialHelper_Render_Error(t *testing.T) {
 	r.Error(err)
 }
 
-func Test_PartialHelper_With_Layout(t *testing.T) {
+func Test_Partial_Helper_With_Layout(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -212,7 +212,7 @@ func Test_PartialHelper_With_Layout(t *testing.T) {
 	r.Equal(`<html><div class="test">Hello Yonghwan</div></html>`, string(html))
 }
 
-func Test_PartialHelper_JavaScript(t *testing.T) {
+func Test_Partial_Helper_Java_Script(t *testing.T) {
 	r := require.New(t)
 
 	name := "index.js"
@@ -228,7 +228,7 @@ func Test_PartialHelper_JavaScript(t *testing.T) {
 	r.Equal(`alert('\'Hello\'');`, string(html))
 }
 
-func Test_PartialHelper_JavaScript_Without_Extension(t *testing.T) {
+func Test_Partial_Helper_Java_Script_Without_Extension(t *testing.T) {
 	r := require.New(t)
 
 	name := "index"
@@ -244,7 +244,7 @@ func Test_PartialHelper_JavaScript_Without_Extension(t *testing.T) {
 	r.Equal(`alert('\'Hello\'');`, string(html))
 }
 
-func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
+func Test_Partial_Helper_Javascript_With_HTML(t *testing.T) {
 	r := require.New(t)
 
 	name := "index.html"
@@ -260,7 +260,7 @@ func Test_PartialHelper_Javascript_With_HTML(t *testing.T) {
 	r.Equal(`alert(\'\\\'Hello\\\'\');`, string(html))
 }
 
-func Test_PartialHelper_Javascript_With_HTML_Partial(t *testing.T) {
+func Test_Partial_Helper_Javascript_With_HTML_Partial(t *testing.T) {
 	// https://github.com/gobuffalo/plush/issues/106
 	r := require.New(t)
 
@@ -302,7 +302,7 @@ func Test_PartialHelper_Javascript_With_HTML_Partial(t *testing.T) {
 	r.Equal(`alert('\u003Cdiv\u003E\\u003Cspan\\u003EFORM\\u003C/span\\u003E\u003C/div\u003E');`, string(html))
 }
 
-func Test_PartialHelper_NoDefaultHelperOverride(t *testing.T) {
+func Test_Partial_Helper_No_Default_Helper_Override(t *testing.T) {
 	r := require.New(t)
 
 	t.Run("Existing key", func(t *testing.T) {

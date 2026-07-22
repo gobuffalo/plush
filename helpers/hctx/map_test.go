@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestMerge(t *testing.T) {
+func Test_Merge(t *testing.T) {
 	map1 := Map{
 		"Test": 1,
 		"Take": 2,

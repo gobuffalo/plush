@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_NextToken_Simple(t *testing.T) {
+func Test_Next_Token_Simple(t *testing.T) {
 	r := require.New(t)
 	input := `<%= 1 %>`
 	tests := []struct {
@@ -29,7 +29,7 @@ func Test_NextToken_Simple(t *testing.T) {
 	}
 }
 
-func Test_NextToken_SkipLineComments(t *testing.T) {
+func Test_Next_Token_Skip_Line_Comments(t *testing.T) {
 	r := require.New(t)
 	input := `<%=
 		# comment
@@ -53,7 +53,7 @@ func Test_NextToken_SkipLineComments(t *testing.T) {
 	}
 }
 
-func Test_HoleCache(t *testing.T) {
+func Test_Hole_Cache(t *testing.T) {
 	r := require.New(t)
 	input := `<%H "mark \"cool\" bates" %><%= a %>`
 	tests := []struct {
@@ -75,7 +75,7 @@ func Test_HoleCache(t *testing.T) {
 	}
 }
 
-func Test_HoleCacheIF(t *testing.T) {
+func Test_Hole_Cache_IF(t *testing.T) {
 	r := require.New(t)
 	input := `<%H if(a == 2) { %> 
 	
@@ -106,7 +106,7 @@ func Test_HoleCacheIF(t *testing.T) {
 	}
 }
 
-func Test_HoleCacheF(t *testing.T) {
+func Test_Hole_Cache_F(t *testing.T) {
 	r := require.New(t)
 	input := `<%H for (i,v) in myArray { %> 
 	
@@ -132,7 +132,7 @@ func Test_HoleCacheF(t *testing.T) {
 		r.Equal(tt.tokenLiteral, tok.Literal)
 	}
 }
-func Test_EscapeStringQuote(t *testing.T) {
+func Test_Escape_String_Quote(t *testing.T) {
 	r := require.New(t)
 	input := `<%= "mark \"cool\" bates" %>`
 	tests := []struct {
@@ -152,7 +152,7 @@ func Test_EscapeStringQuote(t *testing.T) {
 	}
 }
 
-func Test_EscapeExpression(t *testing.T) {
+func Test_Escape_Expression(t *testing.T) {
 	r := require.New(t)
 	input := `<p>\<%= 1 %></p>`
 	tests := []struct {
@@ -170,7 +170,7 @@ func Test_EscapeExpression(t *testing.T) {
 	}
 }
 
-func Test_Escaping_EscapeExpression(t *testing.T) {
+func Test_Escaping_Escape_Expression(t *testing.T) {
 	r := require.New(t)
 	input := `C:\\<%= "temp" %>`
 	l := lexer.New(input)
@@ -192,7 +192,7 @@ func Test_Escaping_EscapeExpression(t *testing.T) {
 	}
 }
 
-func Test_NextToken_WithHTML(t *testing.T) {
+func Test_Next_Token_With_HTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p class="foo"><%= 1 %></p>`
 	tests := []struct {
@@ -213,7 +213,7 @@ func Test_NextToken_WithHTML(t *testing.T) {
 		r.Equal(tt.tokenLiteral, tok.Literal)
 	}
 }
-func Test_NextToken_Complete(t *testing.T) {
+func Test_Next_Token_Complete(t *testing.T) {
 	r := require.New(t)
 	input := `<% break
 	continue

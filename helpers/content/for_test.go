@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ContentFor(t *testing.T) {
+func Test_Content_For(t *testing.T) {
 	r := require.New(t)
 
 	in := "<button>hi</button>"
@@ -25,7 +25,7 @@ func Test_ContentFor(t *testing.T) {
 	r.Contains(s, in)
 }
 
-func Test_ContentFor_Fail(t *testing.T) {
+func Test_Content_For_Fail(t *testing.T) {
 	r := require.New(t)
 
 	hc := helptest.NewContext()

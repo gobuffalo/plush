@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gobuffalo/plush/v5/helpers/hctx"
@@ -29,9 +30,24 @@ var DefaultTimeFormat = "January 02, 2006 15:04:05 -0700"
 var PunchHoleCacheLifetime = 1 * time.Minute
 var cacheEnabled bool
 var holeTemplateFileKey = "__plush_internal_hole_render_key_" + fmt.Sprintf("%d", time.Now().UnixNano()) + "__"
+var interpreterPartialRenderKey = "__plush_internal_interpreter_partial_render_" + fmt.Sprintf("%d", time.Now().UnixNano()) + "__"
 var errClearCache error = errors.New("template recently cached, skipping")
+var punchHoleConcurrencyLimit atomic.Int64
 
 var templateCacheBackend TemplateCache
+
+func init() {
+	punchHoleConcurrencyLimit.Store(int64(runtime.GOMAXPROCS(0)))
+}
+
+func SetPunchHoleConcurrencyLimit(limit int) int {
+	previous := int(punchHoleConcurrencyLimit.Swap(int64(limit)))
+	return previous
+}
+
+func GetPunchHoleConcurrencyLimit() int {
+	return int(punchHoleConcurrencyLimit.Load())
+}
 
 func PlushCacheSetup(ts TemplateCache) {
 	cacheEnabled = true
@@ -41,6 +57,13 @@ func PlushCacheSetup(ts TemplateCache) {
 // BuffaloRenderer implements the render.TemplateEngine interface allowing velvet to be used as a template engine
 // for Buffalo
 func BuffaloRenderer(input string, data map[string]interface{}, helpers map[string]interface{}) (string, error) {
+	return BuffaloRendererWithContext(input, data, helpers, nil)
+}
+
+// BuffaloRendererWithContext is BuffaloRenderer with an optional context
+// configuration hook. The hook runs after data/helpers are loaded and before
+// rendering, so callers can attach per-render options such as VM fast helpers.
+func BuffaloRendererWithContext(input string, data map[string]interface{}, helpers map[string]interface{}, configure func(*Context)) (string, error) {
 	if data == nil {
 		data = make(map[string]interface{})
 	}
@@ -48,6 +71,9 @@ func BuffaloRenderer(input string, data map[string]interface{}, helpers map[stri
 		data[k] = v
 	}
 	ctx := NewContextWith(data)
+	if configure != nil {
+		configure(ctx)
+	}
 	defer func() {
 		if data != nil {
 			for k := range ctx.data.localInterner.stringToID {
@@ -65,6 +91,7 @@ func Parse(input ...string) (*Template, error) {
 	}
 
 	filename := input[1]
+	sourceHash := templateSourceHash(preprocessTrimTags(input[0]))
 	var astKey string
 	isPlushFile := isFilePlush(filename)
 	if isPlushFile {
@@ -73,12 +100,24 @@ func Parse(input ...string) (*Template, error) {
 	}
 	if filename != "" && templateCacheBackend != nil && isPlushFile {
 		t, ok := templateCacheBackend.Get(astKey)
-		if ok {
-			cloned := &Template{
-				Program: t.Program,
-				IsCache: true,
+		if ok && templateSourceMatches(t, sourceHash) {
+			if t.Program != nil {
+				return cachedParseTemplate(t), nil
 			}
-			return cloned, nil
+			if t.Input != "" {
+				parsed, err := NewTemplate(t.Input)
+				if err != nil {
+					return parsed, err
+				}
+				astTemplate := &Template{
+					Program:    parsed.Program,
+					VMBytecode: t.VMBytecode,
+					SourceHash: sourceHash,
+					IsCache:    false,
+				}
+				templateCacheBackend.Set(astKey, astTemplate)
+				return cachedParseTemplate(astTemplate), nil
+			}
 		}
 	}
 
@@ -89,12 +128,26 @@ func Parse(input ...string) (*Template, error) {
 	// Cache the AST
 	if cacheEnabled && templateCacheBackend != nil && filename != "" && isPlushFile {
 		astTemplate := &Template{
-			Program: t.Program,
-			IsCache: false,
+			Program:    t.Program,
+			SourceHash: sourceHash,
+			IsCache:    false,
+		}
+		if cached, ok := templateCacheBackend.Get(astKey); ok && cached != nil && templateSourceMatches(cached, sourceHash) {
+			astTemplate.VMBytecode = cached.VMBytecode
 		}
 		templateCacheBackend.Set(astKey, astTemplate)
 	}
 	return t, nil
+}
+
+func cachedParseTemplate(t *Template) *Template {
+	return &Template{
+		Input:      t.Input,
+		Program:    t.Program,
+		VMBytecode: t.VMBytecode,
+		SourceHash: t.SourceHash,
+		IsCache:    true,
+	}
 }
 
 // RenderWithBudget renders a template and enforces a work-unit limit.
@@ -114,6 +167,9 @@ func RenderWithBudgetConfig(input string, limit int64, costs BudgetCosts, ctx *C
 }
 
 func isHole(ctx hctx.Context) bool {
+	if c, ok := ctx.(*Context); ok {
+		return isHoleContext(c)
+	}
 	if ctx.Value(holeTemplateFileKey) == nil {
 		return false
 	}
@@ -127,24 +183,208 @@ func isHole(ctx hctx.Context) bool {
 
 }
 
-// Render a string using the given context.
-func Render(input string, ctx hctx.Context) (string, error) {
-	var filename string
+func IsHoleRender(ctx hctx.Context) bool {
+	return isHole(ctx)
+}
 
-	// Extract filename from context if we're not in a hole rendering pass.
-	// The filename is used for template caching - only main templates (not holes) should use cache.
-	if !isHole(ctx) && ctx.Value(meta.TemplateFileKey) != nil {
-		if rawFilename, ok := ctx.Value(meta.TemplateFileKey).(string); ok {
-			filename = cleanFilePath(rawFilename) // ✅ Clean once here
+func PunchHoleTemplateFilename(ctx hctx.Context) string {
+	if c, ok := ctx.(*Context); ok {
+		return punchHoleTemplateFilenameContext(c)
+	}
+	if isHole(ctx) || ctx.Value(meta.TemplateFileKey) == nil {
+		return ""
+	}
+	rawFilename, ok := ctx.Value(meta.TemplateFileKey).(string)
+	if !ok {
+		return ""
+	}
+	return cleanFilePath(rawFilename)
+}
+
+func isHoleContext(ctx *Context) bool {
+	if ctx == nil {
+		return false
+	}
+	ctx.moot.RLock()
+	defer ctx.moot.RUnlock()
+
+	holeFile, ok := ctx.data.Resolve(holeTemplateFileKey)
+	if !ok || holeFile == nil {
+		return false
+	}
+	templateFile, ok := ctx.data.Resolve(meta.TemplateFileKey)
+	if !ok || templateFile == nil {
+		return false
+	}
+
+	holeName, _ := holeFile.(string)
+	templateName, _ := templateFile.(string)
+	return templateName == holeName
+}
+
+func punchHoleTemplateFilenameContext(ctx *Context) string {
+	if ctx == nil {
+		return ""
+	}
+	ctx.moot.RLock()
+	defer ctx.moot.RUnlock()
+
+	templateFile, templateOK := ctx.data.Resolve(meta.TemplateFileKey)
+	if !templateOK || templateFile == nil {
+		return ""
+	}
+	holeFile, holeOK := ctx.data.Resolve(holeTemplateFileKey)
+	if holeOK && holeFile != nil {
+		holeName, _ := holeFile.(string)
+		templateName, _ := templateFile.(string)
+		if templateName == holeName {
+			return ""
 		}
 	}
+
+	rawFilename, ok := templateFile.(string)
+	if !ok {
+		return ""
+	}
+	return cleanFilePath(rawFilename)
+}
+
+func IsPlushTemplateFile(filename string) bool {
+	return isFilePlush(filename)
+}
+
+func IsVMBytecodeCacheableTemplateFile(filename string) bool {
+	return isVMBytecodeCacheableFile(filename)
+}
+
+func RenderFromPunchHoleCache(filename string, ctx hctx.Context) (string, error) {
+	return RenderFromPunchHoleCacheWithSource(filename, "", ctx)
+}
+
+func RenderFromPunchHoleCacheWithSource(filename string, source string, ctx hctx.Context) (string, error) {
+	return renderFromCache(filename, source, ctx)
+}
+
+func IsPunchHoleCacheExpired(err error) bool {
+	return errors.Is(err, errClearCache)
+}
+
+func CachePunchHoleSkeleton(filename string, ctx hctx.Context, skeleton string, holes []HoleMarker, force bool) {
+	CachePunchHoleSkeletonWithSource(filename, ctx, skeleton, holes, force, "")
+}
+
+func CachePunchHoleSkeletonWithSource(filename string, ctx hctx.Context, skeleton string, holes []HoleMarker, force bool, source string) {
+	if filename == "" || !cacheEnabled || templateCacheBackend == nil || !isFilePlush(filename) || len(holes) == 0 {
+		return
+	}
+	sourceHash := templateSourceCacheHash(source)
+	if !force {
+		if cached, ok := templateCacheBackend.Get(generateFullKeyFromCleanFilename(filename, ctx)); ok && templateSourceMatches(cached, sourceHash) {
+			return
+		}
+	}
+	astKey := GenerateASTKeyFromCleanFilename(filename)
+	if _, ok := templateCacheBackend.Get(astKey); !ok {
+		templateCacheBackend.Set(astKey, &Template{IsCache: false})
+	}
+	templateCacheBackend.Set(generateFullKeyFromCleanFilename(filename, ctx), &Template{
+		Skeleton:   skeleton,
+		PunchHole:  holesCopy(holes),
+		SourceHash: sourceHash,
+		IsCache:    false,
+		LastCached: time.Now(),
+	})
+}
+
+func FinalizePunchHolePositions(rendered string, holes []HoleMarker) []HoleMarker {
+	out := holesCopy(holes)
+	for i := range out {
+		hole := &out[i]
+		if hole.start == -1 && hole.end == -1 {
+			pos := strings.Index(rendered, hole.marker_name)
+			if pos != -1 {
+				hole.start = pos
+				hole.end = pos + len(hole.marker_name)
+			}
+		}
+	}
+	return out
+}
+
+func RenderPunchHolesConcurrently(holes []HoleMarker, ctx hctx.Context) []HoleMarker {
+	return renderHolesConcurrently(holesCopy(holes), ctx)
+}
+
+func RenderPunchHolesConcurrentlyWith(holes []HoleMarker, ctx hctx.Context, renderer func(string, hctx.Context) (string, error)) []HoleMarker {
+	return renderHolesConcurrentlyWith(holesCopy(holes), ctx, renderer)
+}
+
+func FillPunchHoles(rendered string, holes []HoleMarker) (string, error) {
+	return fillHoles(rendered, holes)
+}
+
+// Render a string using the given context.
+func Render(input string, ctx hctx.Context) (string, error) {
+	if ctx == nil {
+		ctx = NewContext()
+	}
+	restoreDiagnosticsRoot := SetRenderDiagnosticsRootActive(ctx, true)
+	if restoreDiagnosticsRoot != nil {
+		defer restoreDiagnosticsRoot()
+	}
+	start := time.Now()
+	mode := RenderModeNameInterpreter
+	if GetRenderMode() == RenderModeVM {
+		mode = RenderModeNameVM
+	}
+	filename := PunchHoleTemplateFilename(ctx)
+	UpdateRenderDiagnosticsForTemplate(ctx, filename, func(d *RenderDiagnostics) {
+		d.Mode = mode
+		d.TemplateFilename = filename
+		if mode == RenderModeNameInterpreter {
+			d.VMBytecodeCache = VMBytecodeCacheDisabled
+			if d.FastPath == "" {
+				d.FastPath = RenderFastPathGeneric
+			}
+		}
+		if d.PunchHoleCache == "" {
+			d.PunchHoleCache = PunchHoleCacheDisabled
+		}
+	})
+	defer func() {
+		UpdateRenderDiagnostics(ctx, func(d *RenderDiagnostics) {
+			d.Mode = mode
+			if d.TemplateFilename == "" {
+				d.TemplateFilename = filename
+			}
+			if mode == RenderModeNameInterpreter {
+				d.VMBytecodeCache = VMBytecodeCacheDisabled
+			}
+			d.EngineDuration += time.Since(start)
+		})
+	}()
+
+	if GetRenderMode() == RenderModeVM {
+		renderer, ok := registeredVMRenderer()
+		if !ok {
+			return "", fmt.Errorf("%w: import github.com/gobuffalo/plush/v5/VM/plush to register it", ErrVMRendererNotRegistered)
+		}
+		return renderer(input, ctx)
+	}
+	return renderInterpreter(input, ctx)
+}
+
+func renderInterpreter(input string, ctx hctx.Context) (string, error) {
+	// Extract filename from context if we're not in a hole rendering pass.
+	// The filename is used for template caching - only main templates (not holes) should use cache.
+	filename := PunchHoleTemplateFilename(ctx)
 	forceCacheClear := false
 	// Try to render from cache if conditions are met:
 	// - Not in hole rendering pass (prevents infinite recursion)
 	// - Cache is enabled and backend is available
 	// - Template has a filename for cache key
-	if !isHole(ctx) && filename != "" {
-		cacheT, cacheErr := renderFromCache(filename, ctx)
+	if filename != "" {
+		cacheT, cacheErr := renderFromCache(filename, input, ctx)
 		if cacheErr == nil {
 			return cacheT, nil
 		} else if cacheErr == errClearCache {
@@ -177,10 +417,11 @@ func Render(input string, ctx hctx.Context) (string, error) {
 	if (!t.IsCache || forceCacheClear) && cacheEnabled {
 		defer func() {
 			if templateCacheBackend != nil && filename != "" && isPlushFile && len(holeMarkers) > 0 {
-				fullKey := generateFullKey(filename, ctx)
+				fullKey := generateFullKeyFromCleanFilename(filename, ctx)
 				cacheableTemplate := &Template{
 					Skeleton:   t.Skeleton,
 					PunchHole:  holesCopy(t.PunchHole),
+					SourceHash: templateSourceHash(preprocessTrimTags(input)),
 					IsCache:    false,
 					LastCached: time.Now(),
 				}
@@ -198,6 +439,44 @@ func Render(input string, ctx hctx.Context) (string, error) {
 
 	// Return skeleton as-is (either no holes or we're in hole rendering pass)
 	return s, nil
+}
+
+func RenderInterpreter(input string, ctx hctx.Context) (string, error) {
+	if ctx == nil {
+		ctx = NewContext()
+	}
+	restore := forceInterpreterPartialRender(ctx)
+	defer restore()
+	return renderInterpreter(input, ctx)
+}
+
+func forceInterpreterPartialRender(ctx hctx.Context) func() {
+	if ctx == nil {
+		return func() {}
+	}
+	previous := ctx.Value(interpreterPartialRenderKey)
+	ctx.Set(interpreterPartialRenderKey, true)
+	return func() {
+		if previous == nil {
+			ctx.Set(interpreterPartialRenderKey, false)
+			return
+		}
+		ctx.Set(interpreterPartialRenderKey, previous)
+	}
+}
+
+func useInterpreterPartialRender(ctx hctx.Context) bool {
+	if ctx == nil {
+		return false
+	}
+	useInterpreter, _ := ctx.Value(interpreterPartialRenderKey).(bool)
+	return useInterpreter
+}
+
+// InterpreterPartialRenderEnabled reports whether partials should stay on the
+// interpreter path for the current render.
+func InterpreterPartialRenderEnabled(ctx hctx.Context) bool {
+	return useInterpreterPartialRender(ctx)
 }
 
 // fillHoles replaces all markers in the rendered string with their rendered content using stored positions.
@@ -218,19 +497,21 @@ func fillHoles(rendered string, holes []HoleMarker) (string, error) {
 }
 
 func renderHolesConcurrently(holes []HoleMarker, ctx hctx.Context) []HoleMarker {
+	if useInterpreterPartialRender(ctx) {
+		return renderHolesConcurrentlyWith(holes, ctx, RenderInterpreter)
+	}
+	return renderHolesConcurrentlyWith(holes, ctx, Render)
+}
+
+func renderHolesConcurrentlyWith(holes []HoleMarker, ctx hctx.Context, renderer func(string, hctx.Context) (string, error)) []HoleMarker {
 	if len(holes) == 0 {
 		return holes
 	}
-
-	var wg sync.WaitGroup
-	wg.Add(len(holes))
+	if renderer == nil {
+		renderer = Render
+	}
 
 	holeCtx := ctx.New()
-
-	octx := holeCtx.(*Context)
-	defer func() {
-		ctx = octx
-	}()
 	var currentfileName string
 	if holeCtx.Value(meta.TemplateFileKey) != nil {
 
@@ -240,24 +521,38 @@ func renderHolesConcurrently(holes []HoleMarker, ctx hctx.Context) []HoleMarker 
 		}
 	}
 	holeCtx.Set(holeTemplateFileKey, holeCtx.Value(meta.TemplateFileKey))
-	for k, hole := range holes {
-		go func(k int, childCtx hctx.Context, h HoleMarker) {
-			defer wg.Done()
 
-			content, err := Render(h.input, childCtx)
-			if err != nil {
-				content = err.Error() + " in " + currentfileName
-
-			}
-			holes[k].content = content
-		}(k, holeCtx.New(), hole)
+	workerCount := GetPunchHoleConcurrencyLimit()
+	if workerCount <= 0 || workerCount > len(holes) {
+		workerCount = len(holes)
 	}
+
+	jobs := make(chan int)
+	var wg sync.WaitGroup
+	wg.Add(workerCount)
+	for worker := 0; worker < workerCount; worker++ {
+		go func() {
+			defer wg.Done()
+			for k := range jobs {
+				childCtx := holeCtx.New()
+				content, err := renderer(holes[k].input, childCtx)
+				if err != nil {
+					content = err.Error() + " in " + currentfileName
+				}
+				holes[k].content = content
+			}
+		}()
+	}
+	for k := range holes {
+		jobs <- k
+	}
+	close(jobs)
 	wg.Wait()
 	return holes
 }
 
 func RenderR(input io.Reader, ctx hctx.Context) (string, error) {
-	b, err := ioutil.ReadAll(input)
+	b, err := io.ReadAll(input)
 	if err != nil {
 		return "", err
 	}
@@ -307,21 +602,23 @@ func holesCopy(holes []HoleMarker) []HoleMarker {
 // If there is no filename, we should not use the cache.
 // If cache is disabled, we should not use the cache.
 // If there is no templateCacheBackend, we should not use the cache.
-func renderFromCache(filename string, ctx hctx.Context) (string, error) {
+func renderFromCache(filename string, source string, ctx hctx.Context) (string, error) {
 	if filename == "" || !cacheEnabled || templateCacheBackend == nil || isHole(ctx) {
 		return "", errors.New("cache not available")
 	}
 
-	astKey := GenerateASTKey(filename)
-	_, astExists := templateCacheBackend.Get(astKey)
-	if !astExists {
+	sourceHash := templateSourceCacheHash(preprocessTrimTags(source))
+	astKey := GenerateASTKeyFromCleanFilename(filename)
+	astTemplate, astExists := templateCacheBackend.Get(astKey)
+	if !astExists || !templateSourceMatches(astTemplate, sourceHash) {
 		return "", errors.New("AST not cached")
 	}
 
-	fullKey := generateFullKey(filename, ctx)
+	fullKey := generateFullKeyFromCleanFilename(filename, ctx)
 	inCacheTemplate, inCache := templateCacheBackend.Get(fullKey)
 	if inCache &&
 		inCacheTemplate != nil &&
+		templateSourceMatches(inCacheTemplate, sourceHash) &&
 		inCacheTemplate.Skeleton != "" &&
 		len(inCacheTemplate.PunchHole) > 0 {
 		if time.Since(inCacheTemplate.LastCached) > PunchHoleCacheLifetime {
@@ -344,4 +641,11 @@ func isFilePlush(filename string) bool {
 	}
 	// Check for .plush
 	return filename[len(filename)-6:] == ".plush"
+}
+
+func isVMBytecodeCacheableFile(filename string) bool {
+	if isFilePlush(filename) {
+		return true
+	}
+	return strings.HasSuffix(filename, ".html")
 }

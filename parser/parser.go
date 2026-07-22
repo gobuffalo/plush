@@ -337,16 +337,6 @@ func (p *parser) parseHoleStatment() ast.Statement {
 		Statements: p.curToken.Literal,
 	}
 }
-func (p *parser) parseContinue() ast.Expression {
-	if !p.inForBlock {
-		p.errors = append(p.errors, fmt.Sprintf("line %d: continue is not in a loop", p.curToken.LineNumber))
-		return nil
-	}
-
-	stmt := &ast.ContinueExpression{TokenAble: ast.TokenAble{Token: p.curToken}}
-
-	return stmt
-}
 
 func (p *parser) parseIntegerLiteral() ast.Expression {
 	lit := &ast.IntegerLiteral{TokenAble: ast.TokenAble{Token: p.curToken}}
@@ -506,23 +496,8 @@ func (p *parser) parseForExpression() ast.Expression {
 func (p *parser) parseIfExpression() ast.Expression {
 	expression := &ast.IfExpression{TokenAble: ast.TokenAble{Token: p.curToken}}
 
-	if !p.expectPeek(token.LPAREN) {
-		return nil
-	}
-
-	p.nextToken()
-	expression.Condition = p.parseExpression(LOWEST)
-
-	//Confrim that expression is comparable
-	if !p.confrimIfCondition(expression.Condition) {
-		return nil
-	}
-
-	if !p.expectPeek(token.RPAREN) {
-		return nil
-	}
-
-	if !p.expectPeek(token.LBRACE) {
+	expression.Condition = p.parseIfCondition()
+	if expression.Condition == nil {
 		return nil
 	}
 
@@ -555,14 +530,29 @@ func (p *parser) parseIfExpression() ast.Expression {
 func (p *parser) parseElseIfExpression() *ast.ElseIfExpression {
 	expression := &ast.ElseIfExpression{TokenAble: ast.TokenAble{Token: p.curToken}}
 
-	if !p.expectPeek(token.LPAREN) {
+	expression.Condition = p.parseIfCondition()
+	if expression.Condition == nil {
+		return nil
+	}
+
+	expression.Block = p.parseBlockStatement()
+
+	return expression
+}
+
+func (p *parser) parseIfCondition() ast.Expression {
+	if p.peekTokenIs(token.LBRACE) || p.peekTokenIs(token.E_END) || p.peekTokenIs(token.EOF) {
+		p.errors = append(p.errors, fmt.Sprintf("line %d: syntax error: missing if condition", p.curToken.LineNumber))
 		return nil
 	}
 
 	p.nextToken()
-	expression.Condition = p.parseExpression(LOWEST)
+	condition := p.parseExpression(LOWEST)
+	if condition == nil {
+		return nil
+	}
 
-	if !p.expectPeek(token.RPAREN) {
+	if !p.confrimIfCondition(condition) {
 		return nil
 	}
 
@@ -570,9 +560,7 @@ func (p *parser) parseElseIfExpression() *ast.ElseIfExpression {
 		return nil
 	}
 
-	expression.Block = p.parseBlockStatement()
-
-	return expression
+	return condition
 }
 
 func (p *parser) parseBlockStatement() *ast.BlockStatement {
@@ -690,7 +678,7 @@ func (p *parser) parseCallExpression(function ast.Expression) ast.Expression {
 		calleeIdent := &ast.Identifier{Value: exp.Function.String()}
 		p.nextToken()
 		p.nextToken()
-		parseExp := p.parseExpression(LOWEST)
+		parseExp := p.parseExpression(EQUALS)
 
 		exp.ChainCallee = p.assignCallee(parseExp, calleeIdent)
 		if exp.ChainCallee == nil {
@@ -752,7 +740,7 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 		calleeIdent := &ast.Identifier{Value: left.String()}
 		p.nextToken()
 		p.nextToken()
-		parseExp := p.parseExpression(LOWEST)
+		parseExp := p.parseExpression(EQUALS)
 
 		exp.Callee = p.assignCallee(parseExp, calleeIdent)
 		if exp.Callee == nil {
@@ -779,11 +767,14 @@ func (p *parser) assignCallee(exp ast.Expression, calleeIdent *ast.Identifier) (
 	assignedCallee = nil
 	switch ss := exp.(type) {
 	case *ast.IndexExpression:
-		ff, ok := ss.Left.(*ast.Identifier)
-		if ok {
+		switch ff := ss.Left.(type) {
+		case *ast.Identifier:
 			ff.OriginalCallee.Callee = calleeIdent
 			assignedCallee = ss
-		} else {
+		case *ast.CallExpression:
+			ff.Callee = calleeIdent
+			assignedCallee = ss
+		default:
 			msg := fmt.Sprintf("line %d: syntax error: invalid nested index access, expected an identifier %v", p.curToken.LineNumber, ss)
 			p.errors = append(p.errors, msg)
 		}

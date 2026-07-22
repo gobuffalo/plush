@@ -1,5 +1,6 @@
 *.log
 .DS_Store
+Makefile
 doc
 tmp
 pkg

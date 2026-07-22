@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Helpers_WithoutData(t *testing.T) {
+func Test_Helpers_Without_Data(t *testing.T) {
 	type data map[string]interface{}
 	r := require.New(t)
 

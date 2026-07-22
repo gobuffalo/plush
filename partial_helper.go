@@ -86,7 +86,12 @@ func PartialHelper(name string, data map[string]interface{}, help HelperContext)
 			help.Set(meta.TemplateExtensionKey, origExt)
 		}()
 	}
-	if part, err = Render(part, help.Context); err != nil {
+	if useInterpreterPartialRender(help.Context) {
+		part, err = RenderInterpreter(part, help.Context)
+	} else {
+		part, err = Render(part, help.Context)
+	}
+	if err != nil {
 		return "", err
 	}
 	if ct, ok := help.Value("contentType").(string); ok {

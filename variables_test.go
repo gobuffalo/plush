@@ -31,7 +31,7 @@ func Test_Let_Reassignment(t *testing.T) {
 	r.Equal("bar\n    \n  \nbaz", strings.TrimSpace(s))
 }
 
-func Test_Let_SyntaxError_NoEqualSign(t *testing.T) {
+func Test_Let_Syntax_Error_No_Equal_Sign(t *testing.T) {
 	r := require.New(t)
 	input := `<% let foo %>`
 
@@ -41,7 +41,7 @@ func Test_Let_SyntaxError_NoEqualSign(t *testing.T) {
 	r.ErrorContains(err, "expected next token to be =")
 }
 
-func Test_Let_SyntaxError_NoIdentifier(t *testing.T) {
+func Test_Let_Syntax_Error_No_Identifier(t *testing.T) {
 	r := require.New(t)
 	input := `<% let = %>`
 
@@ -51,7 +51,7 @@ func Test_Let_SyntaxError_NoIdentifier(t *testing.T) {
 	r.ErrorContains(err, "expected next token to be IDENT")
 }
 
-func Test_Let_Reassignment_UnknownIdent(t *testing.T) {
+func Test_Let_Reassignment_Unknown_Ident(t *testing.T) {
 	r := require.New(t)
 	input := `<% foo = "baz" %>`
 
@@ -147,7 +147,7 @@ func Test_Render_Let_Array(t *testing.T) {
 	}
 }
 
-func Test_Render_Let_ArrayAsssign_Unassignable(t *testing.T) {
+func Test_Render_Let_Array_Asssign_Unassignable(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 
@@ -162,7 +162,7 @@ func Test_Render_Let_ArrayAsssign_Unassignable(t *testing.T) {
 	r.Contains(err.Error(), "cannot use 'HELLO WORLD' (untyped string constant) as plush_test.tt value in assignment")
 }
 
-func Test_Render_Let_ArrayAsssign_AssignableToArrayInterface(t *testing.T) {
+func Test_Render_Let_Array_Asssign_Assignable_To_Array_Interface(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 
@@ -176,7 +176,7 @@ func Test_Render_Let_ArrayAsssign_AssignableToArrayInterface(t *testing.T) {
 	r.NoError(err)
 }
 
-func Test_Render_AppendArray_WithTypeIntArrayTypeString(t *testing.T) {
+func Test_Render_Append_Array_With_Type_Int_Array_Type_String(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 
@@ -187,7 +187,7 @@ func Test_Render_AppendArray_WithTypeIntArrayTypeString(t *testing.T) {
 	r.Contains(err.Error(), "cannot append '1' (untyped int constant) as string value in assignment")
 }
 
-func Test_Render_AppendArray_ItemAppenedNotReflectValue(t *testing.T) {
+func Test_Render_Append_Array_Item_Appened_Not_Reflect_Value(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	input := `<% let a = [1,"22",33] %><% a = a + 1 %><%= a %>`
@@ -199,7 +199,7 @@ func Test_Render_AppendArray_ItemAppenedNotReflectValue(t *testing.T) {
 	r.Equal(reflect.Int, reflect.TypeOf(val[3]).Kind())
 }
 
-func Test_Render_AppendArray_CreatedInPlush(t *testing.T) {
+func Test_Render_Append_Array_Created_In_Plush(t *testing.T) {
 	r := require.New(t)
 
 	input := `<% let a = [1,2,"HelloWorld"] %><% a = a + 2.2 %><%= a %>`
@@ -207,7 +207,7 @@ func Test_Render_AppendArray_CreatedInPlush(t *testing.T) {
 	r.NoError(err)
 	r.Equal(s, "12HelloWorld2.2")
 }
-func Test_Render_AppendArray_WithTypeInterface(t *testing.T) {
+func Test_Render_Append_Array_With_Type_Interface(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 
@@ -226,7 +226,7 @@ type Product1 struct {
 	Name []string
 }
 
-func Test_Render_Access_CalleeArray(t *testing.T) {
+func Test_Render_Access_Callee_Array(t *testing.T) {
 	tests := []struct {
 		name     string
 		success  bool

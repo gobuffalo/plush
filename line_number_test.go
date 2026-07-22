@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_LineNumberErrors(t *testing.T) {
+func Test_Line_Number_Errors(t *testing.T) {
 	r := require.New(t)
 	input := `<p>
 	<%= f.Foo %>
@@ -18,7 +18,7 @@ func Test_LineNumberErrors(t *testing.T) {
 	r.Contains(err.Error(), "line 2:")
 }
 
-func Test_LineNumberErrors_ForLoop(t *testing.T) {
+func Test_Line_Number_Errors_For_Loop(t *testing.T) {
 	r := require.New(t)
 	input := `
 	<%= for (n) in numbers.Foo { %>
@@ -31,7 +31,7 @@ func Test_LineNumberErrors_ForLoop(t *testing.T) {
 	r.Contains(err.Error(), "line 2:")
 }
 
-func Test_LineNumberErrors_ForLoop2(t *testing.T) {
+func Test_Line_Number_Errors_For_Loop_2(t *testing.T) {
 	r := require.New(t)
 	input := `
 	<%= for (n in numbers.Foo { %>
@@ -46,7 +46,7 @@ func Test_LineNumberErrors_ForLoop2(t *testing.T) {
 	r.Contains(err.Error(), "line 2:")
 }
 
-func Test_LineNumberErrors_InsideForLoop(t *testing.T) {
+func Test_Line_Number_Errors_Inside_For_Loop(t *testing.T) {
 	r := require.New(t)
 	input := `
 	<%= for (n) in numbers { %>
@@ -60,7 +60,7 @@ func Test_LineNumberErrors_InsideForLoop(t *testing.T) {
 	r.Contains(err.Error(), "line 3:")
 }
 
-func Test_LineNumberErrors_MissingKeyword(t *testing.T) {
+func Test_Line_Number_Errors_Missing_Keyword(t *testing.T) {
 	r := require.New(t)
 	input := `
 

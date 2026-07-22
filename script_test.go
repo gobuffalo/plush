@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_RunScript(t *testing.T) {
+func Test_Run_Script(t *testing.T) {
 	r := require.New(t)
 	bb := &bytes.Buffer{}
 	ctx := plush.NewContextWith(map[string]interface{}{

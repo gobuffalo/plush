@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_VariadicHelper(t *testing.T) {
+func Test_Variadic_Helper(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo(1, 2, 3) %>`
 	ctx := plush.NewContext()
@@ -20,7 +20,7 @@ func Test_VariadicHelper(t *testing.T) {
 	r.Equal("3", s)
 }
 
-func Test_VariadicHelper_SecondArg(t *testing.T) {
+func Test_Variadic_Helper_Second_Arg(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo("hello") %>`
 	ctx := plush.NewContext()
@@ -33,7 +33,7 @@ func Test_VariadicHelper_SecondArg(t *testing.T) {
 	r.Equal("hello", s)
 }
 
-func Test_VariadicHelperNoParam(t *testing.T) {
+func Test_Variadic_Helper_No_Param(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo() %>`
 	ctx := plush.NewContext()
@@ -46,7 +46,7 @@ func Test_VariadicHelperNoParam(t *testing.T) {
 	r.Equal("0", s)
 }
 
-func Test_VariadicHelperNoVariadicParam(t *testing.T) {
+func Test_Variadic_Helper_No_Variadic_Param(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo(1) %>`
 	ctx := plush.NewContext()
@@ -59,7 +59,7 @@ func Test_VariadicHelperNoVariadicParam(t *testing.T) {
 	r.Equal("1", s)
 }
 
-func Test_VariadicHelperWithWrongParam(t *testing.T) {
+func Test_Variadic_Helper_With_Wrong_Param(t *testing.T) {
 	r := require.New(t)
 	input := `<%= foo(1, 2, "test") %>`
 	ctx := plush.NewContext()

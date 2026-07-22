@@ -2,6 +2,7 @@ package plush_test
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/gobuffalo/plush/v5"
@@ -112,7 +113,7 @@ func Test_Render_String_Math(t *testing.T) {
 	}
 }
 
-func Test_Render_Operator_UndefinedVar(t *testing.T) {
+func Test_Render_Operator_Undefined_Var(t *testing.T) {
 	tests := []struct {
 		operator      string
 		result        interface{}
@@ -178,4 +179,39 @@ func Test_Render_Bool_Concat(t *testing.T) {
 	s, err := plush.Render(input, plush.NewContext())
 	r.Equal("true", s)
 	r.NoError(err)
+}
+
+func Test_Render_Safe_Mixed_Numeric_Comparisons(t *testing.T) {
+	type stats struct {
+		Count uint64
+	}
+	type robot struct {
+		Count uint32
+		Stats stats
+	}
+
+	ctx := plush.NewContextWith(map[string]interface{}{
+		"i32":     int32(0),
+		"i32v":    int32(3),
+		"neg":     int32(-1),
+		"u32":     uint32(0),
+		"u32v":    uint32(3),
+		"u64":     uint64(0),
+		"u64one":  uint64(1),
+		"u64max":  uint64(math.MaxUint64),
+		"f32":     float32(3.5),
+		"f32i":    float32(3),
+		"f64":     float64(3.5),
+		"f64i":    float64(3),
+		"counts":  map[string]uint32{"active": 0},
+		"values":  []uint32{0},
+		"robot":   robot{Count: 0, Stats: stats{Count: 0}},
+		"robots":  []robot{{Count: 1, Stats: stats{Count: 0}}},
+		"counter": func() uint32 { return 0 },
+	})
+
+	input := `<%= i32 == 0 %>|<%= u32 == 0 %>|<%= u64 == 0 %>|<%= u64one > 0 %>|<%= u64max > 0 %>|<%= neg < 0 %>|<%= neg < u64 %>|<%= neg == u64 %>|<%= u32v == 3 %>|<%= f32 == 3.5 %>|<%= f64 > 3 %>|<%= f32i == 3 %>|<%= f64i == i32v %>|<%= u32v == 3.0 %>|<%= u64one == 1.0 %>|<%= robot.Count == 0 %>|<%= robots[0].Stats.Count == 0 %>|<%= counts["active"] == 0 %>|<%= values[0] == 0 %>|<%= counter() == 0 %>|<%= robot.Count + 1 %>`
+	s, err := plush.Render(input, ctx)
+	require.NoError(t, err)
+	require.Equal(t, "true|true|true|true|true|true|true|false|true|true|true|true|true|true|true|true|true|true|true|true|1", s)
 }

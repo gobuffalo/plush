@@ -21,7 +21,7 @@ func Test_Identifiers_With_Digits(t *testing.T) {
 	r.Equal("hi mark", s)
 }
 
-func Test_Render_Var_ends_in_Number(t *testing.T) {
+func Test_Render_Var_Ends_In_Number(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContextWith(map[string]interface{}{
 		"myvar1": []string{"john", "paul"},
@@ -31,7 +31,7 @@ func Test_Render_Var_ends_in_Number(t *testing.T) {
 	r.Equal("johnpaul", s)
 }
 
-func Test_Render_AllowsManyNumericTypes(t *testing.T) {
+func Test_Render_Allows_Many_Numeric_Types(t *testing.T) {
 	r := require.New(t)
 	input := `<%= i32 %> <%= u32 %> <%= i8 %>`
 

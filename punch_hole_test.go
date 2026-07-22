@@ -1,15 +1,18 @@
 package plush_test
 
 import (
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/gobuffalo/plush/v5"
+	"github.com/gobuffalo/plush/v5/helpers/hctx"
 	"github.com/gobuffalo/plush/v5/helpers/meta"
 	"github.com/gobuffalo/plush/v5/templatecache/inmemory"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Render_HolePunching_IntermediateOutput(t *testing.T) {
+func Test_Render_Hole_Punching_Intermediate_Output(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	ctx.Set("myArray", []string{"a", "b"})
@@ -29,7 +32,36 @@ func Test_Render_HolePunching_IntermediateOutput(t *testing.T) {
 	r.Contains(s, "ab1<PLUSH_HOLE_0>ab1<PLUSH_HOLE_1>")
 }
 
-func Test_Render_HolePunching_ErrorInHole(t *testing.T) {
+func Test_Render_Hole_Punching_Concurrency_Limit(t *testing.T) {
+	oldLimit := plush.SetPunchHoleConcurrencyLimit(2)
+	defer plush.SetPunchHoleConcurrencyLimit(oldLimit)
+
+	holes := make([]plush.HoleMarker, 8)
+	for i := range holes {
+		holes[i] = plush.NewHoleMarker(plush.PunchHoleMarkerName(i), "hole", -1, -1)
+	}
+
+	var active int64
+	var maxActive int64
+	renderer := func(input string, ctx hctx.Context) (string, error) {
+		current := atomic.AddInt64(&active, 1)
+		for {
+			maximum := atomic.LoadInt64(&maxActive)
+			if current <= maximum || atomic.CompareAndSwapInt64(&maxActive, maximum, current) {
+				break
+			}
+		}
+		time.Sleep(5 * time.Millisecond)
+		atomic.AddInt64(&active, -1)
+		return input, nil
+	}
+
+	rendered := plush.RenderPunchHolesConcurrentlyWith(holes, plush.NewContext(), renderer)
+	require.Len(t, rendered, len(holes))
+	require.LessOrEqual(t, atomic.LoadInt64(&maxActive), int64(2))
+}
+
+func Test_Render_Hole_Punching_Error_In_Hole(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -43,7 +75,7 @@ func Test_Render_HolePunching_ErrorInHole(t *testing.T) {
 	r.Nil(err)
 	r.Contains(ss, `line 1: "hole_punch_first_error": unknown identifier`)
 }
-func Test_Render_HolePunching_SecondPass_NoCache(t *testing.T) {
+func Test_Render_Hole_Punching_Second_Pass_No_Cache(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -57,7 +89,28 @@ func Test_Render_HolePunching_SecondPass_NoCache(t *testing.T) {
 	r.Equal(`ab1testingab1sssss`, ss)
 }
 
-func Test_Render_HolePunching_MultipleHolesAtEnd(t *testing.T) {
+func Test_Render_Hole_Punching_Skeleton_Cache_Invalidates_When_Source_Changes(t *testing.T) {
+	r := require.New(t)
+	cache := inmemory.NewMemoryCache()
+	plush.PlushCacheSetup(cache)
+	defer plush.ClearTemplateCache()
+
+	previous := plush.SetRenderMode(plush.RenderModeInterpreter)
+	defer plush.SetRenderMode(previous)
+
+	ctx := plush.NewContext()
+	ctx.Set(meta.TemplateFileKey, "holes-source-change.plush")
+
+	ss, err := plush.Render(`A<%H "hole" %>B`, ctx)
+	r.NoError(err)
+	r.Equal(`AholeB`, ss)
+
+	ss, err = plush.Render(`C<%H "hole" %>D`, ctx)
+	r.NoError(err)
+	r.Equal(`CholeD`, ss)
+}
+
+func Test_Render_Hole_Punching_Multiple_Holes_At_End(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -72,7 +125,7 @@ func Test_Render_HolePunching_MultipleHolesAtEnd(t *testing.T) {
 	r.Equal(`ab1testingab1sssssddddeeee`, ss)
 }
 
-func Test_Render_HolePunching_HolesAtStart(t *testing.T) {
+func Test_Render_Hole_Punching_Holes_At_Start(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -86,7 +139,7 @@ func Test_Render_HolePunching_HolesAtStart(t *testing.T) {
 	r.NoError(err)
 	r.Equal(`testingab1testingab1sssssddddeeee`, ss)
 }
-func Test_Render_HolePunching_SecondPass_WithCache(t *testing.T) {
+func Test_Render_Hole_Punching_Second_Pass_With_Cache(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 
@@ -107,11 +160,11 @@ func Test_Render_HolePunching_SecondPass_WithCache(t *testing.T) {
 	r.True(ok)
 	r.NotEmpty(templ)
 
-	//This should still work and use the cached template even if we update the input
+	// Source changes under the same filename must invalidate the cached skeleton.
 	input = `<% let a = myArray %><% a = a + "2" %><%=a %><%H "testing" %><%= a %><%H "sssss" %>`
 	ss, err = plush.Render(input, ctx)
 	r.NoError(err)
-	r.Equal(`ab1testingab1sssss`, ss, "The output should be the same as the first render since it is cached as the first template")
+	r.Equal(`ab2testingab2sssss`, ss)
 
 	ff.Delete(astKey)
 	ss, err = plush.Render(input, ctx)
@@ -119,7 +172,7 @@ func Test_Render_HolePunching_SecondPass_WithCache(t *testing.T) {
 	r.Equal(`ab2testingab2sssss`, ss)
 }
 
-func Test_Render_HolePunching_HoleAtStartAndEnd(t *testing.T) {
+func Test_Render_Hole_Punching_Hole_At_Start_And_End(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -132,7 +185,7 @@ func Test_Render_HolePunching_HoleAtStartAndEnd(t *testing.T) {
 	r.Equal("startend", ss)
 }
 
-func Test_Render_HolePunching_EmptyHoleContent(t *testing.T) {
+func Test_Render_Hole_Punching_Empty_Hole_Content(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -145,7 +198,7 @@ func Test_Render_HolePunching_EmptyHoleContent(t *testing.T) {
 	r.Equal("foo", ss)
 }
 
-func Test_Render_HolePunching_ManyHoles(t *testing.T) {
+func Test_Render_Hole_Punching_Many_Holes(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -163,7 +216,7 @@ func Test_Render_HolePunching_ManyHoles(t *testing.T) {
 	r.Equal(expected, ss)
 }
 
-func Test_Render_HolePunching_TemplateContainsHolePunch(t *testing.T) {
+func Test_Render_Hole_Punching_Template_Contains_Hole_Punch(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -175,7 +228,7 @@ func Test_Render_HolePunching_TemplateContainsHolePunch(t *testing.T) {
 	r.NoError(err)
 	r.Equal("<PLUSH_HOLE_0>startend", ss)
 }
-func Test_Render_HolePunching_InBlockStatment(t *testing.T) {
+func Test_Render_Hole_Punching_In_Block_Statment(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -189,7 +242,7 @@ func Test_Render_HolePunching_InBlockStatment(t *testing.T) {
 	r.Equal(`testing`, ss)
 }
 
-func Test_Render_HolePunching_InForLoop(t *testing.T) {
+func Test_Render_Hole_Punching_In_For_Loop(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -203,7 +256,7 @@ func Test_Render_HolePunching_InForLoop(t *testing.T) {
 	r.Equal(`testingatestingbtestingc`, ss)
 }
 
-func Test_Render_HolePunching_ForLoopAsHole(t *testing.T) {
+func Test_Render_Hole_Punching_For_Loop_As_Hole(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -217,7 +270,7 @@ func Test_Render_HolePunching_ForLoopAsHole(t *testing.T) {
 	r.Equal(`abc`, ss)
 }
 
-func Test_Render_HolePunching_IfElse(t *testing.T) {
+func Test_Render_Hole_Punching_If_Else(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -231,7 +284,7 @@ func Test_Render_HolePunching_IfElse(t *testing.T) {
 	r.Equal(`3`, ss)
 }
 
-func Test_Render_HolePunching_IfTruthyA(t *testing.T) {
+func Test_Render_Hole_Punching_If_Truthy_A(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -244,7 +297,7 @@ func Test_Render_HolePunching_IfTruthyA(t *testing.T) {
 	r.NoError(err)
 	r.Equal(`NUMBER`, ss)
 }
-func Test_Render_HolePunching_IfTruthy(t *testing.T) {
+func Test_Render_Hole_Punching_If_Truthy(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	cacheFileName := "myfile.plush"
@@ -257,7 +310,7 @@ func Test_Render_HolePunching_IfTruthy(t *testing.T) {
 	r.NoError(err)
 	r.Equal(`NUMBER`, ss)
 }
-func Test_PartialHelper_With_RecursionHole(t *testing.T) {
+func Test_Partial_Helper_With_Recursion_Hole(t *testing.T) {
 	r := require.New(t)
 
 	ctx := plush.NewContext()

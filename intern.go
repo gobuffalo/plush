@@ -9,9 +9,13 @@ type InternTable struct {
 }
 
 func NewInternTable() *InternTable {
+	return newInternTableWithCapacity(0)
+}
+
+func newInternTableWithCapacity(capacity int) *InternTable {
 	return &InternTable{
-		stringToID: make(map[string]int),
-		idToString: []string{},
+		stringToID: make(map[string]int, capacity),
+		idToString: make([]string, 0, capacity),
 		mw:         sync.RWMutex{},
 	}
 }
@@ -19,6 +23,10 @@ func NewInternTable() *InternTable {
 func (it *InternTable) Intern(name string) int {
 	it.mw.Lock()
 	defer it.mw.Unlock()
+	return it.internUnsafe(name)
+}
+
+func (it *InternTable) internUnsafe(name string) int {
 	if id, ok := it.stringToID[name]; ok {
 		return id
 	}
@@ -42,4 +50,13 @@ func (it *InternTable) SymbolName(id int) string {
 		return it.idToString[id]
 	}
 	return "<unknown>"
+}
+
+func (it *InternTable) Name(id int) (string, bool) {
+	it.mw.RLock()
+	defer it.mw.RUnlock()
+	if id < 0 || id >= len(it.idToString) {
+		return "", false
+	}
+	return it.idToString[id], true
 }

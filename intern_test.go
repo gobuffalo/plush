@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInternTable(t *testing.T) {
+func Test_Intern_Table(t *testing.T) {
 	r := require.New(t)
 
 	it := plush.NewInternTable()
@@ -47,7 +47,7 @@ func TestInternTable(t *testing.T) {
 	r.Equal("<unknown>", unknown)
 }
 
-func TestNewInternTable(t *testing.T) {
+func Test_New_Intern_Table(t *testing.T) {
 	r := require.New(t)
 
 	rs := plush.NewInternTable()

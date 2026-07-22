@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_HTMLEscape(t *testing.T) {
+func Test_HTML_Escape(t *testing.T) {
 	r := require.New(t)
 
 	in := `<a href="/path?foo=Bar">foo</a>`
@@ -19,7 +19,7 @@ func Test_HTMLEscape(t *testing.T) {
 	r.Equal(template.HTMLEscapeString(in), s)
 }
 
-func Test_HTMLEscape_Block(t *testing.T) {
+func Test_HTML_Escape_Block(t *testing.T) {
 	r := require.New(t)
 
 	in := `<a href="/path?foo=Bar">foo</a>`

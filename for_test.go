@@ -104,7 +104,7 @@ func Test_Render_For_Array_Continue(t *testing.T) {
 	r.Equal("StartOddStart2StartOddStart4StartOddStart6StartOddStart8StartOddStart10", s)
 }
 
-func Test_Render_For_Array_WithNoOutput(t *testing.T) {
+func Test_Render_For_Array_With_No_Output(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 
@@ -121,7 +121,7 @@ func Test_Render_For_Array_WithNoOutput(t *testing.T) {
 	r.Equal("", s)
 }
 
-func Test_Render_For_Array_WithoutContinue(t *testing.T) {
+func Test_Render_For_Array_Without_Continue(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
@@ -134,7 +134,7 @@ func Test_Render_For_Array_WithoutContinue(t *testing.T) {
 	r.Equal("12345678910", s)
 }
 
-func Test_Render_For_Array_ContinueNoControl(t *testing.T) {
+func Test_Render_For_Array_Continue_No_Control(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		continue
@@ -165,7 +165,7 @@ func Test_Render_For_Array_Break_String(t *testing.T) {
 	r.Equal("Start1Start2Start3Start4StartOdd", s)
 }
 
-func Test_Render_For_Array_WithBreakFirstValue(t *testing.T) {
+func Test_Render_For_Array_With_Break_First_Value(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
@@ -179,7 +179,7 @@ func Test_Render_For_Array_WithBreakFirstValue(t *testing.T) {
 	r.Equal("", s)
 }
 
-func Test_Render_For_Array_WithBreakFirstValueWithReturn(t *testing.T) {
+func Test_Render_For_Array_With_Break_First_Value_With_Return(t *testing.T) {
 	r := require.New(t)
 	input := `<%= for (i,v) in [1, 2, 3,4,5,6,7,8,9,10] {
 		if (v == 1 || v ==3 || v == 5 || v == 7 || v == 9) {
@@ -301,7 +301,7 @@ type Product struct {
 	Name []string
 }
 
-func Test_Render_For_Array_OutofBoundIndex(t *testing.T) {
+func Test_Render_For_Array_Outof_Bound_Index(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	product_listing := Category{}

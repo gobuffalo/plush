@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_LetStatements(t *testing.T) {
+func Test_Let_Statements(t *testing.T) {
 	r := require.New(t)
 	tests := []struct {
 		input              string
@@ -40,7 +40,7 @@ func Test_LetStatements(t *testing.T) {
 	}
 }
 
-func Test_ReturnStatements(t *testing.T) {
+func Test_Return_Statements(t *testing.T) {
 	r := require.New(t)
 	tests := []struct {
 		input         string
@@ -64,7 +64,7 @@ func Test_ReturnStatements(t *testing.T) {
 	}
 }
 
-func Test_IdentifierExpression(t *testing.T) {
+func Test_Identifier_Expression(t *testing.T) {
 	r := require.New(t)
 	input := "<% foobar; %>"
 
@@ -78,7 +78,7 @@ func Test_IdentifierExpression(t *testing.T) {
 	r.Equal("foobar", ident.TokenLiteral())
 }
 
-func Test_IntegerLiteralExpression(t *testing.T) {
+func Test_Integer_Literal_Expression(t *testing.T) {
 	r := require.New(t)
 	input := "<% 5; %>"
 
@@ -92,7 +92,7 @@ func Test_IntegerLiteralExpression(t *testing.T) {
 	r.Equal("5", literal.TokenLiteral())
 }
 
-func Test_FloatLiteralExpression(t *testing.T) {
+func Test_Float_Literal_Expression(t *testing.T) {
 	r := require.New(t)
 	input := "<% 1.23 %>"
 
@@ -107,7 +107,7 @@ func Test_FloatLiteralExpression(t *testing.T) {
 	r.Equal("1.23", literal.TokenLiteral())
 }
 
-func Test_PrefixExpressions(t *testing.T) {
+func Test_Prefix_Expressions(t *testing.T) {
 	r := require.New(t)
 	prefixTests := []struct {
 		input    string
@@ -137,7 +137,7 @@ func Test_PrefixExpressions(t *testing.T) {
 	}
 }
 
-func Test_InfixExpressions(t *testing.T) {
+func Test_Infix_Expressions(t *testing.T) {
 	r := require.New(t)
 	infixTests := []struct {
 		input      string
@@ -176,7 +176,7 @@ func Test_InfixExpressions(t *testing.T) {
 	}
 }
 
-func Test_OperatorPrecedence(t *testing.T) {
+func Test_Operator_Precedence(t *testing.T) {
 	r := require.New(t)
 	tests := []struct {
 		input    string
@@ -312,7 +312,7 @@ func Test_OperatorPrecedence(t *testing.T) {
 	}
 }
 
-func Test_BooleanExpression(t *testing.T) {
+func Test_Boolean_Expression(t *testing.T) {
 	r := require.New(t)
 	tests := []struct {
 		input           string
@@ -335,7 +335,7 @@ func Test_BooleanExpression(t *testing.T) {
 	}
 }
 
-func Test_IfExpression(t *testing.T) {
+func Test_If_Expression(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x < y) { x } %>`
 
@@ -358,7 +358,7 @@ func Test_IfExpression(t *testing.T) {
 	r.Nil(exp.ElseBlock)
 }
 
-func Test_IfExpression_ComapreWithFunction(t *testing.T) {
+func Test_If_Expression_Comapre_With_Function(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (f() != "yes") { x } %>`
 
@@ -390,7 +390,7 @@ func Test_IfExpression_ComapreWithFunction(t *testing.T) {
 	r.True(testIdentifier(t, consequence.Expression, "x"))
 	r.Nil(exp.ElseBlock)
 }
-func Test_IfExpression_PrefixExpressions_InvalidCompar(t *testing.T) {
+func Test_If_Expression_Prefix_Expressions_Invalid_Compar(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (!(x = 1)) { x } %>`
 
@@ -398,7 +398,7 @@ func Test_IfExpression_PrefixExpressions_InvalidCompar(t *testing.T) {
 
 	r.Error(err, "syntax error: invalid if condition, got x = 1")
 }
-func Test_IfExpression_With_Map_Array_Index(t *testing.T) {
+func Test_If_Expression_With_Map_Array_Index(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (flash["error"] ) { x } %>`
 
@@ -407,7 +407,7 @@ func Test_IfExpression_With_Map_Array_Index(t *testing.T) {
 	r.NoError(err)
 }
 
-func Test_IfExpression_InfixExpressions_InvalidCompare(t *testing.T) {
+func Test_If_Expression_Infix_Expressions_Invalid_Compare(t *testing.T) {
 	r := require.New(t)
 	input := `<% if ( y == 1 && x = 1) { x } %>`
 
@@ -416,7 +416,7 @@ func Test_IfExpression_InfixExpressions_InvalidCompare(t *testing.T) {
 	r.Error(err, "syntax error: invalid if condition, got x = 1")
 }
 
-func Test_IfExpression_Boolean(t *testing.T) {
+func Test_If_Expression_Boolean(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (true) { x } %>`
 
@@ -426,7 +426,57 @@ func Test_IfExpression_Boolean(t *testing.T) {
 
 }
 
-func Test_IfExpression_Condition_CompareToString(t *testing.T) {
+func Test_If_Expression_Optional_Parentheses(t *testing.T) {
+	tests := []string{
+		`<% if true { x } %>`,
+		`<% if name { x } %>`,
+		`<% if !name { x } %>`,
+		`<% if name == "mark" { x } %>`,
+		`<% if name == "mark" || admin { x } %>`,
+		`<% if (name == "mark") || admin { x } %>`,
+		`<% if robots[0].Name == "mark" { x } %>`,
+		`<% if robots[0] == mark { x } %>`,
+		`<% if robots["TESTING"] == "mark" { x } %>`,
+		`<% if (true) { x } %>`,
+	}
+
+	for _, input := range tests {
+		t.Run(input, func(t *testing.T) {
+			_, err := parser.Parse(input)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func Test_If_Expression_Optional_Parentheses_Else_If(t *testing.T) {
+	r := require.New(t)
+	input := `<% if false { x } else if name == "mark" { y } else if (admin) { z } else { q } %>`
+
+	program, err := parser.Parse(input)
+	r.NoError(err)
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	exp := stmt.Expression.(*ast.IfExpression)
+	r.Len(exp.ElseIf, 2)
+	r.NotNil(exp.ElseBlock)
+}
+
+func Test_If_Expression_Optional_Parentheses_Errors(t *testing.T) {
+	tests := []string{
+		`<% if { x } %>`,
+		`<% if true x } %>`,
+	}
+
+	for _, input := range tests {
+		t.Run(input, func(t *testing.T) {
+			_, err := parser.Parse(input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_If_Expression_Condition_Compare_To_String(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x == "yes") { x } %>`
 
@@ -435,7 +485,7 @@ func Test_IfExpression_Condition_CompareToString(t *testing.T) {
 	r.NoError(err, "syntax error: invalid if condition, got x = y")
 
 }
-func Test_IfExpression_Condition_Assign(t *testing.T) {
+func Test_If_Expression_Condition_Assign(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x = y) { x } %>`
 
@@ -445,7 +495,7 @@ func Test_IfExpression_Condition_Assign(t *testing.T) {
 
 }
 
-func Test_IfExpression_Condition_EmptyHash(t *testing.T) {
+func Test_If_Expression_Condition_Empty_Hash(t *testing.T) {
 	r := require.New(t)
 	input := `<% if ({}}) { x } %>`
 
@@ -453,7 +503,7 @@ func Test_IfExpression_Condition_EmptyHash(t *testing.T) {
 	r.Error(err, "syntax error: invalid if statment, got {}")
 }
 
-func Test_IfExpression_HTML(t *testing.T) {
+func Test_If_Expression_HTML(t *testing.T) {
 	r := require.New(t)
 	input := `<p><% if (x < y) { %><%= x %><% } %></p>`
 
@@ -480,7 +530,7 @@ func Test_IfExpression_HTML(t *testing.T) {
 	r.Nil(ifs.ElseBlock)
 }
 
-func Test_IfExpression_HTML_NoClosingTag(t *testing.T) {
+func Test_If_Expression_HTML_No_Closing_Tag(t *testing.T) {
 	r := require.New(t)
 	// the template should have a missing '%>' after the if condition
 	input := `<p><% if (x < y) { <title>Hello Buffalo</title> <% } %>`
@@ -503,7 +553,7 @@ func Test_IfExpression_HTML_NoClosingTag(t *testing.T) {
 	// after that, parsing failed so don't expect any more expressions
 }
 
-func Test_IfExpression_Return_HTML_NoClosingTag(t *testing.T) {
+func Test_If_Expression_Return_HTML_No_Closing_Tag(t *testing.T) {
 	r := require.New(t)
 	// the template should have a missing '%>' after the if condition
 	input := `<p><%= if (x < y) { <title>Hello Buffalo</title> <% } %>`
@@ -526,7 +576,7 @@ func Test_IfExpression_Return_HTML_NoClosingTag(t *testing.T) {
 	// after that, parsing failed so don't expect any more expressions
 }
 
-func Test_IfElseExpression(t *testing.T) {
+func Test_If_Else_Expression(t *testing.T) {
 	r := require.New(t)
 	input := `<% if (x < y) { x } else { y } %>`
 
@@ -554,7 +604,7 @@ func Test_IfElseExpression(t *testing.T) {
 	r.True(testIdentifier(t, alternative.Expression, "y"))
 }
 
-func Test_FunctionLiteralParsing(t *testing.T) {
+func Test_Function_Literal_Parsing(t *testing.T) {
 	r := require.New(t)
 	input := `<% fn(x, y) { x + y; } %>`
 
@@ -579,7 +629,7 @@ func Test_FunctionLiteralParsing(t *testing.T) {
 	r.True(testInfixExpression(t, bodyStmt.Expression, "x", "+", "y"))
 }
 
-func Test_FunctionParameterParsing(t *testing.T) {
+func Test_Function_Parameter_Parsing(t *testing.T) {
 	r := require.New(t)
 	tests := []struct {
 		input          string
@@ -604,7 +654,7 @@ func Test_FunctionParameterParsing(t *testing.T) {
 	}
 }
 
-func Test_CallExpression(t *testing.T) {
+func Test_Call_Expression(t *testing.T) {
 	r := require.New(t)
 	input := "<% add(1, 2 * 3, 4 + 5); %>"
 
@@ -626,7 +676,7 @@ func Test_CallExpression(t *testing.T) {
 	r.True(testInfixExpression(t, exp.Arguments[2], 4, "+", 5))
 }
 
-func Test_CallExpressionParameter(t *testing.T) {
+func Test_Call_Expression_Parameter(t *testing.T) {
 	r := require.New(t)
 	tests := []struct {
 		input         string
@@ -667,7 +717,7 @@ func Test_CallExpressionParameter(t *testing.T) {
 	}
 }
 
-func Test_CallExpressionParsing_WithCallee(t *testing.T) {
+func Test_Call_Expression_Parsing_With_Callee(t *testing.T) {
 	r := require.New(t)
 	input := `<%= g.Greet("mark"); %>`
 
@@ -688,7 +738,7 @@ func Test_CallExpressionParsing_WithCallee(t *testing.T) {
 	r.Equal(exp.Arguments[0].String(), "\"mark\"")
 }
 
-func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
+func Test_Call_Expression_Parsing_With_Multiple_Callees(t *testing.T) {
 	r := require.New(t)
 	input := `<%= g.Foo.Greet("mark"); %>`
 
@@ -709,7 +759,7 @@ func Test_CallExpressionParsing_WithMultipleCallees(t *testing.T) {
 	r.Equal(exp.Arguments[0].String(), "\"mark\"")
 }
 
-func Test_IndexExpression_Nested_Structs_Start_WithCallee(t *testing.T) {
+func Test_Index_Expression_Nested_Structs_Start_With_Callee(t *testing.T) {
 	r := require.New(t)
 	input := `<% myarray[0].Name.Final %>`
 
@@ -731,7 +781,7 @@ func Test_IndexExpression_Nested_Structs_Start_WithCallee(t *testing.T) {
 	r.Equal("Name", gg.Callee.Value)
 }
 
-func Test_IndexExpression_Nested_Structs_Start_WithNested_Array(t *testing.T) {
+func Test_Index_Expression_Nested_Structs_Start_With_Nested_Array(t *testing.T) {
 	r := require.New(t)
 	input := `<% myarray[0].Name[1].Final %>`
 
@@ -757,7 +807,78 @@ func Test_IndexExpression_Nested_Structs_Start_WithNested_Array(t *testing.T) {
 	r.Equal("Final", cc.Value)
 }
 
-func Test_CallExpressionParsing_WithBlock(t *testing.T) {
+func Test_Index_Expression_Nested_Structs_With_Comparison(t *testing.T) {
+	r := require.New(t)
+	input := `<% robots[0].Stats.Count == 0 %>`
+
+	program, err := parser.Parse(input)
+	r.NoError(err)
+
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	exp := stmt.Expression.(*ast.InfixExpression)
+	r.Equal("==", exp.Operator)
+	left := exp.Left.(*ast.IndexExpression)
+	r.Equal("robots", left.Left.String())
+	r.Equal("0", left.Index.String())
+	r.Equal("robots.Stats.Count", left.Callee.String())
+	r.Equal("0", exp.Right.String())
+}
+
+func Test_Call_Expression_Index_Chain_From_Call_Receiver(t *testing.T) {
+	r := require.New(t)
+	input := `<% factory().Robots()[0].Name.Echo() %>`
+
+	program, err := parser.Parse(input)
+	r.NoError(err)
+	r.Len(program.Statements, 1)
+}
+
+func Test_Index_Expression_Nested_Map_Slice_Callee_Chain(t *testing.T) {
+	r := require.New(t)
+	input := `<% robot.Nested.Map[nestedKey].Items[0].Name.Echo() %>`
+
+	program, err := parser.Parse(input)
+	r.NoError(err)
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	exp := stmt.Expression.(*ast.IndexExpression)
+	r.Equal("robot.Nested.Map", exp.Left.String())
+	r.Equal("nestedKey", exp.Index.String())
+
+	items := exp.Callee.(*ast.IndexExpression)
+	r.Equal("robot.Nested.Map.Items", items.Left.String())
+	r.Equal("0", items.Index.String())
+	r.Equal("Name.Echo()", items.Callee.String())
+}
+
+func Test_Index_Expression_Method_Return_Slice_Callee_Chain(t *testing.T) {
+	r := require.New(t)
+	input := `<% robot.GetFriends()[0].Name.Echo() %>`
+
+	program, err := parser.Parse(input)
+	r.NoError(err)
+	r.Len(program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	exp := stmt.Expression.(*ast.IndexExpression)
+	r.Equal("robot.GetFriends()", exp.Left.String())
+	r.Equal("0", exp.Index.String())
+	r.Equal("Name.Echo()", exp.Callee.String())
+}
+
+func Test_Call_Expression_Nested_Function_Return_Callee_Chain(t *testing.T) {
+	r := require.New(t)
+	input := `<% factory().Robots().Name().Echo() %>`
+
+	program, err := parser.Parse(input)
+	r.NoError(err)
+	r.Len(program.Statements, 1)
+}
+
+func Test_Call_Expression_Parsing_With_Block(t *testing.T) {
 	r := require.New(t)
 	input := `<p><%= foo() { %>hi<% } %></p>`
 
@@ -782,7 +903,7 @@ func Test_CallExpressionParsing_WithBlock(t *testing.T) {
 	r.Nil(exp.Callee)
 }
 
-func Test_StringLiteralExpression(t *testing.T) {
+func Test_String_Literal_Expression(t *testing.T) {
 	r := require.New(t)
 	input := `<% "hello world"; %>`
 
@@ -795,7 +916,7 @@ func Test_StringLiteralExpression(t *testing.T) {
 	r.Equal("hello world", literal.Value)
 }
 
-func Test_StringBlockExpression(t *testing.T) {
+func Test_String_Block_Expression(t *testing.T) {
 	r := require.New(t)
 	input := "<% `hello world`; %>"
 
@@ -808,7 +929,7 @@ func Test_StringBlockExpression(t *testing.T) {
 	r.Equal("hello world", literal.Value)
 }
 
-func Test_EmptyArrayLiterals(t *testing.T) {
+func Test_Empty_Array_Literals(t *testing.T) {
 	r := require.New(t)
 	input := "<% [] %>"
 
@@ -821,7 +942,7 @@ func Test_EmptyArrayLiterals(t *testing.T) {
 	r.Len(array.Elements, 0)
 }
 
-func Test_ArrayLiterals(t *testing.T) {
+func Test_Array_Literals(t *testing.T) {
 	r := require.New(t)
 	input := "<% [1, 2 * 2, 3 + 3] %>"
 
@@ -838,7 +959,7 @@ func Test_ArrayLiterals(t *testing.T) {
 	r.True(testInfixExpression(t, array.Elements[2], 3, "+", 3))
 }
 
-func Test_IndexExpressionsAssign(t *testing.T) {
+func Test_Index_Expressions_Assign(t *testing.T) {
 	r := require.New(t)
 	input := "<% myArray[2] = 1 %>"
 
@@ -854,7 +975,7 @@ func Test_IndexExpressionsAssign(t *testing.T) {
 	//r.True(testInfixExpression(t, indexExp.Index, 2, "=", 1))
 }
 
-func Test_IndexExpressions(t *testing.T) {
+func Test_Index_Expressions(t *testing.T) {
 	r := require.New(t)
 	input := "<% myArray[1 + 1] %>"
 
@@ -869,7 +990,7 @@ func Test_IndexExpressions(t *testing.T) {
 	r.True(testInfixExpression(t, indexExp.Index, 1, "+", 1))
 }
 
-func Test_EmptyHashLiteral(t *testing.T) {
+func Test_Empty_Hash_Literal(t *testing.T) {
 	r := require.New(t)
 	input := "<% {} %>"
 
@@ -882,7 +1003,7 @@ func Test_EmptyHashLiteral(t *testing.T) {
 	r.Len(hash.Pairs, 0)
 }
 
-func Test_HashLiteralsStringKeys(t *testing.T) {
+func Test_Hash_Literals_String_Keys(t *testing.T) {
 	r := require.New(t)
 	input := `<% {"one": 1, "two": 2, "three": 3} %>`
 
@@ -908,7 +1029,7 @@ func Test_HashLiteralsStringKeys(t *testing.T) {
 	}
 }
 
-func Test_HashLiteralsBooleanKeys(t *testing.T) {
+func Test_Hash_Literals_Boolean_Keys(t *testing.T) {
 	r := require.New(t)
 	input := `<%{true: 1, false: 2}%>`
 
@@ -933,7 +1054,7 @@ func Test_HashLiteralsBooleanKeys(t *testing.T) {
 	}
 }
 
-func Test_HashLiteralsIntegerKeys(t *testing.T) {
+func Test_Hash_Literals_Integer_Keys(t *testing.T) {
 	r := require.New(t)
 	input := `<% {1: 1, 2: 2, 3: 3} %>`
 
@@ -960,7 +1081,7 @@ func Test_HashLiteralsIntegerKeys(t *testing.T) {
 	}
 }
 
-func Test_HashLiteralsWithExpressions(t *testing.T) {
+func Test_Hash_Literals_With_Expressions(t *testing.T) {
 	r := require.New(t)
 	input := `<% {"one": 0 + 1, "two": 10 - 8, "three": 15 / 5} %>`
 
@@ -1049,7 +1170,7 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	return true
 }
 
-func Test_ForExpression_WithContinue(t *testing.T) {
+func Test_For_Expression_With_Continue(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in myArray {  continue } %>`
 
@@ -1074,7 +1195,7 @@ func Test_ForExpression_WithContinue(t *testing.T) {
 	//r.True(testIdentifier(t, consequence.Expression, "v"))
 }
 
-func Test_ForExpression_WithBreak(t *testing.T) {
+func Test_For_Expression_With_Break(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in myArray {  break } %>`
 
@@ -1099,7 +1220,7 @@ func Test_ForExpression_WithBreak(t *testing.T) {
 	//r.True(testIdentifier(t, consequence.Expression, "v"))
 }
 
-func Test_Continue_IfCondtion(t *testing.T) {
+func Test_Continue_If_Condtion(t *testing.T) {
 	r := require.New(t)
 	input := `<% if(x == 2) { continue } %>`
 
@@ -1107,7 +1228,7 @@ func Test_Continue_IfCondtion(t *testing.T) {
 	r.Error(err)
 }
 
-func Test_Break_IfCondtion(t *testing.T) {
+func Test_Break_If_Condtion(t *testing.T) {
 	r := require.New(t)
 	input := `<% if(x == 2) { break } %>`
 
@@ -1115,7 +1236,7 @@ func Test_Break_IfCondtion(t *testing.T) {
 	r.Error(err)
 }
 
-func Test_Empty_IfCondtion(t *testing.T) {
+func Test_Empty_If_Condtion(t *testing.T) {
 	r := require.New(t)
 	input := `<% if() { v } %>`
 
@@ -1123,7 +1244,7 @@ func Test_Empty_IfCondtion(t *testing.T) {
 	r.Error(err)
 }
 
-func Test_Parse_HoleLiteralFunction(t *testing.T) {
+func Test_Parse_Hole_Literal_Function(t *testing.T) {
 	r := require.New(t)
 	input := `<% let a = myArray %><% a = a + "1" %><%=a %><%H "testing Helo WORD"   a + 1 %><%= a %>`
 
@@ -1150,7 +1271,7 @@ func Test_Break_Function(t *testing.T) {
 	r.Error(err)
 }
 
-func Test_ForExpression(t *testing.T) {
+func Test_For_Expression(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in myArray { v } %>`
 
@@ -1174,7 +1295,7 @@ func Test_ForExpression(t *testing.T) {
 	r.True(testIdentifier(t, consequence.Expression, "v"))
 }
 
-func Test_ForExpression_Split(t *testing.T) {
+func Test_For_Expression_Split(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in anArray { %>
 	<p><%= v %></p>
@@ -1195,7 +1316,7 @@ func Test_ForExpression_Split(t *testing.T) {
 	r.Len(exp.Block.Statements, 3)
 }
 
-func Test_ForExpression_Func(t *testing.T) {
+func Test_For_Expression_Func(t *testing.T) {
 	r := require.New(t)
 	input := `<% for (k,v) in range(1,3) { %>
 	<p><%= v %></p>
@@ -1216,7 +1337,7 @@ func Test_ForExpression_Func(t *testing.T) {
 	r.Len(exp.Block.Statements, 3)
 }
 
-func Test_AndOrInfixExpressions(t *testing.T) {
+func Test_And_Or_Infix_Expressions(t *testing.T) {
 	r := require.New(t)
 	infixTests := []struct {
 		input      string
@@ -1269,7 +1390,7 @@ drop_column("table_name", "column2_name")`
 	r.NoError(err)
 	r.Equal(input, p.String())
 }
-func Test_HashLiteralsMixWithIfAndFn(t *testing.T) {
+func Test_Hash_Literals_Mix_With_If_And_Fn(t *testing.T) {
 	r := require.New(t)
 	cases := []string{
 
@@ -1313,7 +1434,7 @@ func Test_HashLiteralsMixWithIfAndFn(t *testing.T) {
 	}
 }
 
-func Test_IndexExpression_MixWithFnBrackets(t *testing.T) {
+func Test_Index_Expression_Mix_With_Fn_Brackets(t *testing.T) {
 	r := require.New(t)
 
 	cases := []string{
@@ -1333,7 +1454,7 @@ func Test_IndexExpression_MixWithFnBrackets(t *testing.T) {
 	}
 }
 
-func Test_ForExpression_MixWithFnBrackets(t *testing.T) {
+func Test_For_Expression_Mix_With_Fn_Brackets(t *testing.T) {
 	r := require.New(t)
 
 	cases := []string{
@@ -1352,7 +1473,7 @@ func Test_ForExpression_MixWithFnBrackets(t *testing.T) {
 	}
 }
 
-func Test_ParseCallExpression_NilFunction_ReactLikePatterns_Panic(t *testing.T) {
+func Test_Parse_Call_Expression_Nil_Function_React_Like_Patterns_Panic(t *testing.T) {
 	r := require.New(t)
 	// These patterns might occur in React compiled files or malformed templates
 	cases := []string{

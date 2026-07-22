@@ -16,6 +16,8 @@ type Template struct {
 	Program    *ast.Program
 	PunchHole  []HoleMarker
 	Skeleton   string
+	VMBytecode interface{}
+	SourceHash string
 	IsCache    bool
 	LastCached time.Time
 }
@@ -44,7 +46,7 @@ func (t *Template) Parse() error {
 		return nil
 	}
 
-	program, err := parser.Parse(t.Input)
+	program, err := parser.Parse(preprocessTrimTags(t.Input))
 	if err != nil {
 		return err
 	}
@@ -72,8 +74,10 @@ func (t *Template) Exec(ctx hctx.Context) (string, []HoleMarker, error) {
 // Clone a template. This is useful for defining helpers on per "instance" of the template.
 func (t *Template) Clone() *Template {
 	t2 := &Template{
-		Input:   t.Input,
-		Program: t.Program,
+		Input:      t.Input,
+		Program:    t.Program,
+		VMBytecode: t.VMBytecode,
+		SourceHash: t.SourceHash,
 	}
 	return t2
 }

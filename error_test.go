@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestErrorType(t *testing.T) {
+func Test_Error_Type(t *testing.T) {
 	r := require.New(t)
 
 	ctx := plush.NewContext()

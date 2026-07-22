@@ -22,7 +22,7 @@ func Test_Render_Struct_Attribute(t *testing.T) {
 	r.Equal("Mark", s)
 }
 
-func Test_Render_UnknownAttribute_on_Callee(t *testing.T) {
+func Test_Render_Unknown_Attribute_On_Callee(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	ctx.Set("m", struct{}{})
@@ -47,7 +47,7 @@ func (r *Robot) Name() string {
 	return r.name
 }
 
-func Test_Render_Function_on_sub_Struct(t *testing.T) {
+func Test_Render_Function_On_Sub_Struct(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	bender := Robot{
@@ -60,7 +60,7 @@ func Test_Render_Function_on_sub_Struct(t *testing.T) {
 	r.Equal("BENDER.JPG", s)
 }
 
-func Test_Render_Struct_PointerMethod(t *testing.T) {
+func Test_Render_Struct_Pointer_Method(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	robot := Robot{name: "robot"}
@@ -81,7 +81,7 @@ func Test_Render_Struct_PointerMethod(t *testing.T) {
 	})
 }
 
-func Test_Render_Struct_PointerMethod_IsNil(t *testing.T) {
+func Test_Render_Struct_Pointer_Method_Is_Nil(t *testing.T) {
 	r := require.New(t)
 
 	type mylist struct {
@@ -116,7 +116,7 @@ func Test_Render_Struct_PointerMethod_IsNil(t *testing.T) {
 	}
 }
 
-func Test_Render_Struct_PointerValue_Nil(t *testing.T) {
+func Test_Render_Struct_Pointer_Value_Nil(t *testing.T) {
 	r := require.New(t)
 
 	type user struct {
@@ -138,7 +138,7 @@ func Test_Render_Struct_PointerValue_Nil(t *testing.T) {
 	r.Equal(`Garn Clapstick: `, res)
 }
 
-func Test_Render_Struct_PointerValue_NonNil(t *testing.T) {
+func Test_Render_Struct_Pointer_Value_Non_Nil(t *testing.T) {
 	r := require.New(t)
 
 	type user struct {
@@ -484,7 +484,7 @@ func (a person) Likes() []string {
 	return a.likes
 }
 
-func Test_Render_Struct_With_ChainingFunction_ArrayAccess(t *testing.T) {
+func Test_Render_Struct_With_Chaining_Function_Array_Access(t *testing.T) {
 	r := require.New(t)
 
 	tt := person{likes: []string{"pringles", "galaxy", "carrot cake", "world pendant", "gold braclet"},
@@ -497,7 +497,7 @@ func Test_Render_Struct_With_ChainingFunction_ArrayAccess(t *testing.T) {
 	r.Equal("pringles", res)
 }
 
-func Test_Render_Struct_With_ChainingFunction_ArrayAccess_Outofbound(t *testing.T) {
+func Test_Render_Struct_With_Chaining_Function_Array_Access_Outofbound(t *testing.T) {
 	r := require.New(t)
 
 	tt := person{likes: []string{"pringles", "galaxy", "carrot cake", "world pendant", "gold bracelet"},
@@ -509,7 +509,7 @@ func Test_Render_Struct_With_ChainingFunction_ArrayAccess_Outofbound(t *testing.
 	r.Error(err)
 }
 
-func Test_Render_Struct_With_ChainingFunction_FunctionCall(t *testing.T) {
+func Test_Render_Struct_With_Chaining_Function_Function_Call(t *testing.T) {
 	r := require.New(t)
 
 	tt := person{born: time.Date(2024, time.January, 11, 0, 0, 0, 0, time.UTC).AddDate(-31, 0, 0)}
@@ -521,7 +521,7 @@ func Test_Render_Struct_With_ChainingFunction_FunctionCall(t *testing.T) {
 	r.Equal("Jan 11, 1993", res)
 }
 
-func Test_Render_Struct_With_ChainingFunction_UndefinedStructProperty(t *testing.T) {
+func Test_Render_Struct_With_Chaining_Function_Undefined_Struct_Property(t *testing.T) {
 	r := require.New(t)
 
 	tt := person{born: time.Now()}
@@ -533,7 +533,7 @@ func Test_Render_Struct_With_ChainingFunction_UndefinedStructProperty(t *testing
 
 }
 
-func Test_Render_Struct_With_ChainingFunction_InvalidFunctionCall(t *testing.T) {
+func Test_Render_Struct_With_Chaining_Function_Invalid_Function_Call(t *testing.T) {
 	r := require.New(t)
 
 	tt := person{born: time.Now()}
@@ -545,7 +545,7 @@ func Test_Render_Struct_With_ChainingFunction_InvalidFunctionCall(t *testing.T) 
 	r.Contains(err.Error(), "'nour.GetBorn' does not have a method named 'TEST' (nour.GetBorn.TEST)")
 }
 
-func Test_Render_Function_on_Invalid_Function_Struct(t *testing.T) {
+func Test_Render_Function_On_Invalid_Function_Struct(t *testing.T) {
 	r := require.New(t)
 	ctx := plush.NewContext()
 	bender := Robot{

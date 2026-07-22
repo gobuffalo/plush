@@ -39,13 +39,12 @@ type compiler struct {
 	ctx               hctx.Context
 	program           *ast.Program
 	curStmt           ast.Statement
-	inCheck           bool
 	positionStartEnds []HoleMarker
 }
 
 // budget returns the active Budget from the current context, or nil if unlimited.
 func (c *compiler) budget() *Budget {
-	if ctx, ok := c.ctx.(*Context); ok {
+	if ctx, ok := c.ctx.(interface{ Budget() *Budget }); ok {
 		return ctx.Budget()
 	}
 	return nil
@@ -269,7 +268,7 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 	if err := c.budget().SpendCondition(); err != nil {
 		return nil, err
 	}
-	octx := c.ctx.(*Context)
+	octx := c.ctx
 	defer func() {
 		c.ctx = octx
 	}()
@@ -554,6 +553,14 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 		return c.nilsOperator(lres, rres, node.Operator)
 	}
 
+	if isNumericOperator(node.Operator) {
+		if lnum, lok := numericValueFromGo(lres); lok {
+			if rnum, rok := numericValueFromGo(rres); rok {
+				return evalNumericOperator(lnum, rnum, node.Operator)
+			}
+		}
+	}
+
 	switch t := lres.(type) {
 	case string:
 		return c.stringsOperator(t, rres, node.Operator)
@@ -804,16 +811,9 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 				return nil, err
 			}
 
-			var ar reflect.Value
 			expectedT := rt.In(pos)
-			if v != nil {
-				ar = reflect.ValueOf(v)
-			} else {
-				ar = reflect.New(expectedT).Elem()
-			}
-
-			actualT := ar.Type()
-			if !actualT.AssignableTo(expectedT) {
+			ar, ok := reflectValueForCallArgument(v, expectedT)
+			if !ok {
 				return nil, fmt.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
 			}
 
@@ -883,16 +883,9 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 				return nil, err
 			}
 
-			var ar reflect.Value
 			expectedT := rt.In(pos)
-			if v != nil {
-				ar = reflect.ValueOf(v)
-			} else {
-				ar = reflect.New(expectedT).Elem()
-			}
-
-			actualT := ar.Type()
-			if !actualT.AssignableTo(expectedT) {
+			ar, ok := reflectValueForCallArgument(v, expectedT)
+			if !ok {
 				return nil, fmt.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
 			}
 
@@ -907,15 +900,8 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 				return nil, err
 			}
 
-			var ar reflect.Value
-			if v != nil {
-				ar = reflect.ValueOf(v)
-			} else {
-				ar = reflect.New(expectedT)
-			}
-
-			actualT := ar.Type()
-			if !actualT.AssignableTo(expectedT) {
+			ar, ok := reflectValueForCallArgument(v, expectedT)
+			if !ok {
 				return nil, fmt.Errorf("%+v (%T) is an invalid argument for %s at pos %d: expected (%s)", v, v, node.Function.String(), pos, expectedT)
 			}
 
@@ -929,7 +915,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 			return nil, fmt.Errorf("could not call %s function: %w", node.Function, e)
 		}
 		if node.ChainCallee != nil {
-			octx := c.ctx.(*Context)
+			octx := c.ctx
 			defer func() {
 				c.ctx = octx
 			}()
@@ -948,8 +934,35 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 	return nil, nil
 }
 
+func reflectValueForCallArgument(value interface{}, expected reflect.Type) (reflect.Value, bool) {
+	arg := reflect.ValueOf(value)
+	if !arg.IsValid() {
+		return reflect.New(expected).Elem(), true
+	}
+	if arg.Type().AssignableTo(expected) {
+		return arg, true
+	}
+	if arg.Type().ConvertibleTo(expected) {
+		return arg.Convert(expected), true
+	}
+	if expected.Kind() == reflect.Ptr {
+		elem := expected.Elem()
+		if arg.Type().AssignableTo(elem) {
+			ptr := reflect.New(elem)
+			ptr.Elem().Set(arg)
+			return ptr, true
+		}
+		if arg.Type().ConvertibleTo(elem) {
+			ptr := reflect.New(elem)
+			ptr.Elem().Set(arg.Convert(elem))
+			return ptr, true
+		}
+	}
+	return reflect.Value{}, false
+}
+
 func (c *compiler) evalForExpression(node *ast.ForExpression) (interface{}, error) {
-	octx := c.ctx.(*Context)
+	octx := c.ctx
 	defer func() {
 		c.ctx = octx
 	}()
@@ -1166,7 +1179,7 @@ func (c *compiler) evalArrayLiteral(node *ast.ArrayLiteral) (interface{}, error)
 }
 
 func (c *compiler) evalIndexCallee(rv reflect.Value, node *ast.IndexExpression) (interface{}, error) {
-	octx := c.ctx.(*Context)
+	octx := c.ctx
 	defer func() {
 		c.ctx = octx
 	}()

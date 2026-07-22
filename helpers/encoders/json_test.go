@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ToJSON(t *testing.T) {
+func Test_To_JSON(t *testing.T) {
 	x := struct {
 		A string
 		B int

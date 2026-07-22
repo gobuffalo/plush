@@ -171,7 +171,7 @@ func Test_If_Updating_Variable_Inside_IF_Scope(t *testing.T) {
 	r.Equal("<p>hi</p>", s)
 }
 
-func Test_If_UserName_Is_Declared(t *testing.T) {
+func Test_If_User_Name_Is_Declared(t *testing.T) {
 	r := require.New(t)
 
 	ctx := plush.NewContext()
@@ -183,7 +183,7 @@ func Test_If_UserName_Is_Declared(t *testing.T) {
 	r.Empty(s)
 }
 
-func Test_If_BlockScope_Declare(t *testing.T) {
+func Test_If_Block_Scope_Declare(t *testing.T) {
 	r := require.New(t)
 
 	ctx := plush.NewContext()
@@ -200,7 +200,7 @@ func Test_If_BlockScope_Declare(t *testing.T) {
 	r.Equal("<p>Hello World</p>", s)
 }
 
-func Test_If_BlockScope_Nested_Declare(t *testing.T) {
+func Test_If_Block_Scope_Nested_Declare(t *testing.T) {
 	r := require.New(t)
 
 	ctx := plush.NewContext()
@@ -220,7 +220,7 @@ func Test_If_BlockScope_Nested_Declare(t *testing.T) {
 	r.Equal("<p>Hello World</p>", s)
 }
 
-func Test_If_BlockScope_Nested_Overwrite(t *testing.T) {
+func Test_If_Block_Scope_Nested_Overwrite(t *testing.T) {
 	r := require.New(t)
 
 	ctx := plush.NewContext()

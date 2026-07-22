@@ -10,31 +10,6 @@ type Iterator interface {
 	Next() interface{}
 }
 
-type ranger struct {
-	pos int
-	end int
-}
-
-func (r *ranger) Next() interface{} {
-	if r.pos < r.end {
-		r.pos++
-		return r.pos
-	}
-	return nil
-}
-
-func rangeHelper(a, b int) Iterator {
-	return &ranger{pos: a - 1, end: b}
-}
-
-func betweenHelper(a, b int) Iterator {
-	return &ranger{pos: a, end: b - 1}
-}
-
-func untilHelper(a int) Iterator {
-	return &ranger{pos: -1, end: a - 1}
-}
-
 func GroupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	if size <= 0 {
 		return nil, fmt.Errorf("size must be greater than zero")

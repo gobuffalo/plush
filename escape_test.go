@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Render_EscapedString(t *testing.T) {
+func Test_Render_Escaped_String(t *testing.T) {
 	r := require.New(t)
 
 	input := `<p><%= "<script>alert('pwned')</script>" %></p>`
@@ -33,7 +33,7 @@ func Test_Render_HTML_Escape(t *testing.T) {
 	r.Equal("&lt;b&gt;unsafe&lt;/b&gt;|<b>unsafe</b>|<b>unsafe</b>", s)
 }
 
-func Test_Escaping_EscapeExpression(t *testing.T) {
+func Test_Escaping_Escape_Expression(t *testing.T) {
 	r := require.New(t)
 	input := `C:\\<%= "temp" %>`
 

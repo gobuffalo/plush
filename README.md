@@ -53,6 +53,47 @@ let greet = fn(n) {
 <h1><%= greet(h["name"]) %></h1>
 ```
 
+#### Recursion
+
+Template functions can call themselves by name. Define the function with `let name = fn(...) { ... }`, then call `name(...)` inside the function body. This works in both the interpreter and the compiled VM renderer.
+
+```erb
+<%
+let countdown = fn(x) {
+  if (x == 0) {
+    return "done"
+  }
+  return countdown(x - 1)
+}
+%>
+<%= countdown(3) %>
+```
+
+renders:
+
+```html
+done
+```
+
+Recursive functions can also close over values from the surrounding template scope:
+
+```erb
+<%
+let remaining = 3
+let tick = fn() {
+  if (remaining == 0) {
+    return "done"
+  } else {
+    remaining = remaining - 1
+    return tick()
+  }
+}
+%>
+<%= tick() %>
+```
+
+The important rule is that recursive functions need a stopping condition. Without a base case, the function will keep calling itself until the render fails or a configured render budget stops it. Use `let` and `fn`; Go-style `var a = func() { ... }` is not Plush syntax.
+
 #### Whitespace Trim Output
 
 Use `<%- %>` when you want to render an expression and remove contiguous whitespace immediately around that tag:

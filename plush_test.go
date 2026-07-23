@@ -96,8 +96,12 @@ func Test_Render_Diagnostics_Interpreter_Context(t *testing.T) {
 
 	ctx := plush.NewContext()
 	ctx.Set(meta.TemplateFileKey, "products/show.plush")
+	ctx.Set("renderValue", func() string {
+		time.Sleep(20 * time.Millisecond)
+		return "interpreter"
+	})
 
-	s, err := plush.Render(`<%= "interpreter" %>`, ctx)
+	s, err := plush.Render(`<%= renderValue() %>`, ctx)
 	r.NoError(err)
 	r.Equal("interpreter", s)
 
@@ -116,8 +120,12 @@ func Test_Render_Diagnostics_From_Data_After_Buffalo_Renderer(t *testing.T) {
 
 	data := map[string]interface{}{
 		meta.TemplateFileKey: "products/show.plush",
+		"renderValue": func() string {
+			time.Sleep(20 * time.Millisecond)
+			return "interpreter"
+		},
 	}
-	rendered, err := plush.BuffaloRenderer(`<%= "interpreter" %>`, data, nil)
+	rendered, err := plush.BuffaloRenderer(`<%= renderValue() %>`, data, nil)
 	r.NoError(err)
 	r.Equal("interpreter", rendered)
 
@@ -136,8 +144,16 @@ func Test_Render_Diagnostics_Accumulates_Sequential_Template_Durations(t *testin
 
 	ctx := plush.NewContext()
 	ctx.Set(meta.TemplateFileKey, "products/show.plush")
+	ctx.Set("renderBody", func() string {
+		time.Sleep(20 * time.Millisecond)
+		return "body"
+	})
+	ctx.Set("renderLayout", func() string {
+		time.Sleep(40 * time.Millisecond)
+		return "layout"
+	})
 
-	_, err := plush.Render(`<%= "body" %>`, ctx)
+	_, err := plush.Render(`<%= renderBody() %>`, ctx)
 	r.NoError(err)
 	first, ok := plush.RenderDiagnosticsFromContext(ctx)
 	r.True(ok)
@@ -145,7 +161,7 @@ func Test_Render_Diagnostics_Accumulates_Sequential_Template_Durations(t *testin
 	r.NotZero(first.EngineDuration)
 
 	ctx.Set(meta.TemplateFileKey, "application.plush")
-	_, err = plush.Render(`<%= "layout" %>`, ctx)
+	_, err = plush.Render(`<%= renderLayout() %>`, ctx)
 	r.NoError(err)
 	second, ok := plush.RenderDiagnosticsFromContext(ctx)
 	r.True(ok)

@@ -2,6 +2,7 @@ package plush_test
 
 import (
 	"testing"
+	"time"
 
 	rootplush "github.com/gobuffalo/plush/v5"
 	_ "github.com/gobuffalo/plush/v5/VM/plush"
@@ -132,8 +133,12 @@ func Test_Root_Render_Mode_VM_Writes_Diagnostics_To_Context(t *testing.T) {
 	ctx := rootplush.NewContext()
 	ctx.Set(meta.TemplateFileKey, filename)
 	ctx.Set("name", "mido")
+	ctx.Set("slow", func() string {
+		time.Sleep(20 * time.Millisecond)
+		return ""
+	})
 
-	out, err := rootplush.Render(`<%= name %>`, ctx)
+	out, err := rootplush.Render(`<%= slow() %><%= name %>`, ctx)
 	require.NoError(t, err)
 	require.Equal(t, "mido", out)
 
@@ -144,7 +149,7 @@ func Test_Root_Render_Mode_VM_Writes_Diagnostics_To_Context(t *testing.T) {
 	require.Equal(t, rootplush.VMBytecodeCacheMissStore, diagnostics.VMBytecodeCache)
 	require.NotZero(t, diagnostics.EngineDuration)
 
-	out, err = rootplush.Render(`<%= name %>`, ctx)
+	out, err = rootplush.Render(`<%= slow() %><%= name %>`, ctx)
 	require.NoError(t, err)
 	require.Equal(t, "mido", out)
 

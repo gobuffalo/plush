@@ -72,9 +72,13 @@ func Test_Render_Diagnostics_Fast_Render_Plan_Stats(t *testing.T) {
 func Test_Render_Diagnostics_Context_Expose_Fast_Render_Plan_Stats(t *testing.T) {
 	ctx := plush.NewContextWith(map[string]interface{}{
 		"name": "Mido",
+		"slow": func() string {
+			time.Sleep(20 * time.Millisecond)
+			return ""
+		},
 	})
 
-	tmpl, err := Compile(`<h1><%= name %></h1>`)
+	tmpl, err := Compile(`<%= slow() %><h1><%= name %></h1>`)
 	require.NoError(t, err)
 
 	out, err := tmpl.Render(ctx)
@@ -117,9 +121,11 @@ func Test_Render_Diagnostics_VM_Hotspots_Record_Fast_Helper_And_Partial(t *testi
 	ctx := plush.NewContextWith(map[string]interface{}{
 		"name": "Mido",
 		"label": func(value string) string {
+			time.Sleep(20 * time.Millisecond)
 			return "slow " + value
 		},
 		"partialFeeder": func(string) (string, error) {
+			time.Sleep(20 * time.Millisecond)
 			return `<%= name %>`, nil
 		},
 	})
@@ -127,6 +133,7 @@ func Test_Render_Diagnostics_VM_Hotspots_Record_Fast_Helper_And_Partial(t *testi
 	SetFastHelper(ctx, "label", func(w FastWriter, args FastArgs) error {
 		value, ok := args.String(0)
 		require.True(t, ok)
+		time.Sleep(20 * time.Millisecond)
 		w.WriteEscapedString("fast " + value)
 		return nil
 	})

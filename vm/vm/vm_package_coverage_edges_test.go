@@ -387,10 +387,10 @@ func Test_VM_Fast_Render_And_Value_Remaining_Edge_Branches(t *testing.T) {
 		}},
 	}
 	emptyChainKey := fastFieldChainPlanKey{plan: emptyChainPlan, typ: reflect.TypeOf(vmStructLoopRecord{})}
-	fastFieldChainPlanCache.Store(emptyChainKey, &fastFieldChainPlan{})
-	defer fastFieldChainPlanCache.Delete(emptyChainKey)
+	runtimePlans := &fastRuntimePlanCache{}
+	runtimePlans.storeFieldChainPlan(emptyChainKey, &fastFieldChainPlan{})
 	rawRecord := vmStructLoopRecord{Name: "cached"}
-	value, ok, err = evalFastFieldChainValue(emptyChainPlan, rawRecord, plush.NewContext())
+	value, ok, err = evalFastFieldChainValue(emptyChainPlan, rawRecord, plush.NewContext(), runtimePlans)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.Equal(t, rawRecord, value)

@@ -297,11 +297,108 @@ const (
 )
 
 type fastMixedPlan struct {
-	ops        []fastMixedOp
-	staticName *fastStaticNamePlan
-	simple     *fastSimplePlan
-	staticSize int
-	nameCount  int
+	ops          []fastMixedOp
+	staticName   *fastStaticNamePlan
+	simple       *fastSimplePlan
+	runtimePlans *fastRuntimePlanCache
+	staticSize   int
+	nameCount    int
+}
+
+// fastRuntimePlanCache owns the reflection plans derived from one compiled
+// FastRenderPlan. Keeping these maps under the prepared plan makes template
+// cache invalidation release the derived plans with their bytecode instead of
+// retaining compiled-plan pointers in process-wide caches.
+type fastRuntimePlanCache struct {
+	mu                    sync.RWMutex
+	structLoopWriterPlans map[fastStructLoopWriterPlanKey]*fastStructLoopWriterPlan
+	fieldChainPlans       map[fastFieldChainPlanKey]*fastFieldChainPlan
+	accessChainPlans      map[fastAccessChainPlanKey]*fastAccessChainPlan
+}
+
+func optionalFastRuntimePlanCache(caches []*fastRuntimePlanCache) *fastRuntimePlanCache {
+	if len(caches) == 0 {
+		return nil
+	}
+	return caches[0]
+}
+
+func (c *fastRuntimePlanCache) structLoopWriterPlan(key fastStructLoopWriterPlanKey) (*fastStructLoopWriterPlan, bool) {
+	if c == nil {
+		return nil, false
+	}
+	c.mu.RLock()
+	plan, ok := c.structLoopWriterPlans[key]
+	c.mu.RUnlock()
+	return plan, ok
+}
+
+func (c *fastRuntimePlanCache) storeStructLoopWriterPlan(key fastStructLoopWriterPlanKey, plan *fastStructLoopWriterPlan) *fastStructLoopWriterPlan {
+	if c == nil {
+		return plan
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if cached, ok := c.structLoopWriterPlans[key]; ok {
+		return cached
+	}
+	if c.structLoopWriterPlans == nil {
+		c.structLoopWriterPlans = make(map[fastStructLoopWriterPlanKey]*fastStructLoopWriterPlan)
+	}
+	c.structLoopWriterPlans[key] = plan
+	return plan
+}
+
+func (c *fastRuntimePlanCache) fieldChainPlan(key fastFieldChainPlanKey) (*fastFieldChainPlan, bool) {
+	if c == nil {
+		return nil, false
+	}
+	c.mu.RLock()
+	plan, ok := c.fieldChainPlans[key]
+	c.mu.RUnlock()
+	return plan, ok
+}
+
+func (c *fastRuntimePlanCache) storeFieldChainPlan(key fastFieldChainPlanKey, plan *fastFieldChainPlan) *fastFieldChainPlan {
+	if c == nil {
+		return plan
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if cached, ok := c.fieldChainPlans[key]; ok {
+		return cached
+	}
+	if c.fieldChainPlans == nil {
+		c.fieldChainPlans = make(map[fastFieldChainPlanKey]*fastFieldChainPlan)
+	}
+	c.fieldChainPlans[key] = plan
+	return plan
+}
+
+func (c *fastRuntimePlanCache) accessChainPlan(key fastAccessChainPlanKey) (*fastAccessChainPlan, bool) {
+	if c == nil {
+		return nil, false
+	}
+	c.mu.RLock()
+	plan, ok := c.accessChainPlans[key]
+	c.mu.RUnlock()
+	return plan, ok
+}
+
+func (c *fastRuntimePlanCache) storeAccessChainPlan(key fastAccessChainPlanKey, plan *fastAccessChainPlan) *fastAccessChainPlan {
+	if c == nil {
+		return plan
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if cached, ok := c.accessChainPlans[key]; ok {
+		return cached
+	}
+	if c.accessChainPlans == nil {
+		c.accessChainPlans = make(map[fastAccessChainPlanKey]*fastAccessChainPlan)
+	}
+	c.accessChainPlans[key] = plan
+	return plan
 }
 
 type fastMixedOp struct {

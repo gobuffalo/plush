@@ -12,14 +12,15 @@ import (
 )
 
 type fastRenderBindings struct {
-	ctx        hctx.Context
-	vmHotspots plush.RenderVMHotspotDiagnosticsRecorder
-	names      []string
-	lookup     contextIDLookup
-	ids        []int
-	inlineIDs  [8]int
-	localOK    []bool
-	localVals  []interface{}
+	ctx          hctx.Context
+	vmHotspots   plush.RenderVMHotspotDiagnosticsRecorder
+	runtimePlans *fastRuntimePlanCache
+	names        []string
+	lookup       contextIDLookup
+	ids          []int
+	inlineIDs    [8]int
+	localOK      []bool
+	localVals    []interface{}
 }
 
 type fastRenderBindingPlan struct {
@@ -34,8 +35,9 @@ func newFastRenderBindingsWithPlan(plan *compiler.FastRenderPlan, ctx hctx.Conte
 
 func newFastRenderBindingsWithPlanDiagnostics(plan *compiler.FastRenderPlan, ctx hctx.Context, bindingPlan *fastRenderBindingPlan, vmHotspots plush.RenderVMHotspotDiagnosticsRecorder) fastRenderBindings {
 	bindings := fastRenderBindings{
-		ctx:        ctx,
-		vmHotspots: vmHotspots,
+		ctx:          ctx,
+		vmHotspots:   vmHotspots,
+		runtimePlans: fastRuntimePlanCacheFor(plan),
 	}
 	if plan != nil {
 		bindings.names = plan.Bindings

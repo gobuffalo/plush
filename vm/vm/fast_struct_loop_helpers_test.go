@@ -1072,9 +1072,9 @@ func Test_VM_Fast_Struct_Field_Loop_Render_And_Cache_Branches(t *testing.T) {
 	handled, err = renderFastStructFieldLoop(&out, ctx, bindings, invalidLoop, iter)
 	require.NoError(t, err)
 	require.False(t, handled)
-	_, ok := fastStructLoopWriterPlanFor(invalidLoop, elemType)
+	_, ok := fastStructLoopWriterPlanFor(invalidLoop, elemType, bindings.runtimePlans)
 	require.False(t, ok)
-	_, ok = fastStructLoopWriterPlanFor(invalidLoop, elemType)
+	_, ok = fastStructLoopWriterPlanFor(invalidLoop, elemType, bindings.runtimePlans)
 	require.False(t, ok)
 
 	validLoop := &compiler.FastLoopPlan{
@@ -1086,10 +1086,10 @@ func Test_VM_Fast_Struct_Field_Loop_Render_And_Cache_Branches(t *testing.T) {
 			{Kind: compiler.FastLoopPartStatic, Value: ";"},
 		},
 	}
-	plan, ok := fastStructLoopWriterPlanFor(validLoop, elemType)
+	plan, ok := fastStructLoopWriterPlanFor(validLoop, elemType, bindings.runtimePlans)
 	require.True(t, ok)
 	require.NotNil(t, plan)
-	cached, ok := fastStructLoopWriterPlanFor(validLoop, elemType)
+	cached, ok := fastStructLoopWriterPlanFor(validLoop, elemType, bindings.runtimePlans)
 	require.True(t, ok)
 	require.Same(t, plan, cached)
 

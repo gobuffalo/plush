@@ -250,10 +250,10 @@ func evalFastPathValue(value *compiler.FastValuePlan, ctx hctx.Context, bindings
 		}
 	}
 	if !fastPathStepsNeedRuntimeBindings(value.Path) {
-		if result, handled, err := evalFastFieldChainValue(value, raw, ctx); handled || err != nil {
+		if result, handled, err := evalFastFieldChainValue(value, raw, ctx, bindings.runtimePlans); handled || err != nil {
 			return result, true, err
 		}
-		if result, handled, err := evalFastAccessChainValue(value, raw, ctx); handled || err != nil {
+		if result, handled, err := evalFastAccessChainValue(value, raw, ctx, bindings.runtimePlans); handled || err != nil {
 			return result, true, err
 		}
 	}
@@ -763,10 +763,10 @@ func writeFastValuePlanOutput(out *strings.Builder, ctx hctx.Context, bindings f
 		}
 		return true, false, nil
 	}
-	if handled, err := writeFastFieldChainValue(out, ctx, value, raw); handled || err != nil {
+	if handled, err := writeFastFieldChainValue(out, ctx, value, raw, bindings.runtimePlans); handled || err != nil {
 		return handled, true, err
 	}
-	if handled, err := writeFastAccessChainValue(out, ctx, value, raw); handled || err != nil {
+	if handled, err := writeFastAccessChainValue(out, ctx, value, raw, bindings.runtimePlans); handled || err != nil {
 		return handled, true, err
 	}
 	return false, false, nil
@@ -814,11 +814,11 @@ func writeFastTopLevelAccessChainOutput(out *strings.Builder, ctx hctx.Context, 
 		}
 		return true, false, nil
 	}
-	handled, err := writeFastTopLevelAccessChainRaw(out, ctx, value, raw, cacheSlot)
+	handled, err := writeFastTopLevelAccessChainRaw(out, ctx, value, raw, cacheSlot, bindings.runtimePlans)
 	return handled, true, err
 }
 
-func writeFastTopLevelAccessChainRaw(out *strings.Builder, ctx hctx.Context, value *compiler.FastValuePlan, raw interface{}, cacheSlot *object.InlineCacheSlot) (bool, error) {
+func writeFastTopLevelAccessChainRaw(out *strings.Builder, ctx hctx.Context, value *compiler.FastValuePlan, raw interface{}, cacheSlot *object.InlineCacheSlot, runtimePlans ...*fastRuntimePlanCache) (bool, error) {
 	if !canUseFastTopLevelAccessChain(value) {
 		return false, nil
 	}
@@ -829,7 +829,7 @@ func writeFastTopLevelAccessChainRaw(out *strings.Builder, ctx hctx.Context, val
 	if !ok {
 		return false, nil
 	}
-	entry := fastTopLevelAccessCacheEntryFor(cacheSlot, value, rv.Type())
+	entry := fastTopLevelAccessCacheEntryFor(cacheSlot, value, rv.Type(), runtimePlans...)
 	if entry == nil || entry.kind == fastTopLevelAccessUnsupported {
 		return false, nil
 	}
@@ -846,9 +846,9 @@ func writeFastTopLevelAccessChainRaw(out *strings.Builder, ctx hctx.Context, val
 	}
 }
 
-func fastTopLevelAccessCacheEntryFor(slot *object.InlineCacheSlot, value *compiler.FastValuePlan, rt reflect.Type) *fastTopLevelAccessCacheEntry {
+func fastTopLevelAccessCacheEntryFor(slot *object.InlineCacheSlot, value *compiler.FastValuePlan, rt reflect.Type, runtimePlans ...*fastRuntimePlanCache) *fastTopLevelAccessCacheEntry {
 	if slot == nil {
-		return buildFastTopLevelAccessCacheEntry(value, rt)
+		return buildFastTopLevelAccessCacheEntry(value, rt, runtimePlans...)
 	}
 	if cached, ok := slot.Load().(*fastTopLevelAccessCacheEntry); ok {
 		for entry := cached; entry != nil; entry = entry.next {
@@ -858,13 +858,13 @@ func fastTopLevelAccessCacheEntryFor(slot *object.InlineCacheSlot, value *compil
 		}
 	}
 	current, _ := slot.Load().(*fastTopLevelAccessCacheEntry)
-	entry := buildFastTopLevelAccessCacheEntry(value, rt)
+	entry := buildFastTopLevelAccessCacheEntry(value, rt, runtimePlans...)
 	entry.next = cloneFastTopLevelAccessCache(current, propertyInlineCacheDepth-1)
 	slot.Store(entry)
 	return entry
 }
 
-func buildFastTopLevelAccessCacheEntry(value *compiler.FastValuePlan, rt reflect.Type) *fastTopLevelAccessCacheEntry {
+func buildFastTopLevelAccessCacheEntry(value *compiler.FastValuePlan, rt reflect.Type, runtimePlans ...*fastRuntimePlanCache) *fastTopLevelAccessCacheEntry {
 	entry := &fastTopLevelAccessCacheEntry{
 		typ:  rt,
 		kind: fastTopLevelAccessUnsupported,
@@ -874,12 +874,12 @@ func buildFastTopLevelAccessCacheEntry(value *compiler.FastValuePlan, rt reflect
 		entry.method = method
 		return entry
 	}
-	if chain, ok := fastFieldChainPlanFor(value, rt); ok {
+	if chain, ok := fastFieldChainPlanFor(value, rt, runtimePlans...); ok {
 		entry.kind = fastTopLevelAccessFieldChain
 		entry.fieldChain = chain
 		return entry
 	}
-	if chain, ok := fastAccessChainPlanFor(value, rt); ok {
+	if chain, ok := fastAccessChainPlanFor(value, rt, runtimePlans...); ok {
 		entry.kind = fastTopLevelAccessChain
 		entry.chain = chain
 		return entry
@@ -914,7 +914,7 @@ func cloneFastTopLevelAccessCache(head *fastTopLevelAccessCacheEntry, limit int)
 	return clone
 }
 
-func evalFastFieldChainValue(value *compiler.FastValuePlan, raw interface{}, ctx hctx.Context) (interface{}, bool, error) {
+func evalFastFieldChainValue(value *compiler.FastValuePlan, raw interface{}, ctx hctx.Context, runtimePlans ...*fastRuntimePlanCache) (interface{}, bool, error) {
 	rv, nilValue, ok := fastFieldChainRootValue(raw)
 	if nilValue {
 		return nil, true, nil
@@ -922,7 +922,7 @@ func evalFastFieldChainValue(value *compiler.FastValuePlan, raw interface{}, ctx
 	if !ok {
 		return nil, false, nil
 	}
-	chain, ok := fastFieldChainPlanFor(value, rv.Type())
+	chain, ok := fastFieldChainPlanFor(value, rv.Type(), runtimePlans...)
 	if !ok {
 		return nil, false, nil
 	}
@@ -957,7 +957,7 @@ func evalFastFieldChainValue(value *compiler.FastValuePlan, raw interface{}, ctx
 	return raw, true, nil
 }
 
-func writeFastFieldChainValue(out *strings.Builder, ctx hctx.Context, value *compiler.FastValuePlan, raw interface{}) (bool, error) {
+func writeFastFieldChainValue(out *strings.Builder, ctx hctx.Context, value *compiler.FastValuePlan, raw interface{}, runtimePlans ...*fastRuntimePlanCache) (bool, error) {
 	rv, nilValue, ok := fastFieldChainRootValue(raw)
 	if nilValue {
 		return true, nil
@@ -965,7 +965,7 @@ func writeFastFieldChainValue(out *strings.Builder, ctx hctx.Context, value *com
 	if !ok {
 		return false, nil
 	}
-	chain, ok := fastFieldChainPlanFor(value, rv.Type())
+	chain, ok := fastFieldChainPlanFor(value, rv.Type(), runtimePlans...)
 	if !ok {
 		return false, nil
 	}
@@ -1049,22 +1049,21 @@ func unwrapFastFieldChainValue(rv reflect.Value) reflect.Value {
 	return rv
 }
 
-func fastFieldChainPlanFor(value *compiler.FastValuePlan, root reflect.Type) (*fastFieldChainPlan, bool) {
+func fastFieldChainPlanFor(value *compiler.FastValuePlan, root reflect.Type, runtimePlans ...*fastRuntimePlanCache) (*fastFieldChainPlan, bool) {
 	if value == nil || value.Kind != compiler.FastValuePath || len(value.Path) == 0 {
 		return nil, false
 	}
 	key := fastFieldChainPlanKey{plan: value, typ: root}
-	if cached, ok := fastFieldChainPlanCache.Load(key); ok {
-		chain, _ := cached.(*fastFieldChainPlan)
+	runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
+	if chain, ok := runtimeCache.fieldChainPlan(key); ok {
 		return chain, chain != nil
 	}
 	chain, ok := buildFastFieldChainPlan(value, root)
 	if !ok {
-		fastFieldChainPlanCache.Store(key, (*fastFieldChainPlan)(nil))
+		runtimeCache.storeFieldChainPlan(key, nil)
 		return nil, false
 	}
-	actual, _ := fastFieldChainPlanCache.LoadOrStore(key, chain)
-	chain, _ = actual.(*fastFieldChainPlan)
+	chain = runtimeCache.storeFieldChainPlan(key, chain)
 	return chain, chain != nil
 }
 
@@ -1098,7 +1097,7 @@ func buildFastFieldChainPlan(value *compiler.FastValuePlan, root reflect.Type) (
 	return chain, len(chain.steps) > 0
 }
 
-func evalFastAccessChainValue(value *compiler.FastValuePlan, raw interface{}, ctx hctx.Context) (interface{}, bool, error) {
+func evalFastAccessChainValue(value *compiler.FastValuePlan, raw interface{}, ctx hctx.Context, runtimePlans ...*fastRuntimePlanCache) (interface{}, bool, error) {
 	rv, nilValue, ok := fastAccessChainRootValue(raw)
 	if nilValue {
 		return nil, true, nil
@@ -1106,7 +1105,7 @@ func evalFastAccessChainValue(value *compiler.FastValuePlan, raw interface{}, ct
 	if !ok {
 		return nil, false, nil
 	}
-	chain, ok := fastAccessChainPlanFor(value, rv.Type())
+	chain, ok := fastAccessChainPlanFor(value, rv.Type(), runtimePlans...)
 	if !ok {
 		return nil, false, nil
 	}
@@ -1114,7 +1113,7 @@ func evalFastAccessChainValue(value *compiler.FastValuePlan, raw interface{}, ct
 	return result, ok, err
 }
 
-func writeFastAccessChainValue(out *strings.Builder, ctx hctx.Context, value *compiler.FastValuePlan, raw interface{}) (bool, error) {
+func writeFastAccessChainValue(out *strings.Builder, ctx hctx.Context, value *compiler.FastValuePlan, raw interface{}, runtimePlans ...*fastRuntimePlanCache) (bool, error) {
 	rv, nilValue, ok := fastAccessChainRootValue(raw)
 	if nilValue {
 		return true, nil
@@ -1122,7 +1121,7 @@ func writeFastAccessChainValue(out *strings.Builder, ctx hctx.Context, value *co
 	if !ok {
 		return false, nil
 	}
-	chain, ok := fastAccessChainPlanFor(value, rv.Type())
+	chain, ok := fastAccessChainPlanFor(value, rv.Type(), runtimePlans...)
 	if !ok {
 		return false, nil
 	}
@@ -1152,22 +1151,21 @@ func fastAccessChainRootValue(raw interface{}) (reflect.Value, bool, bool) {
 	}
 }
 
-func fastAccessChainPlanFor(value *compiler.FastValuePlan, root reflect.Type) (*fastAccessChainPlan, bool) {
+func fastAccessChainPlanFor(value *compiler.FastValuePlan, root reflect.Type, runtimePlans ...*fastRuntimePlanCache) (*fastAccessChainPlan, bool) {
 	if value == nil || value.Kind != compiler.FastValuePath || len(value.Path) == 0 {
 		return nil, false
 	}
 	key := fastAccessChainPlanKey{plan: value, typ: root}
-	if cached, ok := fastAccessChainPlanCache.Load(key); ok {
-		chain, _ := cached.(*fastAccessChainPlan)
+	runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
+	if chain, ok := runtimeCache.accessChainPlan(key); ok {
 		return chain, chain != nil
 	}
 	chain, _, ok := buildFastAccessChainPlanForSteps(value.Path, root)
 	if !ok || len(chain.steps) == 0 {
-		fastAccessChainPlanCache.Store(key, (*fastAccessChainPlan)(nil))
+		runtimeCache.storeAccessChainPlan(key, nil)
 		return nil, false
 	}
-	actual, _ := fastAccessChainPlanCache.LoadOrStore(key, chain)
-	chain, _ = actual.(*fastAccessChainPlan)
+	chain = runtimeCache.storeAccessChainPlan(key, chain)
 	return chain, chain != nil
 }
 

@@ -23,10 +23,6 @@ var vmFastHelpersKey = "__plush_vm_internal_fast_helpers_" + fmt.Sprintf("%d", t
 
 const vmPartialFeederName = "partialFeeder"
 
-var fastStructLoopWriterPlanCache sync.Map
-var fastFieldChainPlanCache sync.Map
-var fastAccessChainPlanCache sync.Map
-
 var True = object.TrueObject
 var False = object.FalseObject
 var Null = object.NullObject

@@ -13,6 +13,9 @@ type Template = vm.Template
 type FastWriter = vm.FastWriter
 type FastArgs = vm.FastArgs
 type FastHelperFunc = vm.FastHelperFunc
+type FastNoContextValueHelperFunc = vm.FastNoContextValueHelperFunc
+type FastReadOnlyContext = vm.FastReadOnlyContext
+type FastReadOnlyValueHelperFunc = vm.FastReadOnlyValueHelperFunc
 type FastValueHelperFunc = vm.FastValueHelperFunc
 
 var ErrFastUnsupported = vm.ErrFastUnsupported
@@ -75,6 +78,33 @@ func SetFastValueHelper(ctx hctx.Context, name string, helper FastValueHelperFun
 
 func ClearFastValueHelper(ctx hctx.Context, name string) {
 	vm.ClearFastValueHelper(ctx, name)
+}
+
+// SetFastNoContextValueHelper registers a value helper that receives no render
+// context. Use it when the helper only needs FastArgs. The VM skips scoped
+// context creation and binding synchronization for these calls.
+func SetFastNoContextValueHelper(ctx hctx.Context, name string, helper FastNoContextValueHelperFunc) {
+	vm.SetFastNoContextValueHelper(ctx, name, helper)
+}
+
+func ClearFastNoContextValueHelper(ctx hctx.Context, name string) {
+	vm.ClearFastNoContextValueHelper(ctx, name)
+}
+
+// SetFastReadOnlyValueHelper registers a helper that can read bindings through
+// FastReadOnlyContext but cannot write bindings through that interface. Plush
+// skips post-call binding synchronization.
+//
+// Read-only is shallow: maps, slices, pointers, arrays containing references,
+// and objects obtained through Value may still expose mutable data. Helpers
+// must treat those values as immutable or make defensive copies. Use
+// SetFastValueHelper for intentional mutation.
+func SetFastReadOnlyValueHelper(ctx hctx.Context, name string, helper FastReadOnlyValueHelperFunc) {
+	vm.SetFastReadOnlyValueHelper(ctx, name, helper)
+}
+
+func ClearFastReadOnlyValueHelper(ctx hctx.Context, name string) {
+	vm.ClearFastReadOnlyValueHelper(ctx, name)
 }
 
 // RenderSourcePartial renders runtime Plush source as a named partial value.

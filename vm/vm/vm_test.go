@@ -498,13 +498,60 @@ func Test_VM_Property_Inline_Cache_Keeps_Polymorphic_Receivers(t *testing.T) {
 	require.Equal(t, reflect.TypeOf(vmInlineCacheUser{}), head.next.typ)
 }
 
-func Test_VM_Regex_Cache_Reuses_Compiled_Pattern(t *testing.T) {
-	regexCache.Delete(`^mido$`)
+func Test_VM_Regex_Cache_Is_Local_To_Match_Instruction(t *testing.T) {
+	program, err := parser.Parse(`<%= name ~= pattern %>`)
+	require.NoError(t, err)
 
-	first, err := cachedRegex(`^mido$`)
-	require.NoError(t, err)
-	second, err := cachedRegex(`^mido$`)
-	require.NoError(t, err)
+	comp := compiler.New()
+	require.NoError(t, comp.Compile(program))
+	bytecode := comp.Bytecode()
+	positions := opcodePositions(bytecode.Instructions, code.OpMatches)
+	require.Len(t, positions, 1)
+	slot := bytecode.RegexCaches[positions[0]]
+	require.NotNil(t, slot)
+	require.Nil(t, slot.Load())
+
+	render := func(name, pattern string) string {
+		machine := NewWithContext(bytecode, plush.NewContextWith(map[string]interface{}{
+			"name":    name,
+			"pattern": pattern,
+		}))
+		require.NoError(t, machine.Run())
+		return machine.Rendered()
+	}
+
+	require.Equal(t, "true", render("Mido", `^Mi`))
+	first := slot.Load().(regexCacheEntry)
+	require.Equal(t, `^Mi`, first.pattern)
+	require.NotNil(t, first.re)
+
+	require.Equal(t, "true", render("Mina", `^Mi`))
+	second := slot.Load().(regexCacheEntry)
+	require.Same(t, first.re, second.re)
+
+	require.Equal(t, "true", render("Ada", `^Ad`))
+	replacement := slot.Load().(regexCacheEntry)
+	require.Equal(t, `^Ad`, replacement.pattern)
+	require.NotSame(t, first.re, replacement.re)
+
+	otherCompiler := compiler.New()
+	require.NoError(t, otherCompiler.Compile(program))
+	otherBytecode := otherCompiler.Bytecode()
+	otherPositions := opcodePositions(otherBytecode.Instructions, code.OpMatches)
+	require.Len(t, otherPositions, 1)
+	otherSlot := otherBytecode.RegexCaches[otherPositions[0]]
+	require.NotNil(t, otherSlot)
+	require.NotSame(t, slot, otherSlot)
+	require.Nil(t, otherSlot.Load())
+}
+
+func Test_VM_Regex_Cache_Reuses_Compile_Error_In_Expression_Slot(t *testing.T) {
+	slot := &object.InlineCacheSlot{}
+
+	_, first := cachedRegex(slot, `[`)
+	require.Error(t, first)
+	_, second := cachedRegex(slot, `[`)
+	require.Error(t, second)
 	require.Same(t, first, second)
 }
 

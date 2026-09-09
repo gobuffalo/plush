@@ -105,12 +105,12 @@ func Test_VM_Eval_Fast_Infix_Operator_Branches(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.op, func(t *testing.T) {
-			got, err := evalFastInfixOperator(tt.op, tt.left, tt.right)
+			got, err := evalFastInfixOperator(tt.op, tt.left, tt.right, nil)
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, got)
 		})
 	}
 
-	_, err := evalFastInfixOperator("??", 1, 2)
+	_, err := evalFastInfixOperator("??", 1, 2, nil)
 	require.ErrorContains(t, err, "unknown fast infix operator")
 }

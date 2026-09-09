@@ -55,6 +55,27 @@ func Test_Phase_15_Concurrent_Compiled_Template_Shared_Bytecode(t *testing.T) {
 	})
 }
 
+func Test_Phase_15_Concurrent_Compiled_Template_Regex_Cache(t *testing.T) {
+	tmpl, err := vmplush.Compile(`<%= value ~= pattern %>`)
+	require.NoError(t, err)
+
+	runConcurrentChecks(t, 32, func(i int) error {
+		value := fmt.Sprintf("category-%d", i)
+		pattern := fmt.Sprintf(`^category-%d$`, i)
+		out, err := tmpl.Render(rootplush.NewContextWith(map[string]interface{}{
+			"value":   value,
+			"pattern": pattern,
+		}))
+		if err != nil {
+			return err
+		}
+		if out != "true" {
+			return fmt.Errorf("regex render %d output mismatch: want %q, got %q", i, "true", out)
+		}
+		return nil
+	})
+}
+
 func Test_Phase_15_Repeated_Compiled_Template_Does_Not_Leak_Globals_Or_Locals(t *testing.T) {
 	tmpl, err := vmplush.Compile(`<% let global = name %><% let make = fn(value) { let local = value + suffix; return local } %><%= global %>|<%= make(name) %>`)
 	require.NoError(t, err)

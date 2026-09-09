@@ -51,7 +51,7 @@ func renderFastStructFieldLoop(out *strings.Builder, ctx hctx.Context, bindings 
 	if !ok {
 		return false, nil
 	}
-	plan, ok := fastStructLoopWriterPlanFor(loop, elemType)
+	plan, ok := fastStructLoopWriterPlanFor(loop, elemType, bindings.runtimePlans)
 	if !ok {
 		return false, nil
 	}
@@ -474,7 +474,7 @@ func evalFastStructLoopStaticCallArgValue(plan *fastStructLoopCallArgPlan, bindi
 	}
 }
 
-func buildFastStructLoopCallPlan(call *compiler.FastCallPlan, elemType reflect.Type) (*fastStructLoopCallPlan, bool) {
+func buildFastStructLoopCallPlan(call *compiler.FastCallPlan, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) (*fastStructLoopCallPlan, bool) {
 	if call == nil {
 		return nil, false
 	}
@@ -482,13 +482,14 @@ func buildFastStructLoopCallPlan(call *compiler.FastCallPlan, elemType reflect.T
 		call: call,
 		args: make([]fastStructLoopCallArgPlan, 0, len(call.Args)),
 	}
+	runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
 	for i := range call.Args {
-		plan.args = append(plan.args, buildFastStructLoopCallArgPlan(&call.Args[i], elemType))
+		plan.args = append(plan.args, buildFastStructLoopCallArgPlan(&call.Args[i], elemType, runtimeCache))
 	}
 	return plan, true
 }
 
-func buildFastStructLoopCallArgPlan(value *compiler.FastValuePlan, elemType reflect.Type) fastStructLoopCallArgPlan {
+func buildFastStructLoopCallArgPlan(value *compiler.FastValuePlan, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) fastStructLoopCallArgPlan {
 	if value == nil {
 		return fastStructLoopCallArgPlan{kind: fastStructLoopCallArgNil}
 	}
@@ -497,6 +498,7 @@ func buildFastStructLoopCallArgPlan(value *compiler.FastValuePlan, elemType refl
 		value: *value,
 		line:  value.Line,
 	}
+	runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
 	switch value.Kind {
 	case compiler.FastValueLoopKey:
 		plan.kind = fastStructLoopCallArgKey
@@ -521,7 +523,7 @@ func buildFastStructLoopCallArgPlan(value *compiler.FastValuePlan, elemType refl
 		plan.boolVal = value.BoolValue
 	case compiler.FastValuePath:
 		if value.NameIndex < 0 {
-			if accessPlan, ok := fastAccessChainPlanFor(value, elemType); ok {
+			if accessPlan, ok := fastAccessChainPlanFor(value, elemType, runtimeCache); ok {
 				plan.kind = fastStructLoopCallArgAccessChain
 				plan.accessPlan = accessPlan
 			}
@@ -807,7 +809,7 @@ func isTruthyFastStructLoopValue(value *compiler.FastValuePlan, ctx hctx.Context
 		if len(value.Path) == 0 {
 			return isTruthyFastReflectValue(rv), true, nil
 		}
-		if chain, ok := fastAccessChainPlanFor(value, rv.Type()); ok {
+		if chain, ok := fastAccessChainPlanFor(value, rv.Type(), bindings.runtimePlans); ok {
 			field, ok, err := evalFastAccessChainReflectValue(chain, rv, ctx)
 			if err != nil || !ok {
 				return false, ok, err
@@ -857,7 +859,7 @@ func evalFastStructLoopPathValue(value *compiler.FastValuePlan, ctx hctx.Context
 	if len(value.Path) == 0 {
 		return fastStructLoopItemValue(item), true, nil
 	}
-	if chain, ok := fastAccessChainPlanFor(value, rv.Type()); ok {
+	if chain, ok := fastAccessChainPlanFor(value, rv.Type(), bindings.runtimePlans); ok {
 		return evalFastAccessChainPlanValue(chain, rv, ctx)
 	}
 	return evalFastValue(value, ctx, bindings, fastReflectInterface(rv))
@@ -884,7 +886,7 @@ func evalFastStructLoopInfixValue(value *compiler.FastValuePlan, ctx hctx.Contex
 	if !ok {
 		right = nil
 	}
-	result, err := evalFastInfixOperator(value.Operator, left, right)
+	result, err := evalFastInfixOperator(value.Operator, left, right, value.RegexCache)
 	if err != nil {
 		return nil, true, fastLineError(value.Line, err)
 	}
@@ -1002,6 +1004,14 @@ func evalFastStructLoopConditionPlan(plan *fastStructLoopConditionPlan, ctx hctx
 		}
 		if !rightOK {
 			right = fastConditionOperandValue{}
+		}
+		if plan.operator == "~=" {
+			pattern := fmt.Sprint(right.goValue())
+			re, err := cachedRegex(plan.regexCache, pattern)
+			if err != nil {
+				return false, true, fastLineError(plan.line, fmt.Errorf("couldn't compile regex %s", right.goValue()))
+			}
+			return re.MatchString(fmt.Sprint(left.goValue())), true, nil
 		}
 		result, err := evalFastConditionInfixOperator(plan.operator, left, right)
 		if err != nil {
@@ -1210,37 +1220,37 @@ func fastStructLoopElementType(iterType reflect.Type) (reflect.Type, bool) {
 	return elemType, true
 }
 
-func fastStructLoopWriterPlanFor(loop *compiler.FastLoopPlan, elemType reflect.Type) (*fastStructLoopWriterPlan, bool) {
+func fastStructLoopWriterPlanFor(loop *compiler.FastLoopPlan, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) (*fastStructLoopWriterPlan, bool) {
 	if loop == nil {
 		return nil, false
 	}
 	key := fastStructLoopWriterPlanKey{loop: loop, typ: elemType}
-	if cached, ok := fastStructLoopWriterPlanCache.Load(key); ok {
-		plan, _ := cached.(*fastStructLoopWriterPlan)
+	runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
+	if plan, ok := runtimeCache.structLoopWriterPlan(key); ok {
 		return plan, plan != nil
 	}
-	plan, ok := buildFastStructLoopWriterPlan(loop, elemType)
+	plan, ok := buildFastStructLoopWriterPlan(loop, elemType, runtimeCache)
 	if !ok {
-		fastStructLoopWriterPlanCache.Store(key, (*fastStructLoopWriterPlan)(nil))
+		runtimeCache.storeStructLoopWriterPlan(key, nil)
 		return nil, false
 	}
-	actual, _ := fastStructLoopWriterPlanCache.LoadOrStore(key, plan)
-	plan, _ = actual.(*fastStructLoopWriterPlan)
+	plan = runtimeCache.storeStructLoopWriterPlan(key, plan)
 	return plan, plan != nil
 }
 
-func buildFastStructLoopWriterPlan(loop *compiler.FastLoopPlan, elemType reflect.Type) (*fastStructLoopWriterPlan, bool) {
+func buildFastStructLoopWriterPlan(loop *compiler.FastLoopPlan, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) (*fastStructLoopWriterPlan, bool) {
 	if loop == nil {
 		return nil, false
 	}
-	ops, ok := buildFastStructLoopWriterOps(loop.Parts, elemType)
+	ops, ok := buildFastStructLoopWriterOps(loop.Parts, elemType, optionalFastRuntimePlanCache(runtimePlans))
 	if !ok {
 		return nil, false
 	}
 	return &fastStructLoopWriterPlan{ops: ops}, true
 }
 
-func buildFastStructLoopWriterOps(parts []compiler.FastLoopPart, elemType reflect.Type) ([]fastStructLoopWriterOp, bool) {
+func buildFastStructLoopWriterOps(parts []compiler.FastLoopPart, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) ([]fastStructLoopWriterOp, bool) {
+	runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
 	ops := make([]fastStructLoopWriterOp, 0, len(parts))
 	for i := range parts {
 		part := &parts[i]
@@ -1282,7 +1292,7 @@ func buildFastStructLoopWriterOps(parts []compiler.FastLoopPart, elemType reflec
 				})
 				continue
 			}
-			accessPlan, ok := fastAccessChainPlanFor(&part.ValuePlan, elemType)
+			accessPlan, ok := fastAccessChainPlanFor(&part.ValuePlan, elemType, runtimeCache)
 			if !ok {
 				return nil, false
 			}
@@ -1295,14 +1305,14 @@ func buildFastStructLoopWriterOps(parts []compiler.FastLoopPart, elemType reflec
 			if part.Call == nil {
 				return nil, false
 			}
-			call, _ := buildFastStructLoopCallPlan(part.Call, elemType)
+			call, _ := buildFastStructLoopCallPlan(part.Call, elemType, runtimeCache)
 			ops = append(ops, fastStructLoopWriterOp{
 				kind: fastStructLoopWriterCall,
 				call: call,
 				line: part.Line,
 			})
 		case compiler.FastLoopPartConditional:
-			conditional, ok := buildFastStructLoopConditionalWriterPlan(part.Conditional, elemType)
+			conditional, ok := buildFastStructLoopConditionalWriterPlan(part.Conditional, elemType, runtimeCache)
 			if !ok {
 				return nil, false
 			}
@@ -1318,28 +1328,29 @@ func buildFastStructLoopWriterOps(parts []compiler.FastLoopPart, elemType reflec
 	return ops, true
 }
 
-func buildFastStructLoopConditionalWriterPlan(conditional *compiler.FastLoopConditionalPlan, elemType reflect.Type) (*fastStructLoopConditionalWriterPlan, bool) {
+func buildFastStructLoopConditionalWriterPlan(conditional *compiler.FastLoopConditionalPlan, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) (*fastStructLoopConditionalWriterPlan, bool) {
 	if conditional == nil {
 		return nil, false
 	}
 	plan := &fastStructLoopConditionalWriterPlan{
 		branches: make([]fastStructLoopConditionalWriterBranch, 0, len(conditional.Branches)),
 	}
+	runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
 	for i := range conditional.Branches {
 		branch := &conditional.Branches[i]
-		ops, ok := buildFastStructLoopWriterOps(branch.Parts, elemType)
+		ops, ok := buildFastStructLoopWriterOps(branch.Parts, elemType, runtimeCache)
 		if !ok {
 			return nil, false
 		}
 		plan.branches = append(plan.branches, fastStructLoopConditionalWriterBranch{
 			condition:     branch.Condition,
-			conditionPlan: buildFastStructLoopConditionPlan(&branch.Condition, elemType),
+			conditionPlan: buildFastStructLoopConditionPlan(&branch.Condition, elemType, runtimeCache),
 			ops:           ops,
 			line:          branch.Line,
 		})
 	}
 	if len(conditional.ElseParts) > 0 {
-		ops, ok := buildFastStructLoopWriterOps(conditional.ElseParts, elemType)
+		ops, ok := buildFastStructLoopWriterOps(conditional.ElseParts, elemType, runtimeCache)
 		if !ok {
 			return nil, false
 		}
@@ -1348,17 +1359,18 @@ func buildFastStructLoopConditionalWriterPlan(conditional *compiler.FastLoopCond
 	return plan, true
 }
 
-func buildFastStructLoopConditionPlan(value *compiler.FastValuePlan, elemType reflect.Type) *fastStructLoopConditionPlan {
+func buildFastStructLoopConditionPlan(value *compiler.FastValuePlan, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) *fastStructLoopConditionPlan {
 	if value == nil {
 		return nil
 	}
 	if value.Kind == compiler.FastValueInfix {
+		runtimeCache := optionalFastRuntimePlanCache(runtimePlans)
 		if value.Left == nil || value.Right == nil {
 			return nil
 		}
 		if value.Operator == "&&" || value.Operator == "||" {
-			left := buildFastStructLoopConditionPlan(value.Left, elemType)
-			right := buildFastStructLoopConditionPlan(value.Right, elemType)
+			left := buildFastStructLoopConditionPlan(value.Left, elemType, runtimeCache)
+			right := buildFastStructLoopConditionPlan(value.Right, elemType, runtimeCache)
 			if left == nil || right == nil {
 				return nil
 			}
@@ -1370,11 +1382,11 @@ func buildFastStructLoopConditionPlan(value *compiler.FastValuePlan, elemType re
 				line:     value.Line,
 			}
 		}
-		left, ok := buildFastStructLoopConditionOperand(value.Left, elemType)
+		left, ok := buildFastStructLoopConditionOperand(value.Left, elemType, runtimeCache)
 		if !ok {
 			return nil
 		}
-		right, ok := buildFastStructLoopConditionOperand(value.Right, elemType)
+		right, ok := buildFastStructLoopConditionOperand(value.Right, elemType, runtimeCache)
 		if !ok {
 			return nil
 		}
@@ -1383,10 +1395,11 @@ func buildFastStructLoopConditionPlan(value *compiler.FastValuePlan, elemType re
 			operator:   value.Operator,
 			leftValue:  left,
 			rightValue: right,
+			regexCache: value.RegexCache,
 			line:       value.Line,
 		}
 	}
-	operand, ok := buildFastStructLoopConditionOperand(value, elemType)
+	operand, ok := buildFastStructLoopConditionOperand(value, elemType, optionalFastRuntimePlanCache(runtimePlans))
 	if !ok {
 		return nil
 	}
@@ -1397,8 +1410,8 @@ func buildFastStructLoopConditionPlan(value *compiler.FastValuePlan, elemType re
 	}
 }
 
-func buildFastStructLoopConditionOperand(value *compiler.FastValuePlan, elemType reflect.Type) (fastStructLoopCallArgPlan, bool) {
-	operand := buildFastStructLoopCallArgPlan(value, elemType)
+func buildFastStructLoopConditionOperand(value *compiler.FastValuePlan, elemType reflect.Type, runtimePlans ...*fastRuntimePlanCache) (fastStructLoopCallArgPlan, bool) {
+	operand := buildFastStructLoopCallArgPlan(value, elemType, optionalFastRuntimePlanCache(runtimePlans))
 	return operand, operand.kind != fastStructLoopCallArgGeneric
 }
 

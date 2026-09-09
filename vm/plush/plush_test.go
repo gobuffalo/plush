@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	rootplush "github.com/gobuffalo/plush/v5"
+	"github.com/gobuffalo/plush/v5/helpers/hctx"
 	"github.com/gobuffalo/plush/v5/helpers/meta"
 	"github.com/gobuffalo/plush/v5/templatecache/inmemory"
 	vmplush "github.com/gobuffalo/plush/v5/vm/plush"
@@ -104,6 +105,44 @@ func Test_Set_Fast_Helper_Custom_Bytecode_Path(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "fast:7", out)
 	require.Zero(t, fallbackCalls)
+}
+
+func Test_Set_Fast_No_Context_Value_Helper(t *testing.T) {
+	ctx := rootplush.NewContextWith(map[string]interface{}{
+		"decorate": func(value string) string { return "fallback:" + value },
+	})
+	vmplush.SetFastNoContextValueHelper(ctx, "decorate", func(args vmplush.FastArgs) (interface{}, error) {
+		value, ok := args.String(0)
+		if !ok || args.Len() != 1 {
+			return nil, vmplush.ErrFastUnsupported
+		}
+		return "fast:" + value, nil
+	})
+
+	out, err := vmplush.Render(`<% let result = decorate("value") %><%= result %>`, ctx)
+	require.NoError(t, err)
+	require.Equal(t, "fast:value", out)
+}
+
+func Test_Set_Fast_Read_Only_Value_Helper(t *testing.T) {
+	ctx := rootplush.NewContextWith(map[string]interface{}{
+		"prefix":   "read-only",
+		"decorate": func(value string) string { return "fallback:" + value },
+	})
+	vmplush.SetFastReadOnlyValueHelper(ctx, "decorate", func(callCtx vmplush.FastReadOnlyContext, args vmplush.FastArgs) (interface{}, error) {
+		_, writable := interface{}(callCtx).(hctx.Context)
+		require.False(t, writable)
+		value, ok := args.String(0)
+		if !ok || args.Len() != 1 {
+			return nil, vmplush.ErrFastUnsupported
+		}
+		prefix, _ := callCtx.Value("prefix").(string)
+		return prefix + ":" + value, nil
+	})
+
+	out, err := vmplush.Render(`<% let prefix = "local" %><% let result = decorate("value") %><%= result %>`, ctx)
+	require.NoError(t, err)
+	require.Equal(t, "local:value", out)
 }
 
 func Test_Buffalo_Renderer_VM_Partial_Sees_Top_Level_Let_From_Layout(t *testing.T) {

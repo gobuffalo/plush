@@ -374,14 +374,25 @@ func prepareFastMixedPlan(plan *compiler.FastRenderPlan) *fastMixedPlan {
 		return cached.(*fastMixedPlan)
 	}
 	prepared := buildFastMixedPlan(plan)
-	plan.Prepared.Store(prepared)
-	return prepared
+	if plan.Prepared.CompareAndSwap(nil, prepared) {
+		return prepared
+	}
+	return plan.Prepared.Load().(*fastMixedPlan)
+}
+
+func fastRuntimePlanCacheFor(plan *compiler.FastRenderPlan) *fastRuntimePlanCache {
+	mixed := prepareFastMixedPlan(plan)
+	if mixed == nil {
+		return nil
+	}
+	return mixed.runtimePlans
 }
 
 func buildFastMixedPlan(plan *compiler.FastRenderPlan) *fastMixedPlan {
 	mixed := &fastMixedPlan{
-		staticSize: plan.StaticSize,
-		nameCount:  plan.NameCount,
+		runtimePlans: &fastRuntimePlanCache{},
+		staticSize:   plan.StaticSize,
+		nameCount:    plan.NameCount,
 	}
 	prefix := ""
 	for i := range plan.Segments {
@@ -982,7 +993,7 @@ func renderFastSimplePlan(out *strings.Builder, ctx hctx.Context, bindings fastR
 				}
 				return true, fastLineError(op.line, fmt.Errorf("%q: unknown identifier", op.valuePlan.Value))
 			}
-			handled, err := writeFastTopLevelAccessChainRaw(out, ctx, &op.valuePlan, value, &op.accessCache)
+			handled, err := writeFastTopLevelAccessChainRaw(out, ctx, &op.valuePlan, value, &op.accessCache, bindings.runtimePlans)
 			if err != nil {
 				return true, err
 			}
@@ -1165,10 +1176,10 @@ func evalFastSimpleValue(plan *fastSimpleValuePlan, ctx hctx.Context, bindings f
 				return nil, false, nil
 			}
 		}
-		if result, handled, err := evalFastFieldChainValue(value, raw, ctx); handled || err != nil {
+		if result, handled, err := evalFastFieldChainValue(value, raw, ctx, bindings.runtimePlans); handled || err != nil {
 			return result, true, err
 		}
-		if result, handled, err := evalFastAccessChainValue(value, raw, ctx); handled || err != nil {
+		if result, handled, err := evalFastAccessChainValue(value, raw, ctx, bindings.runtimePlans); handled || err != nil {
 			return result, true, err
 		}
 		for i := range value.Path {
@@ -1322,7 +1333,7 @@ func evalFastSimpleInfixValue(plan *fastSimpleValuePlan, ctx hctx.Context, bindi
 	if !rightOK {
 		right = nil
 	}
-	result, err := evalFastInfixOperator(value.Operator, left, right)
+	result, err := evalFastInfixOperator(value.Operator, left, right, value.RegexCache)
 	if err != nil {
 		return nil, true, fastLineError(value.Line, annotateFastInfixError(value, leftOK, rightOK, left, right, err))
 	}

@@ -9,7 +9,6 @@ import (
 
 	"html/template"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
@@ -580,7 +579,7 @@ func (c *compiler) evalInfixExpression(node *ast.InfixExpression) (interface{}, 
 
 	switch t := lres.(type) {
 	case string:
-		return c.stringsOperator(t, rres, node.Operator)
+		return c.stringsOperator(node, t, rres)
 	case int64:
 		if r, ok := rres.(int64); ok {
 			return c.intsOperator(int(t), int(r), node.Operator)
@@ -718,8 +717,9 @@ func (c *compiler) floatsOperator(l float64, r float64, op string) (interface{},
 	return nil, fmt.Errorf("unknown operator for float %s", op)
 }
 
-func (c *compiler) stringsOperator(l string, r interface{}, op string) (interface{}, error) {
+func (c *compiler) stringsOperator(node *ast.InfixExpression, l string, r interface{}) (interface{}, error) {
 	rr := fmt.Sprint(r)
+	op := node.Operator
 
 	switch op {
 	case "+":
@@ -737,7 +737,7 @@ func (c *compiler) stringsOperator(l string, r interface{}, op string) (interfac
 	case "==":
 		return l == rr, nil
 	case "~=":
-		x, err := regexp.Compile(rr)
+		x, err := node.CachedRegex(rr)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't compile regex %s", rr)
 		}

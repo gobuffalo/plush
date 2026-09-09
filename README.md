@@ -546,7 +546,7 @@ For one-off template strings, the interpreter is still a good default because th
 | File-backed app templates | `plush.SetRenderMode(plush.RenderModeVM)` plus `PlushCacheSetup` | Reuses cached VM bytecode by filename |
 | Watched file-backed templates | Trusted partial and top-level bytecode cache APIs | Skips warm source reads and source hashing when the application owns invalidation |
 | One-off/dynamic template strings | Default `plush.Render` interpreter | Avoids compile overhead when reuse is unlikely |
-| App-specific hot helpers | Optional `vmplush.SetFastHelper` and `vmplush.SetFastValueHelper` | Skips generic reflection for helper hot paths |
+| App-specific hot helpers | Optional `vmplush.SetFastHelper` and context-appropriate fast value-helper registration | Skips generic reflection and avoids unnecessary context work on helper hot paths |
 
 ### Compiled Template API
 
@@ -1135,7 +1135,7 @@ Common header meanings:
 | `X-Plush-Fast-Plan-Partial-Names` | Partial names the fast plan found while compiling. Useful for spotting partial-heavy templates. |
 | `X-Plush-VM-Helper-*` | Optional helper-call count and timing fields. They are zero unless `EnableRenderVMHotspotDiagnostics` was enabled for that context. |
 | `X-Plush-VM-Helper-Call-Paths` | Exact direct, reflection, and unclassified helper-call totals; direct/reflection time; reflection percentage; and bounded-detail drop counts. |
-| `X-Plush-VM-Helper-Call-Details` | Up to eight retained helper/signature records, with reflection records ordered first. Use this to identify signatures worth adding to the generated direct invokers or registering through `SetFastHelper` or `SetFastValueHelper`. |
+| `X-Plush-VM-Helper-Call-Details` | Up to eight retained helper/signature records, with reflection records ordered first. Use this to identify signatures worth adding to the generated direct invokers or registering through `SetFastHelper` or the appropriate fast value-helper mode. |
 | `X-Plush-VM-Partial-*` | Optional partial-call count and timing fields. They are zero unless `EnableRenderVMHotspotDiagnostics` was enabled for that context. |
 | `X-Plush-VM-Partial-Fallback-*` | Application-mapped fallback totals and bounded-detail drop counts. They are zero unless `EnableRenderPartialFallbackDiagnostics` was enabled for that context. Inspect `diagnostics.PartialFallbacks.Details` for retained partial names, reasons, and counts. |
 | `Server-Timing` | Browser/devtools-friendly timing summary. The example maps Plush engine time plus optional VM helper and partial hotspot time into server timing metrics. |
@@ -1321,14 +1321,17 @@ For app-specific hot helpers that use broad types like `interface{}` or complex 
 <%= label(value) %>
 ```
 
-When the same helper result is needed as a Go value, register `vmplush.SetFastValueHelper` too. Value-position calls include assignments, conditions, arguments to other helpers, loops, and partial data-map values:
+When the same helper result is needed as a Go value, register one of the fast
+value-helper modes too. Value-position calls include assignments, conditions,
+arguments to other helpers, loops, and partial data-map values:
 
 ```erb
 <% let text = label(value) %>
 <%= wrap(text) %>
 ```
 
-The value-helper examples below use `hctx.Context` from `github.com/gobuffalo/plush/v5/helpers/hctx`.
+The read/write value-helper API uses `hctx.Context` from
+`github.com/gobuffalo/plush/v5/helpers/hctx`.
 
 ```go
 ctx.Set("label", func(value interface{}) string {
@@ -1349,7 +1352,7 @@ vmplush.SetFastHelper(ctx, "label", func(w vmplush.FastWriter, args vmplush.Fast
   return nil
 })
 
-vmplush.SetFastValueHelper(ctx, "label", func(_ hctx.Context, args vmplush.FastArgs) (interface{}, error) {
+vmplush.SetFastNoContextValueHelper(ctx, "label", func(args vmplush.FastArgs) (interface{}, error) {
   text, ok := args.String(0)
   if !ok {
     return nil, vmplush.ErrFastUnsupported
@@ -1359,6 +1362,49 @@ vmplush.SetFastValueHelper(ctx, "label", func(_ hctx.Context, args vmplush.FastA
 })
 ```
 
+#### Choosing a value-helper context mode
+
+Choose the narrowest mode that implements the helper correctly:
+
+| Registration API | Context access | Binding write-back | Typical use |
+|---|---|---|---|
+| `SetFastNoContextValueHelper` | None; receives `FastArgs` only | No | Pure formatting, parsing, encoding, and other argument-only helpers |
+| `SetFastReadOnlyValueHelper` | `Value` and `Has` through `FastReadOnlyContext` | No | Helpers that inspect root bindings or current frame locals without changing them |
+| `SetFastValueHelper` | Full `hctx.Context` | Yes | Helpers that set/update bindings or require an API that accepts the full context |
+
+The `label` example above uses no-context mode because its result depends only
+on its arguments. This avoids constructing a scoped read/write context and
+avoids post-call binding synchronization.
+
+Use read-only mode when the result also depends on a binding:
+
+```go
+vmplush.SetFastReadOnlyValueHelper(ctx, "label", func(callCtx vmplush.FastReadOnlyContext, args vmplush.FastArgs) (interface{}, error) {
+  text, ok := args.String(0)
+  if !ok {
+    return nil, vmplush.ErrFastUnsupported
+  }
+
+  prefix, ok := callCtx.Value("label_prefix").(string)
+  if !ok {
+    return nil, vmplush.ErrFastUnsupported
+  }
+  return prefix + text, nil
+})
+```
+
+`FastReadOnlyContext` prevents binding mutation through the context interface,
+but read-only access is shallow. A map, slice, pointer, array containing
+references, or object returned by `Value` can still expose mutable application
+data. A read-only helper must treat every reachable value as immutable, make a
+defensive copy, or use `SetFastValueHelper` when mutation is intentional.
+
+Registering any value-helper mode for a name replaces its previous fast
+value-helper registration. All three modes preserve normal-helper fallback:
+keep the normal helper in the context and return `vmplush.ErrFastUnsupported`
+when the fast implementation cannot safely handle a call. Matching `Clear...`
+functions are available for each registration API.
+
 The template stays normal:
 
 ```erb
@@ -1367,7 +1413,10 @@ The template stays normal:
 
 Fast helpers should only optimize the hot path. They must not cache request values or rendered output. Use `WriteEscapedString` for normal text and `WriteHTML` only for trusted `template.HTML`. Value helpers should return the same Go value as the normal helper. If either fast helper cannot safely handle the current arguments, return `vmplush.ErrFastUnsupported` so the VM can call the regular helper.
 
-`FastArgs` and the context passed to a `FastValueHelperFunc` are valid only for the duration of that helper call because the VM reuses their backing storage. Do not retain either after the helper returns. A helper that must keep an argument should retain the value returned by `args.Raw(i)`, not `FastArgs` itself.
+`FastArgs` and any context passed to a fast value helper are valid only for the
+duration of that helper call because the VM reuses their backing storage. Do
+not retain either after the helper returns. A helper that must keep an argument
+should retain the value returned by `args.Raw(i)`, not `FastArgs` itself.
 
 #### Runtime source partials
 
@@ -1518,7 +1567,9 @@ For helpers that return trusted HTML, use the writer helper to write trusted out
 <%= markup %>
 ```
 
-The first call can use `SetFastHelper`; the second also needs `SetFastValueHelper` because Plush must put the helper result on the VM stack before writing it later.
+The first call can use `SetFastHelper`; the second also needs the appropriate
+fast value-helper mode because Plush must put the helper result on the VM stack
+before writing it later.
 
 Normal templates can still use regular Plush access without a fast helper:
 

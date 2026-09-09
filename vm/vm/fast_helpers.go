@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"context"
 	"errors"
 	"html/template"
 	"math"
@@ -25,14 +26,65 @@ type contextualValueFastInvoker func(name string, raw interface{}, args *fastCal
 type fastStructLoopDirectCallWriter func(out *strings.Builder, ctx hctx.Context, bindings fastRenderBindings, plan *fastStructLoopCallPlan, loopKey interface{}, item reflect.Value) (bool, error)
 type FastHelperFunc func(FastWriter, FastArgs) error
 
+// FastNoContextValueHelperFunc is a fast value helper that cannot access the
+// render context. Use it for helpers whose result depends only on their
+// arguments (or on state explicitly captured by the helper closure).
+//
+// Unlike FastValueHelperFunc, the VM does not create a scoped helper context,
+// copy frame locals into that context, or synchronize bindings after the call.
+// The normal helper must still be registered for ErrFastUnsupported fallback.
+type FastNoContextValueHelperFunc func(FastArgs) (interface{}, error)
+
+// FastReadOnlyContext exposes binding lookup without Set, Update, or New.
+// It is valid only for the duration of a FastReadOnlyValueHelperFunc call and
+// must not be retained.
+//
+// Read-only applies to context bindings, not recursively to the values stored
+// in them. Maps, slices, pointers (including pointers to arrays), arrays that
+// contain reference values, and objects returned by Value may still expose
+// mutable data. Read-only helpers must treat all reachable values as immutable.
+// A helper that needs to mutate a reachable value must use FastValueHelperFunc
+// or make and mutate its own defensive copy.
+type FastReadOnlyContext interface {
+	context.Context
+	Has(key string) bool
+}
+
+// FastReadOnlyValueHelperFunc is a fast value helper that may inspect context
+// bindings but cannot create, replace, or update them through its context.
+// The VM makes frame locals visible for the call but deliberately skips binding
+// synchronization afterward.
+//
+// This is shallow read-only access. The helper must not mutate maps, slices,
+// pointers, arrays containing references, or objects obtained from the context;
+// see FastReadOnlyContext.
+type FastReadOnlyValueHelperFunc func(FastReadOnlyContext, FastArgs) (interface{}, error)
+
 // FastValueHelperFunc receives a context that is valid only for the duration
-// of the helper call. Helpers must not retain the context after returning.
+// of the helper call. Helpers must not retain the context after returning. It
+// is the existing full read/write mode: binding changes are synchronized back
+// into the VM after a successful helper call.
 type FastValueHelperFunc func(hctx.Context, FastArgs) (interface{}, error)
+
+type fastValueHelperMode uint8
+
+const (
+	fastValueHelperReadWrite fastValueHelperMode = iota
+	fastValueHelperNoContext
+	fastValueHelperReadOnly
+)
+
+type fastValueHelperRegistration struct {
+	mode      fastValueHelperMode
+	readWrite FastValueHelperFunc
+	noContext FastNoContextValueHelperFunc
+	readOnly  FastReadOnlyValueHelperFunc
+}
 
 type fastHelperRegistry struct {
 	mu           sync.RWMutex
 	helpers      map[string]FastHelperFunc
-	valueHelpers map[string]FastValueHelperFunc
+	valueHelpers map[string]fastValueHelperRegistration
 }
 
 type FastWriter struct {
@@ -65,6 +117,38 @@ func ClearFastHelper(ctx hctx.Context, name string) {
 }
 
 func SetFastValueHelper(ctx hctx.Context, name string, helper FastValueHelperFunc) {
+	setFastValueHelperRegistration(ctx, name, fastValueHelperRegistration{
+		mode:      fastValueHelperReadWrite,
+		readWrite: helper,
+	}, helper == nil)
+}
+
+// SetFastNoContextValueHelper registers a helper that receives arguments but
+// no render context. Registering any value-helper mode for the same name
+// replaces the previous mode. The normal helper should remain registered for
+// correctness and ErrFastUnsupported fallback.
+func SetFastNoContextValueHelper(ctx hctx.Context, name string, helper FastNoContextValueHelperFunc) {
+	setFastValueHelperRegistration(ctx, name, fastValueHelperRegistration{
+		mode:      fastValueHelperNoContext,
+		noContext: helper,
+	}, helper == nil)
+}
+
+// SetFastReadOnlyValueHelper registers a binding-read-only helper. The helper
+// can read root bindings and current frame locals, but it cannot write bindings
+// through FastReadOnlyContext and the VM performs no post-call write-back.
+//
+// This API does not provide deep immutability. Helpers must not mutate maps,
+// slices, pointers, arrays containing references, or objects obtained from the
+// context. Use the existing SetFastValueHelper API when mutation is required.
+func SetFastReadOnlyValueHelper(ctx hctx.Context, name string, helper FastReadOnlyValueHelperFunc) {
+	setFastValueHelperRegistration(ctx, name, fastValueHelperRegistration{
+		mode:     fastValueHelperReadOnly,
+		readOnly: helper,
+	}, helper == nil)
+}
+
+func setFastValueHelperRegistration(ctx hctx.Context, name string, registration fastValueHelperRegistration, clear bool) {
 	if ctx == nil || name == "" {
 		return
 	}
@@ -72,17 +156,25 @@ func SetFastValueHelper(ctx hctx.Context, name string, helper FastValueHelperFun
 	registry.mu.Lock()
 	defer registry.mu.Unlock()
 	if registry.valueHelpers == nil {
-		registry.valueHelpers = map[string]FastValueHelperFunc{}
+		registry.valueHelpers = map[string]fastValueHelperRegistration{}
 	}
-	if helper == nil {
+	if clear {
 		delete(registry.valueHelpers, name)
 		return
 	}
-	registry.valueHelpers[name] = helper
+	registry.valueHelpers[name] = registration
 }
 
 func ClearFastValueHelper(ctx hctx.Context, name string) {
 	SetFastValueHelper(ctx, name, nil)
+}
+
+func ClearFastNoContextValueHelper(ctx hctx.Context, name string) {
+	SetFastNoContextValueHelper(ctx, name, nil)
+}
+
+func ClearFastReadOnlyValueHelper(ctx hctx.Context, name string) {
+	SetFastReadOnlyValueHelper(ctx, name, nil)
 }
 
 func fastHelperRegistryForContext(ctx hctx.Context, create bool) *fastHelperRegistry {
@@ -121,17 +213,25 @@ func fastHelperForContext(ctx hctx.Context, name string) (FastHelperFunc, bool) 
 }
 
 func fastValueHelperForContext(ctx hctx.Context, name string) (FastValueHelperFunc, bool) {
-	if name == "" {
+	registration, ok := fastValueHelperRegistrationForContext(ctx, name)
+	if !ok || registration.mode != fastValueHelperReadWrite || registration.readWrite == nil {
 		return nil, false
+	}
+	return registration.readWrite, true
+}
+
+func fastValueHelperRegistrationForContext(ctx hctx.Context, name string) (fastValueHelperRegistration, bool) {
+	if name == "" {
+		return fastValueHelperRegistration{}, false
 	}
 	registry := fastHelperRegistryForContext(ctx, false)
 	if registry == nil {
-		return nil, false
+		return fastValueHelperRegistration{}, false
 	}
 	registry.mu.RLock()
 	defer registry.mu.RUnlock()
-	helper, ok := registry.valueHelpers[name]
-	return helper, ok && helper != nil
+	registration, ok := registry.valueHelpers[name]
+	return registration, ok
 }
 
 func writeRegisteredFastHelper(out *strings.Builder, ctx hctx.Context, helper FastHelperFunc, args *fastCallArgs) (bool, error) {
@@ -158,21 +258,98 @@ func writeRegisteredFastHelperNamed(out *strings.Builder, ctx hctx.Context, name
 }
 
 func callRegisteredFastValueHelper(ctx hctx.Context, name string, helper FastValueHelperFunc, args *fastCallArgs, vmHotspots plush.RenderVMHotspotDiagnosticsRecorder) (interface{}, bool, error) {
-	if helper == nil {
+	return callRegisteredFastValueHelperRegistration(ctx, name, fastValueHelperRegistration{
+		mode:      fastValueHelperReadWrite,
+		readWrite: helper,
+	}, args, vmHotspots)
+}
+
+func callRegisteredFastValueHelperRegistration(ctx hctx.Context, name string, registration fastValueHelperRegistration, args *fastCallArgs, vmHotspots plush.RenderVMHotspotDiagnosticsRecorder) (interface{}, bool, error) {
+	switch registration.mode {
+	case fastValueHelperReadWrite:
+		if registration.readWrite == nil {
+			return nil, false, nil
+		}
+	case fastValueHelperNoContext:
+		if registration.noContext == nil {
+			return nil, false, nil
+		}
+	case fastValueHelperReadOnly:
+		if registration.readOnly == nil {
+			return nil, false, nil
+		}
+	default:
 		return nil, false, nil
 	}
 	var start time.Time
 	if vmHotspots.Enabled() {
 		start = time.Now()
 	}
-	value, err := helper(ctx, FastArgs{args: args})
+	fastArgs := FastArgs{args: args}
+	var value interface{}
+	var err error
+	switch registration.mode {
+	case fastValueHelperNoContext:
+		value, err = registration.noContext(fastArgs)
+	case fastValueHelperReadOnly:
+		value, err = registration.readOnly(fastReadOnlyContext{ctx: ctx}, fastArgs)
+	default:
+		value, err = registration.readWrite(ctx, fastArgs)
+	}
 	if errors.Is(err, ErrFastUnsupported) {
 		return nil, false, nil
 	}
 	if vmHotspots.Enabled() {
-		vmHotspots.AddHelperCall(name, vmHelperCallSignature(reflect.TypeOf(helper)), plush.RenderVMHelperCallDirect, time.Since(start))
+		vmHotspots.AddHelperCall(name, vmHelperCallRegistrationSignature(registration), plush.RenderVMHelperCallDirect, time.Since(start))
 	}
 	return value, true, err
+}
+
+func vmHelperCallRegistrationSignature(registration fastValueHelperRegistration) string {
+	switch registration.mode {
+	case fastValueHelperNoContext:
+		return vmHelperCallSignature(reflect.TypeOf(registration.noContext))
+	case fastValueHelperReadOnly:
+		return vmHelperCallSignature(reflect.TypeOf(registration.readOnly))
+	default:
+		return vmHelperCallSignature(reflect.TypeOf(registration.readWrite))
+	}
+}
+
+type fastReadOnlyContext struct {
+	ctx hctx.Context
+}
+
+func (c fastReadOnlyContext) Deadline() (time.Time, bool) {
+	if c.ctx == nil {
+		return time.Time{}, false
+	}
+	return c.ctx.Deadline()
+}
+
+func (c fastReadOnlyContext) Done() <-chan struct{} {
+	if c.ctx == nil {
+		return nil
+	}
+	return c.ctx.Done()
+}
+
+func (c fastReadOnlyContext) Err() error {
+	if c.ctx == nil {
+		return nil
+	}
+	return c.ctx.Err()
+}
+
+func (c fastReadOnlyContext) Value(key interface{}) interface{} {
+	if c.ctx == nil {
+		return nil
+	}
+	return c.ctx.Value(key)
+}
+
+func (c fastReadOnlyContext) Has(key string) bool {
+	return c.ctx != nil && c.ctx.Has(key)
 }
 
 func (w FastWriter) Context() hctx.Context {

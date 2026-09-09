@@ -18,6 +18,7 @@ type Bytecode struct {
 	Properties                map[int]object.PropertyAccess
 	PropertyCaches            []object.InlineCacheSlot
 	CallCaches                []object.InlineCacheSlot
+	RegexCaches               map[int]*object.InlineCacheSlot
 	NumLocals                 int
 	NumGlobals                int
 	Constants                 []object.Object
@@ -218,6 +219,7 @@ type FastValuePlan struct {
 	Elements      []FastValuePlan
 	Pairs         []FastValuePair
 	Path          []FastPathStep
+	RegexCache    *object.InlineCacheSlot
 	Line          int
 }
 

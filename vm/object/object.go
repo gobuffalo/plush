@@ -199,6 +199,7 @@ type CompiledFunction struct {
 	Properties                map[int]PropertyAccess
 	PropertyCaches            []InlineCacheSlot
 	CallCaches                []InlineCacheSlot
+	RegexCaches               map[int]*InlineCacheSlot
 	NumLocals                 int
 	NumParameters             int
 }

@@ -55,6 +55,7 @@ func newWithContextDiagnosticsState(bytecode *compiler.Bytecode, ctx hctx.Contex
 		Properties:                bytecode.Properties,
 		PropertyCaches:            bytecode.PropertyCaches,
 		CallCaches:                bytecode.CallCaches,
+		RegexCaches:               bytecode.RegexCaches,
 		NumLocals:                 bytecode.NumLocals,
 	}
 	mainClosure := &object.Closure{Fn: mainFn}

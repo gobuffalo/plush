@@ -754,7 +754,7 @@ func (vm *VM) executeComparisonOrLogical(op code.Opcode) error {
 		return vm.push(nativeBoolToBooleanObject(result))
 	case code.OpMatches:
 		pattern := fmt.Sprint(object.ToGo(right))
-		re, err := cachedRegex(pattern)
+		re, err := cachedRegex(vm.currentRegexCacheSlot(vm.lastIP), pattern)
 		if err != nil {
 			return fmt.Errorf("couldn't compile regex %s", object.ToGo(right))
 		}
@@ -792,17 +792,27 @@ func compareEquality(operator string, left, right object.Object) (bool, error) {
 	return reflect.DeepEqual(object.ToGo(left), object.ToGo(right)), nil
 }
 
-func cachedRegex(pattern string) (*regexp.Regexp, error) {
-	if cached, ok := regexCache.Load(pattern); ok {
+func cachedRegex(slot *object.InlineCacheSlot, pattern string) (*regexp.Regexp, error) {
+	if cached := slot.Load(); cached != nil {
 		entry := cached.(regexCacheEntry)
-		return entry.re, entry.err
+		if entry.pattern == pattern {
+			return entry.re, entry.err
+		}
 	}
 
 	re, err := regexp.Compile(pattern)
-	entry := regexCacheEntry{re: re, err: err}
-	actual, _ := regexCache.LoadOrStore(pattern, entry)
-	entry = actual.(regexCacheEntry)
-	return entry.re, entry.err
+	if slot != nil {
+		slot.Store(regexCacheEntry{pattern: pattern, re: re, err: err})
+	}
+	return re, err
+}
+
+func (vm *VM) currentRegexCacheSlot(ip int) *object.InlineCacheSlot {
+	frame := vm.currentFrame()
+	if frame == nil || frame.cl == nil || frame.cl.Fn == nil {
+		return nil
+	}
+	return frame.cl.Fn.RegexCaches[ip]
 }
 
 func compareOrdered(op code.Opcode, left, right object.Object) (bool, error) {
@@ -1362,7 +1372,7 @@ func (vm *VM) tryFastWriteNativeValueCall(name string, raw interface{}, numArgs 
 }
 
 func (vm *VM) tryCallRegisteredFastValueHelper(name string, numArgs int, calleeOnStack bool) (bool, error) {
-	value, callCtx, callCtxScope, handled, err := vm.registeredFastValueHelperResult(name, numArgs)
+	value, callCtx, callCtxScope, writeBack, handled, err := vm.registeredFastValueHelperResult(name, numArgs)
 	if !handled || err != nil {
 		callCtxScope.release()
 		return handled, err
@@ -1371,14 +1381,16 @@ func (vm *VM) tryCallRegisteredFastValueHelper(name string, numArgs int, calleeO
 	if calleeOnStack {
 		vm.sp--
 	}
-	vm.syncContextBindingsFromContext(vm.ctx, callCtx)
-	vm.syncFrameBindingsFromContext(callCtx)
+	if writeBack {
+		vm.syncContextBindingsFromContext(vm.ctx, callCtx)
+		vm.syncFrameBindingsFromContext(callCtx)
+	}
 	callCtxScope.release()
 	return true, vm.push(object.Wrap(value))
 }
 
 func (vm *VM) tryWriteRegisteredFastValueHelper(name string, numArgs int, calleeOnStack bool) (bool, error) {
-	value, callCtx, callCtxScope, handled, err := vm.registeredFastValueHelperResult(name, numArgs)
+	value, callCtx, callCtxScope, writeBack, handled, err := vm.registeredFastValueHelperResult(name, numArgs)
 	if !handled || err != nil {
 		callCtxScope.release()
 		return handled, err
@@ -1387,28 +1399,36 @@ func (vm *VM) tryWriteRegisteredFastValueHelper(name string, numArgs int, callee
 	if calleeOnStack {
 		vm.sp--
 	}
-	vm.syncContextBindingsFromContext(vm.ctx, callCtx)
-	vm.syncFrameBindingsFromContext(callCtx)
+	if writeBack {
+		vm.syncContextBindingsFromContext(vm.ctx, callCtx)
+		vm.syncFrameBindingsFromContext(callCtx)
+	}
 	callCtxScope.release()
 	vm.writeFrameOutput(vm.currentFrame(), object.Wrap(value))
 	return true, nil
 }
 
-func (vm *VM) registeredFastValueHelperResult(name string, numArgs int) (interface{}, hctx.Context, partialChildContextScope, bool, error) {
-	helper, ok := fastValueHelperForContext(vm.ctx, name)
+func (vm *VM) registeredFastValueHelperResult(name string, numArgs int) (interface{}, hctx.Context, partialChildContextScope, bool, bool, error) {
+	registration, ok := fastValueHelperRegistrationForContext(vm.ctx, name)
 	if !ok {
-		return nil, nil, partialChildContextScope{}, false, nil
+		return nil, nil, partialChildContextScope{}, false, false, nil
 	}
 	if numArgs < 0 || vm.sp < numArgs {
-		return nil, nil, partialChildContextScope{}, false, nil
+		return nil, nil, partialChildContextScope{}, false, false, nil
 	}
 	var argStore fastCallArgs
 	for _, obj := range vm.stack[vm.sp-numArgs : vm.sp] {
 		argStore.Append(obj)
 	}
+	args := fastCallArgsOrNil(&argStore, numArgs)
+	if registration.mode == fastValueHelperNoContext {
+		value, handled, err := callRegisteredFastValueHelperRegistration(nil, name, registration, args, vm.renderVMHotspots())
+		return value, nil, partialChildContextScope{}, false, handled, err
+	}
 	callCtx, callCtxScope := vm.scopedContextWithFrameLocals()
-	value, handled, err := callRegisteredFastValueHelper(callCtx, name, helper, fastCallArgsOrNil(&argStore, numArgs), vm.renderVMHotspots())
-	return value, callCtx, callCtxScope, handled, err
+	value, handled, err := callRegisteredFastValueHelperRegistration(callCtx, name, registration, args, vm.renderVMHotspots())
+	writeBack := registration.mode == fastValueHelperReadWrite
+	return value, callCtx, callCtxScope, writeBack, handled, err
 }
 
 func (vm *VM) writeNativeReturnValue(frame *Frame, value reflect.Value, plan *callPlan) {

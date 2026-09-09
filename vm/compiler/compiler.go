@@ -940,6 +940,7 @@ func (c *Compiler) compileFunctionLiteral(node *ast.FunctionLiteral, name string
 		Properties:                properties,
 		PropertyCaches:            object.NewInlineCacheSlots(len(instructions)),
 		CallCaches:                object.NewInlineCacheSlots(len(instructions)),
+		RegexCaches:               regexCacheSlots(instructions),
 		NumLocals:                 numLocals,
 		NumParameters:             len(node.Parameters),
 	}
@@ -1094,6 +1095,7 @@ func (c *Compiler) compileBlockConstant(block *ast.BlockStatement, params []stri
 		Properties:                properties,
 		PropertyCaches:            object.NewInlineCacheSlots(len(instructions)),
 		CallCaches:                object.NewInlineCacheSlots(len(instructions)),
+		RegexCaches:               regexCacheSlots(instructions),
 		NumLocals:                 numLocals,
 		NumParameters:             len(params),
 	}
@@ -1173,6 +1175,7 @@ func (c *Compiler) Bytecode() *Bytecode {
 		Properties:                properties,
 		PropertyCaches:            object.NewInlineCacheSlots(len(instructions)),
 		CallCaches:                object.NewInlineCacheSlots(len(instructions)),
+		RegexCaches:               regexCacheSlots(instructions),
 		NumLocals:                 c.currentLocalCount(),
 		NumGlobals:                c.globalCount(),
 		Constants:                 c.constants,

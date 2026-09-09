@@ -1387,11 +1387,12 @@ func fastValuePlanFromInfixExpression(plan *FastRenderPlan, expr *ast.InfixExpre
 		return FastValuePlan{}, false
 	}
 	return FastValuePlan{
-		Kind:     FastValueInfix,
-		Operator: expr.Operator,
-		Left:     &left,
-		Right:    &right,
-		Line:     line,
+		Kind:       FastValueInfix,
+		Operator:   expr.Operator,
+		Left:       &left,
+		Right:      &right,
+		RegexCache: fastRegexCacheSlot(expr.Operator),
+		Line:       line,
 	}, true
 }
 
@@ -2899,11 +2900,12 @@ func fastValuePlanFromLoopInfix(plan *FastRenderPlan, loop *FastLoopPlan, expr *
 		return FastValuePlan{}, false
 	}
 	return FastValuePlan{
-		Kind:     FastValueInfix,
-		Operator: expr.Operator,
-		Left:     &left,
-		Right:    &right,
-		Line:     line,
+		Kind:       FastValueInfix,
+		Operator:   expr.Operator,
+		Left:       &left,
+		Right:      &right,
+		RegexCache: fastRegexCacheSlot(expr.Operator),
+		Line:       line,
 	}, true
 }
 

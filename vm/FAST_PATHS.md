@@ -119,6 +119,28 @@ current render context. If a custom fast helper cannot handle the argument
 shape, it should return `ErrFastUnsupported` so the normal helper remains the
 source of truth.
 
+Fast value helpers have three explicit context-access modes:
+
+- `SetFastNoContextValueHelper` receives only `FastArgs`. The VM does not build
+  a scoped helper context and does not synchronize bindings after the call.
+- `SetFastReadOnlyValueHelper` receives `FastReadOnlyContext`. It can read root
+  bindings and current frame locals, but the interface has no `Set`, `Update`,
+  or `New` method. The VM does not synchronize bindings after the call.
+- `SetFastValueHelper` is the existing read/write mode. It receives
+  `hctx.Context`, and Plush synchronizes binding changes after the call.
+
+Read-only context access is deliberately shallow. A map, slice, pointer
+(including a pointer to an array), array containing reference values, or object
+returned by `Value` may still refer to mutable application data. A read-only
+helper must not mutate such a value. If mutation is necessary, the helper must
+either make a defensive copy or use the read/write helper API. The read-only
+interface protects context bindings; it is not a deep-freezing or copy-on-read
+mechanism.
+
+Registering one value-helper mode for a name replaces the previously registered
+mode for that name. All modes preserve `ErrFastUnsupported` fallback to the
+normal helper.
+
 Receiver method calls can also be planned when their arguments are representable
 as fast values. For example, `builder.RenderControl({name: "Email", type:
 inputType})` is planned as a receiver path on `builder`, followed by a method

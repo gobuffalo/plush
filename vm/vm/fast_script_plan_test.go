@@ -1468,6 +1468,9 @@ func Test_VM_Fast_Render_Regex_And_NonString_Hash_Keys(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, tmpl.bytecode.FastRenderPlan, tmpl.bytecode.FastReject)
 	require.Empty(t, tmpl.bytecode.FastReject)
+	regexSlot := tmpl.bytecode.FastRenderPlan.Segments[0].ValuePlan.RegexCache
+	require.NotNil(t, regexSlot)
+	require.Nil(t, regexSlot.Load())
 
 	ctx := plush.NewContextWith(map[string]interface{}{
 		"name": "Mido",
@@ -1475,6 +1478,17 @@ func Test_VM_Fast_Render_Regex_And_NonString_Hash_Keys(t *testing.T) {
 	out, err := tmpl.Render(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "true|yes", out)
+	firstRegex := regexSlot.Load().(regexCacheEntry)
+	require.Equal(t, "^Mi", firstRegex.pattern)
+	require.NotNil(t, firstRegex.re)
+
+	out, err = tmpl.Render(plush.NewContextWith(map[string]interface{}{
+		"name": "Mina",
+	}))
+	require.NoError(t, err)
+	require.Equal(t, "true|yes", out)
+	secondRegex := regexSlot.Load().(regexCacheEntry)
+	require.Same(t, firstRegex.re, secondRegex.re)
 
 	diagnostics, ok := plush.RenderDiagnosticsFromContext(ctx)
 	require.True(t, ok)

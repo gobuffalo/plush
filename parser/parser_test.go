@@ -1236,6 +1236,18 @@ func Test_Break_If_Condtion(t *testing.T) {
 	r.Error(err)
 }
 
+func Test_Break_After_Call_Iterable_Loop(t *testing.T) {
+	for _, input := range []string{
+		`<%= for (item) in items() { %><%= item %><% } %><% break %>`,
+		`<%= for (item) in container.GetItems().GetItems() { %><%= item %><% } %><% break %>`,
+	} {
+		t.Run(input, func(t *testing.T) {
+			_, err := parser.Parse(input)
+			require.ErrorContains(t, err, "break is not in a loop")
+		})
+	}
+}
+
 func Test_Empty_If_Condtion(t *testing.T) {
 	r := require.New(t)
 	input := `<% if() { v } %>`

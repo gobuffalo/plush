@@ -1683,8 +1683,19 @@ func fastPathStepsNeedRuntimeBindings(steps []compiler.FastPathStep) bool {
 
 func evalFastPathSteps(base interface{}, steps []compiler.FastPathStep, ctx hctx.Context, bindings fastRenderBindings, loopKey, loopValue interface{}, loopAware bool) (interface{}, error) {
 	raw := base
-	for i := range steps {
+	for i := 0; i < len(steps); i++ {
 		step := &steps[i]
+		if i+1 < len(steps) && step.Kind == compiler.FastPathStepProperty && step.Method &&
+			steps[i+1].Kind == compiler.FastPathStepCall && len(steps[i+1].Args) == 0 {
+			if result, handled, err := evalFastZeroArgMethod(raw, step, &steps[i+1], ctx, bindings); handled || err != nil {
+				if err != nil {
+					return nil, err
+				}
+				raw = result
+				i++
+				continue
+			}
+		}
 		var err error
 		raw, err = evalFastPathStepWithBindings(raw, step, ctx, bindings, loopKey, loopValue, loopAware)
 		if err != nil {

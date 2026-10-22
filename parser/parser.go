@@ -466,10 +466,12 @@ func (p *parser) parseForExpression() ast.Expression {
 	p.nextToken()
 	expression.Iterable = p.parseExpression(LOWEST)
 
-	if ce, ok := expression.Iterable.(*ast.CallExpression); ok {
+	for ce, ok := expression.Iterable.(*ast.CallExpression); ok; ce, ok = ce.ChainCallee.(*ast.CallExpression) {
+		// The loop body can be attached to the final call in a method chain.
 		if ce.Block != nil {
 			expression.Block = ce.Block
 			ce.Block = nil
+			p.inForBlock = false
 			return expression
 		}
 	}

@@ -165,6 +165,13 @@ func renderFastLoop(out *strings.Builder, ctx hctx.Context, bindings fastRenderB
 		}
 	}()
 
+	if handled, err := renderFastPrimitiveValueLoop(out, ctx, loop, iter); handled || err != nil {
+		if handled && err == nil {
+			renderedItems = itemCount
+		}
+		return true, err
+	}
+
 	switch iter := iter.(type) {
 	case []string:
 		if handled, err := renderFastStringKeyValueLoop(out, ctx, loop, iter); handled || err != nil {
@@ -219,6 +226,14 @@ func renderFastLoop(out *strings.Builder, ctx hctx.Context, bindings fastRenderB
 	}
 	switch rv.Kind() {
 	case reflect.Array, reflect.Slice:
+		if rv.Kind() == reflect.Array {
+			if handled, err := renderFastPrimitiveArrayLoop(out, ctx, loop, rv); handled || err != nil {
+				if handled && err == nil {
+					renderedItems = rv.Len()
+				}
+				return true, err
+			}
+		}
 		if handled, err := renderFastStructFieldLoop(out, ctx, bindings, loop, rv); handled || err != nil {
 			if handled && err == nil {
 				renderedItems = rv.Len()

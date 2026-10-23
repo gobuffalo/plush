@@ -790,7 +790,9 @@ func trimReceiverParts(parts []string, base string) []string {
 	if basePart == "" {
 		return parts
 	}
-	for i, part := range parts {
+	// Only strip receiver prefixes. The final part is the member being
+	// accessed even when it has the same name as the preceding method.
+	for i, part := range parts[:len(parts)-1] {
 		if part == basePart || lastStringPart(part) == basePart {
 			return parts[i+1:]
 		}

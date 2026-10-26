@@ -1620,8 +1620,8 @@ func fastValuePlanFromCallExpression(plan *FastRenderPlan, exp *ast.CallExpressi
 func appendFastReceiverCalleeWithArgumentPlanner(value *FastValuePlan, exp ast.Expression, base string, line int, argPlan func(ast.Expression, int) (FastValuePlan, bool)) bool {
 	switch exp := exp.(type) {
 	case *ast.Identifier:
-		receiver := base
-		for _, property := range trimReceiverParts(identifierParts(exp), base) {
+		properties, receiver := receiverCalleeParts(exp, base)
+		for _, property := range properties {
 			full := property
 			if receiver != "" {
 				full = receiver + "." + property
@@ -1648,9 +1648,11 @@ func appendFastReceiverCalleeWithArgumentPlanner(value *FastValuePlan, exp ast.E
 			return false
 		}
 		if ident, ok := exp.Function.(*ast.Identifier); ok {
-			receiver := base
-			parts := trimReceiverParts(identifierParts(ident), base)
+			parts, receiver := receiverCalleeParts(ident, base)
 			for i, property := range parts {
+				if i == len(parts)-1 && exp.Callee != nil {
+					receiver = exp.Callee.String()
+				}
 				full := property
 				if receiver != "" {
 					full = receiver + "." + property

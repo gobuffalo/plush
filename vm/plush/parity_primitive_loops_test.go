@@ -6,12 +6,43 @@ import (
 	"testing"
 
 	rootplush "github.com/gobuffalo/plush/v5"
+	vmplush "github.com/gobuffalo/plush/v5/vm/plush"
 	"github.com/stretchr/testify/require"
 )
 
 type primitiveLoopCustomValue int
 
 func (primitiveLoopCustomValue) String() string { return "custom" }
+
+func Test_Parity_Primitive_Loops_UTF8(t *testing.T) {
+	previous := rootplush.SetVMGenericFallback(false)
+	defer rootplush.SetVMGenericFallback(previous)
+	for _, tt := range []struct {
+		name, input, expected string
+		items                 [3]string
+	}{
+		{"multibyte values", `<%= for (item) in items { %><%= item %><% } %>`, "café東京🙂", [3]string{"café", "東京", "🙂"}},
+		{"escaping and combining characters", `<%= for (item) in items { %>[<%= item %>]<% } %>after`, "[&lt;é &amp; 東京&gt;][e\u0301][👩‍💻]after", [3]string{"<é & 東京>", "e\u0301", "👩‍💻"}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpl, err := vmplush.Compile(tt.input)
+			require.NoError(t, err)
+			for _, items := range []interface{}{tt.items[:], tt.items, &tt.items} {
+				factory := contextWith(map[string]interface{}{"items": items})
+				out, err := renderInterpreter(tt.input, factory)
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, out)
+				ctx := factory()
+				out, err = tmpl.Render(ctx)
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, out)
+				diagnostics, ok := rootplush.RenderDiagnosticsFromContext(ctx)
+				require.True(t, ok)
+				require.Equal(t, rootplush.RenderFastPathFast, diagnostics.FastPath)
+			}
+		})
+	}
+}
 
 func Test_Parity_Primitive_Loops_Types(t *testing.T) {
 	for _, tt := range []struct {

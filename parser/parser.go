@@ -374,6 +374,11 @@ func (p *parser) parseStringLiteral() ast.Expression {
 
 func (p *parser) parseCommentLiteral() ast.Expression {
 	for p.curToken.Type != token.E_END {
+		if p.curTokenIs(token.EOF) {
+			msg := fmt.Sprintf("line %d: unterminated comment", p.curToken.LineNumber)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
 		p.nextToken()
 	}
 

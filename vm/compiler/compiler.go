@@ -712,8 +712,14 @@ func (c *Compiler) compileIndexExpression(node *ast.IndexExpression) error {
 func (c *Compiler) compileReceiverCallee(exp ast.Expression, base string) error {
 	switch exp := exp.(type) {
 	case *ast.Identifier:
-		for _, property := range trimReceiverParts(identifierParts(exp), base) {
-			c.emit(code.OpGetProperty, c.addStringConstant(property))
+		properties, receiver := receiverCalleeParts(exp, base)
+		for _, property := range properties {
+			full := property
+			if receiver != "" {
+				full = receiver + "." + property
+			}
+			c.emitProperty(property, receiver, full)
+			receiver = full
 		}
 		return nil
 	case *ast.IndexExpression:
@@ -737,8 +743,20 @@ func (c *Compiler) compileReceiverCallee(exp ast.Expression, base string) error 
 		return nil
 	case *ast.CallExpression:
 		if ident, ok := exp.Function.(*ast.Identifier); ok {
-			for _, property := range trimReceiverParts(identifierParts(ident), base) {
-				c.emit(code.OpGetProperty, c.addStringConstant(property))
+			properties, receiver := receiverCalleeParts(ident, base)
+			for i, property := range properties {
+				if i == len(properties)-1 && exp.Callee != nil {
+					receiver = exp.Callee.String()
+				}
+				full := property
+				if receiver != "" {
+					full = receiver + "." + property
+				}
+				c.emitProperty(property, receiver, full)
+				if i == len(properties)-1 {
+					c.markLastPropertyAsMethod()
+				}
+				receiver = full
 			}
 		} else if err := c.compileReceiverCallee(exp.Function, base); err != nil {
 			return err
@@ -780,6 +798,18 @@ func identifierParts(id *ast.Identifier) []string {
 		}
 	}
 	return parts
+}
+
+// The receiver is already on the stack, so only its remaining members need
+// evaluating. Retain the stripped prefix for interpreter-compatible errors.
+func receiverCalleeParts(id *ast.Identifier, base string) ([]string, string) {
+	parts := identifierParts(id)
+	properties := trimReceiverParts(parts, base)
+	receiver := strings.Join(parts[:len(parts)-len(properties)], ".")
+	if receiver == "" {
+		receiver = base
+	}
+	return properties, receiver
 }
 
 func trimReceiverParts(parts []string, base string) []string {

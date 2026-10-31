@@ -28,6 +28,12 @@ func Test_Comment(t *testing.T) {
 	}
 }
 
+func Test_Unterminated_Comment(t *testing.T) {
+	output, err := plush.Render("<%# unterminated comment", plush.NewContext())
+	require.EqualError(t, err, "line 1: unterminated comment")
+	require.Empty(t, output)
+}
+
 func Test_Block_Comment(t *testing.T) {
 	r := require.New(t)
 	input := map[string]string{

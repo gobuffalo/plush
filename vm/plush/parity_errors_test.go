@@ -118,6 +118,8 @@ func Test_Parity_Phase_13_Line_Numbers(t *testing.T) {
 }
 
 func Test_Parity_Phase_13_Parser_And_EOF_Syntax_Errors(t *testing.T) {
+	compareExactRenderError(t, `<%#`, emptyContext)
+	compareExactRenderError(t, "<%# first line\nsecond line", emptyContext)
 	compareExactRenderError(t, `<% let = %>`, emptyContext)
 	compareBothRenderError(t, `<%= if true %>bad<% } %>`, emptyContext)
 	compareBothRenderError(t, `<%= foo("unterminated) %>`, contextWith(map[string]interface{}{
